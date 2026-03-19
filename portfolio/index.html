@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="page-title">Case Study — Hexagon Misfit</title>
+  <meta name="description" id="page-desc" content="Case study from Hexagon Misfit, creative technology studio." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/reset.css" />
+  <link rel="stylesheet" href="../css/tokens.css" />
+  <link rel="stylesheet" href="../css/layout.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/animations.css" />
+  <link rel="stylesheet" href="../css/portfolio-detail.css" />
+</head>
+<body>
+
+<!-- Back nav -->
+<nav class="cs-nav-back" role="navigation" aria-label="Case study navigation">
+  <div class="container">
+    <div class="cs-nav-back-inner">
+      <a href="../#work" class="cs-back-link">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 8H1M7 2L1 8l6 6"/>
+        </svg>
+        All Work
+      </a>
+      <a href="../" style="font-family: var(--font-heading); font-weight: 700; font-size: var(--text-sm); color: var(--color-text-secondary);">Hexagon Misfit</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Page content injected by JS -->
+<main id="cs-main"></main>
+
+<script src="../js/portfolio-data.js"></script>
+<script>
+(function () {
+  const main = document.getElementById('cs-main');
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('project');
+
+  if (!id || typeof PROJECTS === 'undefined') {
+    renderNotFound();
+    return;
+  }
+
+  const project = PROJECTS.find(p => p.id === id);
+  if (!project || !project.caseStudy) {
+    renderNotFound();
+    return;
+  }
+
+  // Set page meta
+  document.getElementById('page-title').textContent = `${project.title} — Hexagon Misfit`;
+  document.getElementById('page-desc').content = project.headline;
+
+  // Related projects: same category, excluding current, up to 3
+  const related = PROJECTS
+    .filter(p => p.id !== project.id && p.category === project.category)
+    .slice(0, 3);
+
+  // Fallback to any featured if not enough in category
+  if (related.length < 3) {
+    PROJECTS
+      .filter(p => p.id !== project.id && p.featured && !related.includes(p))
+      .slice(0, 3 - related.length)
+      .forEach(p => related.push(p));
+  }
+
+  const relatedCardsHtml = related.map(p => `
+    <article class="portfolio-card" data-category="${p.category}">
+      <div class="portfolio-card-img">
+        <img src="${p.heroImage}" alt="${p.title}" loading="lazy" />
+        <div class="portfolio-card-overlay">
+          <p class="portfolio-card-overlay-text">${p.headline}</p>
+        </div>
+      </div>
+      <div class="portfolio-card-body">
+        <div class="portfolio-card-meta">
+          <span class="portfolio-card-client">${p.client}</span>
+          <span class="portfolio-card-category">${CATEGORY_LABELS[p.category]}</span>
+        </div>
+        <h3 class="portfolio-card-title">${p.title}</h3>
+        <div class="portfolio-card-tags">${p.tags.slice(0,3).map(t => `<span class="tag">${t}</span>`).join('')}</div>
+        ${p.caseStudy ? `<a href="?project=${p.id}" class="portfolio-card-link">View Case Study <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 7h12M7 1l6 6-6 6"/></svg></a>` : ''}
+      </div>
+    </article>
+  `).join('');
+
+  const techListHtml = project.technologies
+    ? project.technologies.map(t => `<li>${t}</li>`).join('')
+    : '';
+
+  main.innerHTML = `
+    <!-- Hero -->
+    <div class="cs-hero">
+      <img class="cs-hero-img" src="${project.heroImage}" alt="${project.title}" />
+      <div class="cs-hero-overlay"></div>
+      <div class="cs-hero-title-block">
+        <div class="container">
+          <p class="cs-hero-client">${project.client} &nbsp;·&nbsp; ${project.year}</p>
+          <h1 class="cs-hero-heading">${project.title}</h1>
+        </div>
+      </div>
+    </div>
+
+    <!-- Meta bar -->
+    <div class="cs-meta-bar">
+      <div class="container">
+        <div class="cs-meta-grid">
+          <div class="cs-meta-item">
+            <span class="cs-meta-label">Client</span>
+            <span class="cs-meta-value">${project.client}</span>
+          </div>
+          <div class="cs-meta-item">
+            <span class="cs-meta-label">Year</span>
+            <span class="cs-meta-value">${project.year}</span>
+          </div>
+          <div class="cs-meta-item">
+            <span class="cs-meta-label">Service</span>
+            <span class="cs-meta-value">${CATEGORY_LABELS[project.category]}</span>
+          </div>
+          <div class="cs-meta-item">
+            <span class="cs-meta-label">Primary Tech</span>
+            <span class="cs-meta-value">${project.tags[0]}${project.tags[1] ? ', ' + project.tags[1] : ''}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <section class="cs-body">
+      <div class="container">
+        <div class="cs-layout">
+
+          <!-- Main content -->
+          <div class="cs-main-content">
+
+            <div class="cs-main-section" data-animate>
+              <h2 class="cs-section-heading">The Challenge</h2>
+              <p class="cs-text">${project.challenge || project.headline}</p>
+            </div>
+
+            <div class="cs-main-section" data-animate>
+              <h2 class="cs-section-heading">The Solution</h2>
+              <p class="cs-text">${project.solution || project.description}</p>
+            </div>
+
+            ${project.outcome ? `
+            <div class="cs-outcome" data-animate>
+              <p class="cs-outcome-label">Result</p>
+              <p class="cs-outcome-text">${project.outcome}</p>
+            </div>
+            ` : ''}
+
+          </div>
+
+          <!-- Sidebar -->
+          <aside class="cs-sidebar">
+            ${techListHtml ? `
+            <div class="cs-sidebar-block" data-animate>
+              <h4>Technologies Used</h4>
+              <ul class="cs-tech-list">${techListHtml}</ul>
+            </div>
+            ` : ''}
+
+            <div class="cs-sidebar-block" data-animate>
+              <h4>Have a similar project?</h4>
+              <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: 1.25rem; line-height: var(--leading-normal);">
+                Tell us what you're building. We'll respond within 24 hours.
+              </p>
+              <a href="../#contact" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                Get in Touch
+              </a>
+            </div>
+          </aside>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Related projects -->
+    ${related.length ? `
+    <section class="cs-related">
+      <div class="container">
+        <span class="section-label">Related Work</span>
+        <h2 class="section-heading" style="margin-bottom: 0;">More from our portfolio</h2>
+        <div class="cs-related-grid" data-stagger>
+          ${relatedCardsHtml}
+        </div>
+      </div>
+    </section>
+    ` : ''}
+
+    <!-- CTA -->
+    <section class="cs-cta">
+      <div class="container">
+        <h2>Got a brief that needs something extraordinary?</h2>
+        <p>We'll respond within 24 hours — no pitch deck required.</p>
+        <a href="../#contact" class="btn btn-primary">Start a Conversation</a>
+      </div>
+    </section>
+  `;
+
+  // Kick off scroll animations on dynamically inserted content
+  if (typeof IntersectionObserver !== 'undefined') {
+    const animated = main.querySelectorAll('[data-animate]');
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('is-visible');
+          obs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+    animated.forEach(el => obs.observe(el));
+  }
+})();
+
+function renderNotFound() {
+  document.getElementById('cs-main').innerHTML = `
+    <div class="cs-not-found">
+      <h1>Project not found</h1>
+      <p>This case study doesn't exist or hasn't been published yet.</p>
+      <a href="../#work" class="btn btn-primary">Back to All Work</a>
+    </div>
+  `;
+}
+</script>
+
+</body>
+</html>

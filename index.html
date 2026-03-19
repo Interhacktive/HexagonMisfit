@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hexagon Misfit — Creative Technology Partner for Agencies</title>
+  <meta name="description" content="Hexagon Misfit is a creative technology studio that partners with marketing agencies to build interactive installations, projection mapping, real-time VFX, and immersive experiences." />
+  <meta property="og:title" content="Hexagon Misfit — Creative Technology Partner" />
+  <meta property="og:description" content="Interactive installations, projection mapping, real-time VFX, and immersive experiences. Built for agencies who need technology that performs." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://hexagonmisfit.com" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+  <link rel="stylesheet" href="css/sections.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+  NAV
+══════════════════════════════════════════════════ -->
+<nav class="nav" role="navigation" aria-label="Main navigation">
+  <div class="container">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo" aria-label="Hexagon Misfit home">
+        <img src="assets/images/logo/hm-logo.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+
+      <ul class="nav-links" role="list">
+        <li><a href="#services">Services</a></li>
+        <li><a href="#work">Work</a></li>
+        <li><a href="#process">Process</a></li>
+        <li><a href="#about">About</a></li>
+      </ul>
+
+      <div class="nav-cta">
+        <a href="#contact" class="btn btn-outline">Let's Talk</a>
+      </div>
+
+      <button class="nav-hamburger" aria-label="Toggle mobile menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile menu -->
+<div class="nav-mobile" role="dialog" aria-modal="true" aria-label="Mobile navigation">
+  <a href="#services">Services</a>
+  <a href="#work">Work</a>
+  <a href="#process">Process</a>
+  <a href="#about">About</a>
+  <a href="#contact" class="btn btn-primary" style="margin-top: 1rem;">Let's Talk</a>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+  HERO
+══════════════════════════════════════════════════ -->
+<section id="home" class="hero">
+  <div class="hero-bg">
+    <div class="hero-bg-hex"></div>
+    <div class="hero-bg-gradient"></div>
+    <div class="hero-bg-bottom"></div>
+  </div>
+
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-eyebrow" data-animate="fade" style="transition-delay: 0ms;">
+        Creative Technology Studio
+      </div>
+
+      <h1 class="hero-headline" data-animate style="transition-delay: 100ms;">
+        Your <em>Creative<br>Technology</em> Partner
+      </h1>
+
+      <p class="hero-sub" data-animate style="transition-delay: 200ms;">
+        We build the interactive installations your campaigns need — from projection mapping on landmark buildings to responsive LED sculpture — using the tools that make it actually happen.
+      </p>
+
+      <div class="hero-actions" data-animate style="transition-delay: 300ms;">
+        <a href="#work" class="btn btn-primary">See Client Work</a>
+        <a href="#contact" class="btn btn-outline">Start a Conversation</a>
+      </div>
+
+      <div class="hero-clients" data-animate="fade" style="transition-delay: 450ms;">
+        <span class="hero-clients-label">Trusted by</span>
+        <div class="hero-client-dots">
+          <span class="hero-client-name">Intel</span>
+          <span class="hero-client-name" style="color: var(--color-border);">·</span>
+          <span class="hero-client-name">Microsoft</span>
+          <span class="hero-client-name" style="color: var(--color-border);">·</span>
+          <span class="hero-client-name">Coachella</span>
+          <span class="hero-client-name" style="color: var(--color-border);">·</span>
+          <span class="hero-client-name">NASA / Museum of Flight</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-scroll" aria-hidden="true">
+    <span>Scroll</span>
+    <div class="hero-scroll-line"></div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  VALUE PROPS
+══════════════════════════════════════════════════ -->
+<section class="value-props" aria-label="Core capabilities">
+  <div class="container">
+    <div class="value-props-grid">
+
+      <div class="vp-item" data-animate>
+        <div class="hex-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="vp-text">
+          <h3>End-to-End Execution</h3>
+          <p>We handle concept, engineering, fabrication, and live operation. You stay focused on the campaign — we handle the build.</p>
+        </div>
+      </div>
+
+      <div class="vp-item" data-animate style="transition-delay: 100ms;">
+        <div class="hex-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+          </svg>
+        </div>
+        <div class="vp-text">
+          <h3>Real-Time, Responsive Technology</h3>
+          <p>Built on Unreal Engine, TouchDesigner, and custom hardware. Your installation reacts to people, data, and the moment — live.</p>
+        </div>
+      </div>
+
+      <div class="vp-item" data-animate style="transition-delay: 200ms;">
+        <div class="hex-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div class="vp-text">
+          <h3>Agency-Proven Partnership</h3>
+          <p>We've delivered alongside agencies for Intel, Microsoft, Coachella, and more. We know how to fit your process, timeline, and approval chain.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  SERVICES
+══════════════════════════════════════════════════ -->
+<section id="services" class="section">
+  <div class="container">
+    <div data-animate>
+      <span class="section-label">What We Do</span>
+      <h2 class="section-heading">Technology for every<br>kind of interactive experience</h2>
+      <p class="section-sub">Whether you need a projection on a landmark building, an installation that reacts to visitors, or real-time visuals for a live keynote — we have done it before, and we have the receipts.</p>
+    </div>
+
+    <div class="services-grid" data-stagger>
+
+      <div class="service-card" data-animate>
+        <div class="service-card-header">
+          <div class="hex-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+          </div>
+          <span class="service-card-number">01</span>
+        </div>
+        <h3>Projection Mapping &amp; Venue Transformation</h3>
+        <p>Turn any surface — building facades, product launches, museum artifacts — into a storytelling canvas. We handle everything from geometric calibration to narrative direction and on-site operation.</p>
+        <div class="service-card-tags">
+          <span class="tag tag-accent">Notch</span>
+          <span class="tag tag-accent">TouchDesigner</span>
+          <span class="tag">Large Format</span>
+          <span class="tag">Real-Time</span>
+        </div>
+        <a href="#work" class="service-card-link" data-filter-trigger="projection">
+          See projection work
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 7h12M7 1l6 6-6 6"/></svg>
+        </a>
+      </div>
+
+      <div class="service-card" data-animate style="transition-delay: 100ms;">
+        <div class="service-card-header">
+          <div class="hex-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </div>
+          <span class="service-card-number">02</span>
+        </div>
+        <h3>Interactive Installations &amp; Sculptures</h3>
+        <p>Hardware and software built together from scratch. Sensor-driven walls, LED sculptures, interactive models — permanent or temporary, indoor or outdoor. We design, fabricate, and install.</p>
+        <div class="service-card-tags">
+          <span class="tag tag-accent">TouchDesigner</span>
+          <span class="tag tag-accent">Unity</span>
+          <span class="tag">Custom LED</span>
+          <span class="tag">Depth Cameras</span>
+        </div>
+        <a href="#work" class="service-card-link" data-filter-trigger="installation">
+          See installation work
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 7h12M7 1l6 6-6 6"/></svg>
+        </a>
+      </div>
+
+      <div class="service-card" data-animate style="transition-delay: 200ms;">
+        <div class="service-card-header">
+          <div class="hex-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+          </div>
+          <span class="service-card-number">03</span>
+        </div>
+        <h3>Real-Time Motion &amp; Live Visuals</h3>
+        <p>Live events and keynote moments that respond to the audience in real time. Biometric data, depth cameras, motion capture — we turn live sensor data into visuals that perform on stage and on camera.</p>
+        <div class="service-card-tags">
+          <span class="tag tag-accent">Unreal Engine</span>
+          <span class="tag tag-accent">Intel RealSense</span>
+          <span class="tag">HoloLens</span>
+          <span class="tag">Biometric</span>
+        </div>
+        <a href="#work" class="service-card-link" data-filter-trigger="motion">
+          See live visual work
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 7h12M7 1l6 6-6 6"/></svg>
+        </a>
+      </div>
+
+      <div class="service-card" data-animate style="transition-delay: 300ms;">
+        <div class="service-card-header">
+          <div class="hex-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+          </div>
+          <span class="service-card-number">04</span>
+        </div>
+        <h3>Permanent &amp; Landmark Installations</h3>
+        <p>When the brief calls for something that lasts — public art commissions, smart city installations, permanent lobby pieces. We engineer for longevity and operate in conditions from alpine summits to coastal cities.</p>
+        <div class="service-card-tags">
+          <span class="tag tag-accent">Custom Fabrication</span>
+          <span class="tag">Weatherproof LED</span>
+          <span class="tag">Smart City APIs</span>
+          <span class="tag">Structural</span>
+        </div>
+        <a href="#work" class="service-card-link" data-filter-trigger="permanent">
+          See permanent work
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 7h12M7 1l6 6-6 6"/></svg>
+        </a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  PORTFOLIO
+══════════════════════════════════════════════════ -->
+<section id="work" class="section" style="padding-top: 0;">
+  <div class="container">
+
+    <div class="portfolio-header">
+      <div data-animate>
+        <span class="section-label">Selected Work</span>
+        <h2 class="section-heading">18 installations across<br>two continents</h2>
+      </div>
+    </div>
+
+    <div class="portfolio-filter" role="tablist" aria-label="Filter portfolio by category">
+      <button class="filter-btn active" role="tab" aria-selected="true"  data-filter="all">All Work</button>
+      <button class="filter-btn" role="tab" aria-selected="false" data-filter="projection">Projection Mapping</button>
+      <button class="filter-btn" role="tab" aria-selected="false" data-filter="installation">Installations</button>
+      <button class="filter-btn" role="tab" aria-selected="false" data-filter="motion">Motion &amp; Live</button>
+      <button class="filter-btn" role="tab" aria-selected="false" data-filter="permanent">Permanent</button>
+    </div>
+
+    <div class="portfolio-grid" id="portfolio-grid" data-stagger>
+      <!-- Populated by render-portfolio.js inline script below -->
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  CLIENT LOGOS
+══════════════════════════════════════════════════ -->
+<section class="clients" aria-label="Clients and partners">
+  <div class="clients-label">Trusted by leading brands &amp; institutions</div>
+  <div class="clients-marquee-wrap">
+    <div class="clients-marquee" aria-hidden="true">
+      <!-- Duplicated for seamless loop -->
+      <span class="client-logo-item">Intel</span>
+      <span class="client-logo-item">Microsoft</span>
+      <span class="client-logo-item">Coachella</span>
+      <span class="client-logo-item">Republic Records</span>
+      <span class="client-logo-item">NASA / Museum of Flight</span>
+      <span class="client-logo-item">Pacific Science Center</span>
+      <span class="client-logo-item">America's Got Talent</span>
+      <span class="client-logo-item">Boston Children's Hospital</span>
+      <span class="client-logo-item">AIGA</span>
+      <span class="client-logo-item">Steve Aoki</span>
+      <span class="client-logo-item">Stadium of Light</span>
+      <!-- duplicate -->
+      <span class="client-logo-item">Intel</span>
+      <span class="client-logo-item">Microsoft</span>
+      <span class="client-logo-item">Coachella</span>
+      <span class="client-logo-item">Republic Records</span>
+      <span class="client-logo-item">NASA / Museum of Flight</span>
+      <span class="client-logo-item">Pacific Science Center</span>
+      <span class="client-logo-item">America's Got Talent</span>
+      <span class="client-logo-item">Boston Children's Hospital</span>
+      <span class="client-logo-item">AIGA</span>
+      <span class="client-logo-item">Steve Aoki</span>
+      <span class="client-logo-item">Stadium of Light</span>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  PROCESS
+══════════════════════════════════════════════════ -->
+<section id="process" class="section">
+  <div class="container">
+    <div class="text-center" data-animate>
+      <span class="section-label">How We Work</span>
+      <h2 class="section-heading">Built for agency timelines</h2>
+      <p class="section-sub" style="margin-inline: auto;">
+        We've worked inside enough agency production cycles to know what makes a technology partner frustrating — and what makes one indispensable. Here's how we stay the latter.
+      </p>
+    </div>
+
+    <div class="process-grid" data-stagger>
+
+      <div class="process-step" data-animate>
+        <div class="process-number">01</div>
+        <h3>Discover</h3>
+        <p>We learn your campaign goals, venue constraints, budget range, and audience expectations in one focused brief intake. No endless back-and-forth.</p>
+      </div>
+
+      <div class="process-step" data-animate style="transition-delay: 100ms;">
+        <div class="process-number">02</div>
+        <h3>Design</h3>
+        <p>You get concept renders, a technical specification, and a production timeline before anything gets built. Your client can see exactly what they're approving.</p>
+      </div>
+
+      <div class="process-step" data-animate style="transition-delay: 200ms;">
+        <div class="process-number">03</div>
+        <h3>Build</h3>
+        <p>Fabrication and software development happen in our studio with full progress visibility for your team. We flag issues early — never at load-in.</p>
+      </div>
+
+      <div class="process-step" data-animate style="transition-delay: 300ms;">
+        <div class="process-number">04</div>
+        <h3>Deliver</h3>
+        <p>On-site installation, show-day operation support, and post-event documentation you can use in your campaign reporting and case studies.</p>
+      </div>
+
+    </div>
+
+    <div class="process-cta" data-animate>
+      <a href="#contact" class="btn btn-primary">Start a conversation</a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  ABOUT
+══════════════════════════════════════════════════ -->
+<section id="about" class="section" style="background: var(--color-bg-secondary); border-top: 1px solid var(--color-border);">
+  <div class="container">
+    <div class="about-inner">
+
+      <div class="about-copy" data-animate>
+        <span class="section-label">About</span>
+        <h2 class="section-heading">The studio behind the technology</h2>
+        <p>Hexagon Misfit is a creative technology studio that <strong>engineers immersive experiences</strong> from concept to installation. We work where software, hardware, and physical fabrication meet — building systems that no single discipline alone could deliver.</p>
+        <p>Over more than a decade, we have delivered <strong>interactive installations across the US and UK</strong> — from a 4-story LED chandelier narrating a Mayan folktale, to real-time biometric visualizations on stage at CES with Intel, to the largest projection mapping Seattle has ever seen.</p>
+        <p>When marketing agencies need a technology partner who can say yes to the ambitious brief and then actually build it, they call us.</p>
+        <a href="#contact" class="btn btn-outline" style="margin-top: 1.5rem;">Get in touch</a>
+      </div>
+
+      <div class="about-stats" data-stagger>
+        <div class="about-stat" data-animate>
+          <span class="about-stat-value">18+</span>
+          <span class="about-stat-label">Installations delivered worldwide</span>
+        </div>
+        <div class="about-stat" data-animate style="transition-delay: 80ms;">
+          <span class="about-stat-value">10+</span>
+          <span class="about-stat-label">Years of creative technology work</span>
+        </div>
+        <div class="about-stat" data-animate style="transition-delay: 160ms;">
+          <span class="about-stat-value">F500</span>
+          <span class="about-stat-label">Clients include Intel &amp; Microsoft</span>
+        </div>
+        <div class="about-stat" data-animate style="transition-delay: 240ms;">
+          <span class="about-stat-value">2</span>
+          <span class="about-stat-label">Continents — US &amp; UK</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  CONTACT
+══════════════════════════════════════════════════ -->
+<section id="contact" class="section">
+  <div class="container">
+    <div class="contact-inner">
+
+      <div class="contact-copy" data-animate>
+        <span class="section-label">Get in Touch</span>
+        <h2 class="section-heading">Got a brief that needs something extraordinary?</h2>
+        <p>Tell us about your project. We'll respond within 24 hours with initial thoughts — no pitch deck required.</p>
+        <a href="mailto:hello@hexagonmisfit.com" class="contact-email-link">
+          hello@hexagonmisfit.com
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 8h14M9 2l6 6-6 6"/>
+          </svg>
+        </a>
+      </div>
+
+      <div data-animate style="transition-delay: 150ms;">
+        <!-- Netlify Forms: add data-netlify="true" and hidden form-name input -->
+        <form
+          class="contact-form"
+          name="contact"
+          method="POST"
+          data-netlify="true"
+          netlify-honeypot="bot-field"
+          novalidate
+        >
+          <input type="hidden" name="form-name" value="contact" />
+          <p class="sr-only">
+            <label>Don't fill this out if you're human: <input name="bot-field" /></label>
+          </p>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="name">Name</label>
+              <input type="text" id="name" name="name" placeholder="Your name" required />
+              <span class="form-error">Please enter your name</span>
+            </div>
+            <div class="form-group">
+              <label for="company">Agency / Company</label>
+              <input type="text" id="company" name="company" placeholder="Agency name" required />
+              <span class="form-error">Please enter your company</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="you@agency.com" required />
+            <span class="form-error">Please enter a valid email</span>
+          </div>
+
+          <div class="form-group">
+            <label for="project-type">Project Type</label>
+            <select id="project-type" name="project-type" required>
+              <option value="" disabled selected>Select a service area</option>
+              <option value="projection-mapping">Projection Mapping &amp; Venue Transformation</option>
+              <option value="interactive-installation">Interactive Installation &amp; Sculpture</option>
+              <option value="live-visuals">Real-Time Motion &amp; Live Visuals</option>
+              <option value="permanent">Permanent &amp; Landmark Installation</option>
+              <option value="other">Something else</option>
+            </select>
+            <span class="form-error">Please select a project type</span>
+          </div>
+
+          <div class="form-group">
+            <label for="message">Tell us about your project</label>
+            <textarea id="message" name="message" placeholder="Brief description, timeline, event or venue details..." required></textarea>
+            <span class="form-error">Please tell us about your project</span>
+          </div>
+
+          <span class="form-error form-submit-error" style="display:none; margin-bottom: 0.5rem;">
+            Something went wrong — please email us directly at hello@hexagonmisfit.com
+          </span>
+
+          <button type="submit" class="btn btn-primary" style="align-self: flex-start; width: auto;">
+            Send Message
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 7h12M7 1l6 6-6 6"/></svg>
+          </button>
+        </form>
+
+        <div class="form-success" role="alert">
+          <h3>Message sent.</h3>
+          <p>We'll be in touch within 24 hours. Talk soon.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  FOOTER
+══════════════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <a href="#" class="footer-logo" aria-label="Hexagon Misfit home">
+        <img src="assets/images/logo/hm-logo.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+
+      <nav class="footer-links" aria-label="Footer navigation">
+        <a href="#services">Services</a>
+        <a href="#work">Work</a>
+        <a href="#process">Process</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+      </nav>
+
+      <span class="footer-copy">&copy; <span id="footer-year"></span> Hexagon Misfit</span>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ═══════════════════════════════════════════════
+  SCRIPTS
+══════════════════════════════════════════════════ -->
+<script src="js/portfolio-data.js"></script>
+
+<!-- Render portfolio cards from data -->
+<script>
+(function () {
+  const grid = document.getElementById('portfolio-grid');
+  if (!grid || typeof PROJECTS === 'undefined') return;
+
+  PROJECTS.forEach(p => {
+    const hasCaseStudy = p.caseStudy;
+    const linkHref = hasCaseStudy
+      ? `portfolio/?project=${p.id}`
+      : null;
+
+    const tagsHtml = p.tags.slice(0, 3).map(t =>
+      `<span class="tag">${t}</span>`
+    ).join('');
+
+    const linkHtml = hasCaseStudy
+      ? `<a href="${linkHref}" class="portfolio-card-link">
+          View Case Study
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 7h12M7 1l6 6-6 6"/></svg>
+        </a>`
+      : '';
+
+    const cardEl = document.createElement('article');
+    cardEl.className = 'portfolio-card';
+    cardEl.dataset.category = p.category;
+    cardEl.setAttribute('data-animate', '');
+    cardEl.innerHTML = `
+      <div class="portfolio-card-img">
+        <img src="${p.heroImage}" alt="${p.title}" loading="lazy" />
+        <div class="portfolio-card-overlay">
+          <p class="portfolio-card-overlay-text">${p.headline}</p>
+        </div>
+      </div>
+      <div class="portfolio-card-body">
+        <div class="portfolio-card-meta">
+          <span class="portfolio-card-client">${p.client}</span>
+          <span class="portfolio-card-category">${CATEGORY_LABELS[p.category]}</span>
+        </div>
+        <h3 class="portfolio-card-title">${p.title}</h3>
+        <div class="portfolio-card-tags">${tagsHtml}</div>
+        ${linkHtml}
+      </div>
+    `;
+    grid.appendChild(cardEl);
+  });
+})();
+
+// Footer year
+document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+// Service card filter links
+document.querySelectorAll('[data-filter-trigger]').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    const filter = link.dataset.filterTrigger;
+    const btn = document.querySelector(`.filter-btn[data-filter="${filter}"]`);
+    if (btn) {
+      btn.click();
+      document.getElementById('work').scrollIntoView({ behavior: 'smooth' });
+    }
+  });
+});
+</script>
+
+<script src="js/main.js"></script>
+<script src="js/portfolio-filter.js"></script>
+<script src="js/animations.js"></script>
+<script src="js/contact-form.js"></script>
+
+</body>
+</html>

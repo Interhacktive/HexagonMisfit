@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Case Studies — Hexagon Misfit</title>
+  <meta name="description" content="Six flagship case studies from Hexagon Misfit — interactive installations, projection mapping, and immersive experiences built for marketing agencies." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/reset.css" />
+  <link rel="stylesheet" href="../css/tokens.css" />
+  <link rel="stylesheet" href="../css/layout.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/animations.css" />
+  <style>
+
+    /* ───────────────────────────────────────────────
+       PAGE HEADER
+    ─────────────────────────────────────────────── */
+    .csl-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding-block: var(--space-5);
+      background: rgba(10, 10, 15, 0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .csl-nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .csl-nav-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      text-decoration: none;
+    }
+    .csl-nav-logo img { height: 28px; width: auto; }
+    .csl-back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .csl-back-link:hover { color: var(--color-text-primary); }
+    .csl-back-link svg { width: 14px; height: 14px; }
+
+    .csl-page-header {
+      padding-block: var(--space-16) var(--space-12);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .csl-page-header .section-label { display: block; margin-bottom: var(--space-4); }
+    .csl-page-heading {
+      font-family: var(--font-heading);
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 700;
+      line-height: 1.05;
+      color: var(--color-text-primary);
+      max-width: 14ch;
+    }
+    .csl-page-heading em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--color-accent-primary), var(--color-accent-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .csl-page-sub {
+      margin-top: var(--space-6);
+      max-width: 50ch;
+      color: var(--color-text-secondary);
+      line-height: var(--leading-normal);
+    }
+
+    /* ───────────────────────────────────────────────
+       SHARED CARD BASE
+    ─────────────────────────────────────────────── */
+    .csl-card {
+      position: relative;
+      overflow: hidden;
+    }
+    .csl-card-label {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-accent-secondary);
+    }
+    .csl-card-client-year {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+    .csl-card-link {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 600;
+      color: var(--color-accent-primary);
+      text-decoration: none;
+      transition: gap 0.2s, color 0.2s;
+    }
+    .csl-card-link:hover { gap: var(--space-4); color: var(--color-text-primary); }
+    .csl-card-link svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    /* ───────────────────────────────────────────────
+       STYLE 1 — CINEMATIC
+       Full-bleed image, overlay, title at bottom-left
+    ─────────────────────────────────────────────── */
+    .csl-cinematic {
+      height: clamp(480px, 65vw, 720px);
+      display: flex;
+      align-items: flex-end;
+    }
+    .csl-cinematic-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      transform: scale(1.03);
+      transition: transform 0.8s ease;
+    }
+    .csl-cinematic:hover .csl-cinematic-bg { transform: scale(1); }
+    .csl-cinematic-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to top,
+        rgba(10,10,15,0.95) 0%,
+        rgba(10,10,15,0.5) 45%,
+        rgba(10,10,15,0.15) 100%
+      );
+    }
+    .csl-cinematic-content {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      padding: var(--space-12);
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: var(--space-8);
+    }
+    .csl-cinematic-text { max-width: 600px; }
+    .csl-cinematic-label {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-accent-secondary);
+      margin-bottom: var(--space-3);
+    }
+    .csl-cinematic-title {
+      font-family: var(--font-heading);
+      font-size: clamp(1.75rem, 4vw, 3.25rem);
+      font-weight: 700;
+      line-height: 1.08;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-4);
+    }
+    .csl-cinematic-desc {
+      font-size: var(--text-base);
+      color: rgba(255,255,255,0.6);
+      line-height: 1.6;
+      max-width: 48ch;
+    }
+    .csl-cinematic-cta {
+      flex-shrink: 0;
+      align-self: flex-end;
+    }
+
+    /* ───────────────────────────────────────────────
+       STYLE 2 — SPLIT PANEL
+       Image right, text left, clean corporate
+    ─────────────────────────────────────────────── */
+    .csl-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 480px;
+      border-top: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .csl-split-text {
+      padding: var(--space-16) var(--space-12);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: var(--space-6);
+      background: var(--color-bg-secondary);
+    }
+    .csl-split-num {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      color: var(--color-text-muted);
+    }
+    .csl-split-title {
+      font-family: var(--font-heading);
+      font-size: clamp(1.5rem, 3vw, 2.25rem);
+      font-weight: 700;
+      line-height: 1.12;
+      color: var(--color-text-primary);
+    }
+    .csl-split-desc {
+      font-size: var(--text-base);
+      color: var(--color-text-secondary);
+      line-height: 1.65;
+      max-width: 44ch;
+    }
+    .csl-split-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+    .csl-split-img {
+      position: relative;
+      overflow: hidden;
+    }
+    .csl-split-img img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      transition: transform 0.6s ease;
+    }
+    .csl-split:hover .csl-split-img img { transform: scale(1.04); }
+
+    /* ───────────────────────────────────────────────
+       STYLE 3 — NUMBERED MINIMAL
+       Large background number, thumbnail, stark layout
+    ─────────────────────────────────────────────── */
+    .csl-numbered {
+      padding-block: var(--space-16);
+      border-bottom: 1px solid var(--color-border);
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: var(--space-12);
+      align-items: center;
+    }
+    .csl-numbered-num {
+      font-family: var(--font-heading);
+      font-size: clamp(5rem, 12vw, 9rem);
+      font-weight: 700;
+      line-height: 1;
+      color: transparent;
+      -webkit-text-stroke: 1px var(--color-border-accent);
+      user-select: none;
+      flex-shrink: 0;
+      width: clamp(80px, 14vw, 140px);
+      text-align: right;
+    }
+    .csl-numbered-body { display: flex; flex-direction: column; gap: var(--space-5); }
+    .csl-numbered-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+    .csl-numbered-divider {
+      width: 1px;
+      height: 12px;
+      background: var(--color-border);
+    }
+    .csl-numbered-title {
+      font-family: var(--font-heading);
+      font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--color-text-primary);
+    }
+    .csl-numbered-headline {
+      font-size: var(--text-base);
+      color: var(--color-text-secondary);
+      line-height: 1.6;
+      max-width: 52ch;
+    }
+    .csl-numbered-img {
+      width: clamp(200px, 22vw, 300px);
+      aspect-ratio: 4/3;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 1px solid var(--color-border);
+    }
+    .csl-numbered-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s ease;
+    }
+    .csl-numbered:hover .csl-numbered-img img { transform: scale(1.06); }
+
+    /* ───────────────────────────────────────────────
+       STYLE 4 — EDITORIAL MAGAZINE
+       Asymmetric, overlapping, bold type
+    ─────────────────────────────────────────────── */
+    .csl-editorial {
+      position: relative;
+      padding-block: var(--space-16);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .csl-editorial-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.1fr;
+      gap: var(--space-10);
+      align-items: center;
+    }
+    .csl-editorial-img-wrap {
+      position: relative;
+    }
+    .csl-editorial-img {
+      width: 100%;
+      aspect-ratio: 3/2;
+      object-fit: cover;
+      border-radius: var(--radius-lg);
+      display: block;
+      transition: transform 0.6s ease;
+    }
+    .csl-editorial:hover .csl-editorial-img { transform: scale(1.02); }
+    .csl-editorial-img-wrap { overflow: hidden; border-radius: var(--radius-lg); }
+    .csl-editorial-badge {
+      position: absolute;
+      bottom: var(--space-5);
+      left: var(--space-5);
+      background: var(--color-bg-primary);
+      border: 1px solid var(--color-border-accent);
+      border-radius: var(--radius-md);
+      padding: var(--space-3) var(--space-5);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-accent-primary);
+    }
+    .csl-editorial-text {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-6);
+    }
+    .csl-editorial-kicker {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+    .csl-editorial-kicker::before {
+      content: '';
+      display: block;
+      width: 32px;
+      height: 2px;
+      background: var(--color-accent-primary);
+      flex-shrink: 0;
+    }
+    .csl-editorial-title {
+      font-family: var(--font-heading);
+      font-size: clamp(1.75rem, 4vw, 3rem);
+      font-weight: 700;
+      line-height: 1.08;
+      color: var(--color-text-primary);
+    }
+    .csl-editorial-body {
+      font-size: var(--text-base);
+      color: var(--color-text-secondary);
+      line-height: 1.7;
+      max-width: 44ch;
+    }
+    .csl-editorial-outcome {
+      background: linear-gradient(135deg, rgba(108,99,255,0.08), rgba(45,212,191,0.06));
+      border-left: 3px solid var(--color-accent-primary);
+      padding: var(--space-4) var(--space-5);
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: 1.6;
+    }
+    .csl-editorial-outcome strong {
+      display: block;
+      font-family: var(--font-heading);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-accent-secondary);
+      margin-bottom: var(--space-2);
+    }
+
+    /* ───────────────────────────────────────────────
+       STYLE 5 — GLOW CARD
+       Dark card with violet glow, terminal/tech feel
+    ─────────────────────────────────────────────── */
+    .csl-glow-wrap {
+      padding-block: var(--space-16);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .csl-glow-card {
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border-accent);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: 0 0 60px rgba(108,99,255,0.12), 0 0 120px rgba(108,99,255,0.06);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    .csl-glow-media {
+      position: relative;
+      overflow: hidden;
+    }
+    .csl-glow-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      transition: transform 0.6s ease;
+      display: block;
+      min-height: 400px;
+    }
+    .csl-glow-card:hover .csl-glow-media img { transform: scale(1.05); }
+    .csl-glow-media-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to right, transparent 60%, var(--color-bg-card) 100%);
+    }
+    .csl-glow-content {
+      padding: var(--space-10) var(--space-10) var(--space-10) var(--space-8);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-5);
+      justify-content: center;
+    }
+    .csl-glow-terminal-line {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.08em;
+      color: var(--color-accent-secondary);
+    }
+    .csl-glow-terminal-line::before { content: '> '; opacity: 0.5; }
+    .csl-glow-title {
+      font-family: var(--font-heading);
+      font-size: clamp(1.5rem, 2.5vw, 2.25rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--color-text-primary);
+    }
+    .csl-glow-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: 1.65;
+      max-width: 40ch;
+    }
+    .csl-glow-tech {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+    .csl-glow-tech-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      padding: 3px 10px;
+      border: 1px solid var(--color-border-accent);
+      border-radius: 3px;
+      color: var(--color-accent-primary);
+      background: rgba(108,99,255,0.06);
+    }
+
+    /* ───────────────────────────────────────────────
+       STYLE 6 — PANORAMIC STRIP
+       Wide horizontal band, landscape aspect, minimal text
+    ─────────────────────────────────────────────── */
+    .csl-panoramic {
+      padding-block: var(--space-16);
+    }
+    .csl-panoramic-label {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-6);
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+    .csl-panoramic-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--color-border);
+    }
+    .csl-panoramic-img-wrap {
+      position: relative;
+      width: 100%;
+      height: clamp(220px, 35vw, 400px);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: var(--space-8);
+    }
+    .csl-panoramic-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 30%;
+      transition: transform 1s ease;
+    }
+    .csl-panoramic:hover .csl-panoramic-img-wrap img { transform: scale(1.03); }
+    .csl-panoramic-img-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent 40%, rgba(10,10,15,0.7) 100%);
+    }
+    .csl-panoramic-img-title {
+      position: absolute;
+      bottom: var(--space-8);
+      left: var(--space-8);
+      right: var(--space-8);
+      font-family: var(--font-heading);
+      font-size: clamp(1.25rem, 3vw, 2rem);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      line-height: 1.15;
+    }
+    .csl-panoramic-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-6);
+      flex-wrap: wrap;
+    }
+    .csl-panoramic-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+      flex-wrap: wrap;
+    }
+    .csl-panoramic-meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .csl-panoramic-meta-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+    .csl-panoramic-meta-val {
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--color-text-primary);
+    }
+
+    /* ───────────────────────────────────────────────
+       FOOTER
+    ─────────────────────────────────────────────── */
+    .csl-footer {
+      border-top: 1px solid var(--color-border);
+      padding-block: var(--space-8);
+      text-align: center;
+      color: var(--color-text-muted);
+      font-size: var(--text-sm);
+    }
+    .csl-footer a {
+      color: var(--color-accent-primary);
+      text-decoration: none;
+    }
+    .csl-footer a:hover { text-decoration: underline; }
+
+    /* ───────────────────────────────────────────────
+       RESPONSIVE
+    ─────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .csl-cinematic-content {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: var(--space-8);
+      }
+      .csl-split { grid-template-columns: 1fr; }
+      .csl-split-img { height: 260px; position: relative; }
+      .csl-split-img img { position: absolute; }
+      .csl-split-text { padding: var(--space-10) var(--space-8); }
+      .csl-numbered { grid-template-columns: auto 1fr; }
+      .csl-numbered-img { display: none; }
+      .csl-editorial-grid { grid-template-columns: 1fr; }
+      .csl-glow-card { grid-template-columns: 1fr; }
+      .csl-glow-media img { min-height: 260px; }
+      .csl-glow-media-overlay { background: linear-gradient(to bottom, transparent 60%, var(--color-bg-card) 100%); }
+      .csl-glow-content { padding: var(--space-8); }
+      .csl-panoramic-footer { flex-direction: column; align-items: flex-start; }
+    }
+
+  </style>
+</head>
+<body style="background: var(--color-bg-primary);">
+
+<!-- ── NAV ── -->
+<nav class="csl-nav" role="navigation" aria-label="Main navigation">
+  <div class="container">
+    <div class="csl-nav-inner">
+      <a href="../" class="csl-nav-logo">
+        <img src="../assets/images/logo/hm-logo.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <a href="../#work" class="csl-back-link">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 8H1M7 2L1 8l6 6"/></svg>
+        Back to Work
+      </a>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ── PAGE HEADER ── -->
+<header class="csl-page-header">
+  <div class="container">
+    <span class="section-label">Selected Work</span>
+    <h1 class="csl-page-heading">Six Flagship<br><em>Case Studies</em></h1>
+    <p class="csl-page-sub">A deeper look at the work behind the work — the challenges, solutions, and outcomes from our most significant projects.</p>
+  </div>
+</header>
+
+
+<!-- ══════════════════════════════════════════════
+  STYLE 1 — CINEMATIC
+  Pier 86 Projection Mapping
+══════════════════════════════════════════════════ -->
+<section class="csl-card csl-cinematic" aria-label="Pier 86 Projection Mapping">
+  <div
+    class="csl-cinematic-bg"
+    style="background-image: url('https://cdn.prod.website-files.com/67b6a9ac780b924c936f06b2/6943552e21cddcfed0b3b0cb_signal-2025-12-17-171234.jpeg');"
+    aria-hidden="true"
+  ></div>
+  <div class="csl-cinematic-overlay" aria-hidden="true"></div>
+  <div class="csl-cinematic-content">
+    <div class="csl-cinematic-text">
+      <p class="csl-cinematic-label">Projection Mapping &nbsp;·&nbsp; City of Seattle &nbsp;·&nbsp; 2025</p>
+      <h2 class="csl-cinematic-title">Pier 86<br>Projection Mapping</h2>
+      <p class="csl-cinematic-desc">Seattle's largest projection mapping, celebrating the city's Native history on Pier 86. Tens of thousands of viewers. Community leaders from several tribal nations at the opening.</p>
+    </div>
+    <div class="csl-cinematic-cta">
+      <a href="../portfolio/?project=pier-86-projection-mapping" class="btn btn-primary">
+        View Case Study
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 7h12M7 1l6 6-6 6"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+  STYLE 2 — SPLIT PANEL
+  Intel HQ Lobby
+══════════════════════════════════════════════════ -->
+<section class="csl-card csl-split" aria-label="Intel HQ Lobby">
+  <div class="csl-split-text">
+    <p class="csl-split-num">02 / 06 &nbsp;·&nbsp; Interactive Installation</p>
+    <h2 class="csl-split-title">Intel HQ<br>Lobby</h2>
+    <p class="csl-split-desc">A fully reimagined corporate headquarters lobby — an interactive depth-camera wall paired with an inverted 360° LED cube ceiling. Running 24/7 with zero downtime since launch.</p>
+    <div class="csl-split-tags">
+      <span class="tag tag-accent">Intel RealSense</span>
+      <span class="tag tag-accent">TouchDesigner</span>
+      <span class="tag">Custom LED</span>
+      <span class="tag">Permanent</span>
+    </div>
+    <div>
+      <a href="../portfolio/?project=intel-hq-lobby" class="csl-card-link">
+        View Case Study
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 7h12M7 1l6 6-6 6"/></svg>
+      </a>
+    </div>
+  </div>
+  <div class="csl-split-img" aria-hidden="true">
+    <img
+      src="https://cdn.prod.website-files.com/67b6a9ac780b924c936f06b2/69438d2a7dfdfda5d143a086_IntelLobby.png"
+      alt="Intel HQ Lobby installation"
+      loading="lazy"
+    />
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+  STYLE 3 — NUMBERED MINIMAL
+  Space Shuttle Projection Mapping
+══════════════════════════════════════════════════ -->
+<section class="csl-card csl-numbered" aria-label="Space Shuttle Projection Mapping">
+  <div class="container" style="display: contents;">
+    <div class="csl-numbered-num" aria-hidden="true">03</div>
+    <div class="csl-numbered-body">
+      <div class="csl-numbered-meta">
+        <span class="csl-card-label">Projection Mapping</span>
+        <div class="csl-numbered-divider" aria-hidden="true"></div>
+        <span class="csl-card-client-year">Museum of Flight / NASA &nbsp;·&nbsp; 2022</span>
+      </div>
+      <h2 class="csl-numbered-title">Space Shuttle<br>Projection Mapping</h2>
+      <p class="csl-numbered-headline">The full fuselage of the NASA Space Shuttle Trainer at Seattle's Museum of Flight became a 122-foot canvas for a large-scale projection narrative. Sold out within hours of announcement.</p>
+      <a href="../portfolio/?project=space-shuttle-mapping" class="csl-card-link">
+        View Case Study
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 7h12M7 1l6 6-6 6"/></svg>
+      </a>
+    </div>
+    <div class="csl-numbered-img" aria-hidden="true">
+      <img
+        src="https://cdn.prod.website-files.com/67b6a9ac780b924c936f06b2/694340bfd24579622d0f88f5_spaceshuttle.jpeg"
+        alt="Space Shuttle projection mapping"
+        loading="lazy"
+      />
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+  STYLE 4 — EDITORIAL MAGAZINE
+  Mariposa Chandelier
+══════════════════════════════════════════════════ -->
+<section class="csl-card csl-editorial" aria-label="Mariposa Chandelier">
+  <div class="container">
+    <div class="csl-editorial-grid">
+      <div class="csl-editorial-img-wrap">
+        <img
+          class="csl-editorial-img"
+          src="https://cdn.prod.website-files.com/67b6a9ac780b924c936f06b2/67b780eb3e3561a4c9292a87_chandelier1.jpg"
+          alt="Mariposa Chandelier"
+          loading="lazy"
+        />
+        <div class="csl-editorial-badge">Permanent Installation · 2021</div>
+      </div>
+      <div class="csl-editorial-text">
+        <div class="csl-editorial-kicker">
+          <span class="csl-card-label">LED Fabrication &amp; Spatial Audio</span>
+        </div>
+        <h2 class="csl-editorial-title">Mariposa<br>Chandelier</h2>
+        <p class="csl-editorial-body">A 4-story interactive LED chandelier comprising 120 hand-built luminous elements, synchronized to an original 40-speaker spatial audio composition that narrates the Mayan folktale of Mariposa — a story of transformation told through light.</p>
+        <div class="csl-editorial-outcome">
+          <strong>Outcome</strong>
+          The piece has been in continuous operation since installation and has become the building's most photographed feature, appearing regularly in the institution's promotional materials.
+        </div>
+        <div>
+          <a href="../portfolio/?project=mariposa-chandelier" class="csl-card-link">
+            View Case Study
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 7h12M7 1l6 6-6 6"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+  STYLE 5 — GLOW CARD
+  Intel CES Keynote
+══════════════════════════════════════════════════ -->
+<section class="csl-card csl-glow-wrap" aria-label="Intel CES Keynote">
+  <div class="container">
+    <div class="csl-glow-card">
+      <div class="csl-glow-media">
+        <img
+          src="https://cdn.prod.website-files.com/67b6a9ac780b924c936f06b2/67b77d16cb2cfc0eeff8da50_mg3ZgOY0.png"
+          alt="Intel CES Keynote"
+          loading="lazy"
+        />
+        <div class="csl-glow-media-overlay" aria-hidden="true"></div>
+      </div>
+      <div class="csl-glow-content">
+        <p class="csl-glow-terminal-line">client: Intel &nbsp;/&nbsp; year: 2020 &nbsp;/&nbsp; venue: CES Las Vegas</p>
+        <h2 class="csl-glow-title">Intel CES<br>Keynote Performance</h2>
+        <p class="csl-glow-desc">Trampoline acrobats captured in real-time by an array of RealSense depth cameras and rendered as volumetric 3D figures on massive screens — live on stage, zero latency, in front of tens of thousands.</p>
+        <div class="csl-glow-tech">
+          <span class="csl-glow-tech-tag">Intel RealSense D435</span>
+          <span class="csl-glow-tech-tag">Unreal Engine</span>
+          <span class="csl-glow-tech-tag">Point Cloud Fusion</span>
+          <span class="csl-glow-tech-tag">NVIDIA RTX</span>
+        </div>
+        <div>
+          <a href="../portfolio/?project=intel-ces-keynote" class="csl-card-link">
+            View Case Study
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 7h12M7 1l6 6-6 6"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+  STYLE 6 — PANORAMIC STRIP
+  Ring of Light
+══════════════════════════════════════════════════ -->
+<section class="csl-card csl-panoramic" aria-label="Ring of Light">
+  <div class="container">
+    <p class="csl-panoramic-label">06 / 06 &nbsp;·&nbsp; Permanent Installation &nbsp;·&nbsp; Sunderland, UK</p>
+    <div class="csl-panoramic-img-wrap">
+      <img
+        src="https://cdn.prod.website-files.com/67b6a9ac780b924c936f06b2/69438a1b36396888405b59e5_RingOfLight4.png"
+        alt="Ring of Light — Sunderland Stadium of Light"
+        loading="lazy"
+      />
+      <div class="csl-panoramic-img-overlay" aria-hidden="true"></div>
+      <h2 class="csl-panoramic-img-title">Ring of Light</h2>
+    </div>
+    <div class="csl-panoramic-footer">
+      <div class="csl-panoramic-meta">
+        <div class="csl-panoramic-meta-item">
+          <span class="csl-panoramic-meta-label">Client</span>
+          <span class="csl-panoramic-meta-val">Stadium of Light / City of Sunderland</span>
+        </div>
+        <div class="csl-panoramic-meta-item">
+          <span class="csl-panoramic-meta-label">Type</span>
+          <span class="csl-panoramic-meta-val">Smart City Sculpture</span>
+        </div>
+        <div class="csl-panoramic-meta-item">
+          <span class="csl-panoramic-meta-label">Status</span>
+          <span class="csl-panoramic-meta-val">Permanent — Live Data</span>
+        </div>
+        <div class="csl-panoramic-meta-item">
+          <span class="csl-panoramic-meta-label">Year</span>
+          <span class="csl-panoramic-meta-val">2023</span>
+        </div>
+      </div>
+      <a href="../portfolio/?project=ring-of-light" class="btn btn-outline">
+        View Project
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 7h12M7 1l6 6-6 6"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── FOOTER ── -->
+<footer class="csl-footer">
+  <div class="container">
+    <p>
+      &copy; <span id="footer-year"></span> Hexagon Misfit &nbsp;·&nbsp;
+      <a href="../#contact">Get in Touch</a> &nbsp;·&nbsp;
+      <a href="../#work">All Work</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('footer-year').textContent = new Date().getFullYear();
+</script>
+
+</body>
+</html>

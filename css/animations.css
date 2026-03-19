@@ -1,0 +1,66 @@
+/* ─── Keyframes ───────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes hexFloat {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+@keyframes marqueeLTR {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1; }
+}
+@keyframes hexSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ─── Scroll-reveal base states ───────────────────── */
+[data-animate] {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity    var(--duration-slower) var(--ease-out),
+    transform  var(--duration-slower) var(--ease-out);
+}
+[data-animate="fade"] {
+  transform: none;
+}
+[data-animate="slide-right"] {
+  transform: translateX(-24px);
+}
+[data-animate="scale"] {
+  transform: scale(0.94);
+}
+[data-animate].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ─── Stagger delays for grid children ────────────── */
+[data-stagger] > *:nth-child(1) { transition-delay: 0ms; }
+[data-stagger] > *:nth-child(2) { transition-delay: 80ms; }
+[data-stagger] > *:nth-child(3) { transition-delay: 160ms; }
+[data-stagger] > *:nth-child(4) { transition-delay: 240ms; }
+[data-stagger] > *:nth-child(5) { transition-delay: 320ms; }
+[data-stagger] > *:nth-child(6) { transition-delay: 400ms; }
+[data-stagger] > *:nth-child(7) { transition-delay: 480ms; }
+[data-stagger] > *:nth-child(8) { transition-delay: 560ms; }
+[data-stagger] > *:nth-child(n+9) { transition-delay: 640ms; }
