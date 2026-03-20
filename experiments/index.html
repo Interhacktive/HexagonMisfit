@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Experiments — Hexagon Misfit</title>
+  <meta name="description" content="Live creative technology experiments and interactive demos from Hexagon Misfit." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/reset.css" />
+  <link rel="stylesheet" href="../css/tokens.css" />
+  <link rel="stylesheet" href="../css/layout.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/animations.css" />
+
+  <style>
+    /* ── NAV ─────────────────────────────────────────── */
+    .exp-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding-block: var(--space-5);
+      background: rgba(10, 10, 15, 0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .exp-nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .exp-nav-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      text-decoration: none;
+    }
+    .exp-nav-logo img { height: 28px; width: auto; }
+    .exp-nav-links {
+      display: flex;
+      align-items: center;
+      gap: var(--space-8);
+      list-style: none;
+    }
+    .exp-nav-links a {
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      text-decoration: none;
+      transition: color var(--duration-fast);
+    }
+    .exp-nav-links a:hover,
+    .exp-nav-links a.active { color: var(--color-text-primary); }
+    .exp-nav-links a.active { color: var(--color-accent-primary); }
+
+    /* ── PAGE HERO ────────────────────────────────────── */
+    .exp-hero {
+      padding-block: var(--space-20) var(--space-16);
+      text-align: center;
+    }
+    .exp-hero-eyebrow {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-accent-primary);
+      margin-bottom: var(--space-4);
+    }
+    .exp-hero h1 {
+      font-family: var(--font-heading);
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 700;
+      line-height: var(--leading-tight);
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-6);
+    }
+    .exp-hero h1 em {
+      font-style: normal;
+      color: var(--color-accent-primary);
+    }
+    .exp-hero p {
+      max-width: 52ch;
+      margin-inline: auto;
+      color: var(--color-text-secondary);
+      font-size: var(--text-lg);
+    }
+
+    /* ── EXPERIMENT CARD ──────────────────────────────── */
+    .exp-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: var(--space-8);
+      padding-bottom: var(--space-32);
+    }
+    @media (max-width: 720px) {
+      .exp-grid { grid-template-columns: 1fr; }
+    }
+
+    .exp-card {
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      transition: border-color var(--duration-base) var(--ease-out),
+                  transform var(--duration-base) var(--ease-out),
+                  box-shadow var(--duration-base) var(--ease-out);
+    }
+    .exp-card:hover {
+      border-color: var(--color-border-accent);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(108, 99, 255, 0.12);
+    }
+    .exp-card--featured {
+      grid-column: 1 / -1;
+    }
+
+    /* ── DEMO CANVAS AREA ─────────────────────────────── */
+    .exp-demo-wrap {
+      position: relative;
+      width: 100%;
+      height: 500px;
+      background: #07070D;
+      cursor: none;
+      overflow: hidden;
+    }
+    .exp-card--featured .exp-demo-wrap {
+      height: clamp(360px, 55vh, 640px);
+    }
+    #ascii-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    .exp-demo-hint {
+      position: absolute;
+      bottom: var(--space-5);
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      color: rgba(152, 152, 176, 0.5);
+      white-space: nowrap;
+      pointer-events: none;
+      transition: opacity 0.5s;
+    }
+    .exp-demo-hint.hidden { opacity: 0; }
+
+    .exp-demo-corner {
+      position: absolute;
+      top: var(--space-4);
+      right: var(--space-4);
+      display: flex;
+      gap: var(--space-2);
+    }
+    .exp-demo-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--color-border);
+    }
+    .exp-demo-dot--live {
+      background: #2DD4BF;
+      box-shadow: 0 0 8px rgba(45, 212, 191, 0.6);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ── CARD BODY ────────────────────────────────────── */
+    .exp-card-body {
+      padding: var(--space-6);
+    }
+    .exp-card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-3);
+    }
+    .exp-card-title {
+      font-family: var(--font-heading);
+      font-size: var(--text-xl);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-2);
+    }
+    .exp-card-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: var(--leading-normal);
+      margin-bottom: var(--space-5);
+    }
+    .exp-card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+
+    /* ── COMING SOON CARD ─────────────────────────────── */
+    .exp-card--soon {
+      display: flex;
+      flex-direction: column;
+    }
+    .exp-soon-preview {
+      flex: 1;
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #07070D;
+      border-bottom: 1px solid var(--color-border);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      letter-spacing: 0.08em;
+      position: relative;
+      overflow: hidden;
+    }
+    .exp-soon-preview::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 6px,
+        rgba(42, 42, 58, 0.3) 6px,
+        rgba(42, 42, 58, 0.3) 7px
+      );
+    }
+    .exp-soon-label {
+      position: relative;
+      z-index: 1;
+      padding: 0.3rem 0.8rem;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-full);
+      background: var(--color-bg-card);
+    }
+
+    /* ── GEO MINI PREVIEW ─────────────────────────────── */
+    .exp-geo-preview {
+      position: relative;
+      display: block;
+      width: 100%;
+      height: 200px;
+      background: #000;
+      overflow: hidden;
+      text-decoration: none;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .exp-geo-preview canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    .exp-geo-cta {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+      background: rgba(0,0,0,0.35);
+    }
+    .exp-geo-preview:hover .exp-geo-cta { opacity: 1; }
+    .exp-geo-cta span {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      color: rgba(240,240,245,0.85);
+      padding: 0.4rem 1rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: var(--radius-full);
+      background: rgba(10,10,15,0.6);
+      backdrop-filter: blur(6px);
+    }
+
+    /* ── THEME PICKER ─────────────────────────────────── */
+    .exp-theme-picker {
+      position: absolute;
+      bottom: var(--space-5);
+      right: var(--space-5);
+      display: flex;
+      gap: 6px;
+      z-index: 2;
+    }
+    .exp-theme-btn {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.15);
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .exp-theme-btn:hover  { transform: scale(1.35); border-color: rgba(255,255,255,0.45); }
+    .exp-theme-btn.active { border-color: rgba(255,255,255,0.85); transform: scale(1.2); }
+    .exp-theme-btn[data-theme="0"] { background: #6C63FF; }
+    .exp-theme-btn[data-theme="1"] { background: #FF6010; }
+    .exp-theme-btn[data-theme="2"] { background: #00E044; }
+    .exp-theme-btn[data-theme="3"] { background: #50B4FF; }
+    .exp-theme-btn[data-theme="4"] { background: #D232FF; }
+
+    /* ── CUSTOM CURSOR ────────────────────────────────── */
+    .exp-cursor {
+      position: fixed;
+      width: 12px;
+      height: 12px;
+      background: var(--color-accent-primary);
+      border-radius: 50%;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: opacity 0.2s;
+      opacity: 0;
+    }
+    .exp-cursor.inside { opacity: 1; }
+
+    /* ── FOOTER ───────────────────────────────────────── */
+    .exp-footer {
+      border-top: 1px solid var(--color-border);
+      padding-block: var(--space-8);
+    }
+    .exp-footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+    }
+    .exp-footer-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-secondary);
+      text-decoration: none;
+    }
+    .exp-footer-logo img { height: 22px; width: auto; }
+    .exp-footer-copy {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      font-family: var(--font-mono);
+    }
+    .exp-footer-links {
+      display: flex;
+      gap: var(--space-6);
+    }
+    .exp-footer-links a {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      text-decoration: none;
+      transition: color var(--duration-fast);
+    }
+    .exp-footer-links a:hover { color: var(--color-text-primary); }
+  </style>
+</head>
+<body>
+
+<!-- ─── CUSTOM CURSOR ─────────────────────────────────── -->
+<div class="exp-cursor" id="exp-cursor"></div>
+
+<!-- ─── NAV ──────────────────────────────────────────────── -->
+<nav class="exp-nav" role="navigation" aria-label="Main navigation">
+  <div class="container">
+    <div class="exp-nav-inner">
+      <a href="../" class="exp-nav-logo">
+        <img src="../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <ul class="exp-nav-links" role="list">
+        <li><a href="../#services">Services</a></li>
+        <li><a href="../#work">Work</a></li>
+        <li><a href="../#about">About</a></li>
+        <li><a href="." class="active">Experiments</a></li>
+      </ul>
+      <a href="../#contact" class="btn btn-outline">Let's Talk</a>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ─── HERO ──────────────────────────────────────────────── -->
+<section class="exp-hero">
+  <div class="container">
+    <p class="exp-hero-eyebrow">// live_demos &amp; experiments</p>
+    <h1>Where code<br>becomes <em>sensation</em></h1>
+    <p>Interactive prototypes, real-time systems, and technical curiosities from inside the studio. All running live in your browser.</p>
+  </div>
+</section>
+
+
+<!-- ─── EXPERIMENTS GRID ──────────────────────────────────── -->
+<section class="section" style="padding-top: 0;">
+  <div class="container">
+    <div class="exp-grid">
+
+      <!-- ════ EXPERIMENT 01 — ASCII PARTICLE FLOW ════ -->
+      <article class="exp-card exp-card--featured">
+        <div class="exp-demo-wrap" id="ascii-wrap">
+          <canvas id="ascii-canvas" aria-label="ASCII art particle system responding to mouse movement"></canvas>
+          <div class="exp-demo-corner">
+            <div class="exp-demo-dot exp-demo-dot--live"></div>
+            <div class="exp-demo-dot"></div>
+            <div class="exp-demo-dot"></div>
+          </div>
+          <p class="exp-demo-hint" id="ascii-hint">move your cursor to begin</p>
+
+          <div class="exp-theme-picker">
+            <button class="exp-theme-btn active" data-theme="0" title="Nebula" aria-label="Nebula theme"></button>
+            <button class="exp-theme-btn"        data-theme="1" title="Fire"   aria-label="Fire theme"></button>
+            <button class="exp-theme-btn"        data-theme="2" title="Matrix" aria-label="Matrix theme"></button>
+            <button class="exp-theme-btn"        data-theme="3" title="Ice"    aria-label="Ice theme"></button>
+            <button class="exp-theme-btn"        data-theme="4" title="Void"   aria-label="Void theme"></button>
+          </div>
+        </div>
+
+        <div class="exp-card-body">
+          <div class="exp-card-meta">
+            <span class="section-label" style="margin-bottom: 0;">01</span>
+            <span class="tag tag-teal">LIVE</span>
+          </div>
+          <h2 class="exp-card-title">ASCII Particle Flow</h2>
+          <p class="exp-card-desc">
+            A real-time particle system rendered entirely in ASCII characters. Each particle is born at your cursor with a velocity shaped by the direction you move, then drifts through a turbulence field before fading out. No WebGL — pure 2D canvas text, thousands of characters computed every frame.
+          </p>
+          <div class="exp-card-tags">
+            <span class="tag">Canvas 2D</span>
+            <span class="tag">Particle System</span>
+            <span class="tag">ASCII Art</span>
+            <span class="tag">Mouse Interaction</span>
+            <span class="tag">Flow Field</span>
+          </div>
+        </div>
+      </article>
+
+
+      <!-- ════ EXPERIMENT 02 — GENERATIVE GEOMETRY ════ -->
+      <article class="exp-card">
+        <a href="generative-geometry/" class="exp-geo-preview" id="gg-mini-wrap" aria-label="View Generative Geometry experiment">
+          <canvas id="gg-mini-canvas"></canvas>
+          <div class="exp-demo-corner">
+            <div class="exp-demo-dot exp-demo-dot--live"></div>
+            <div class="exp-demo-dot"></div>
+            <div class="exp-demo-dot"></div>
+          </div>
+          <div class="exp-geo-cta"><span>View Experiment →</span></div>
+        </a>
+        <div class="exp-card-body">
+          <div class="exp-card-meta">
+            <span class="section-label" style="margin-bottom: 0;">02</span>
+            <span class="tag tag-teal">LIVE</span>
+          </div>
+          <h2 class="exp-card-title">Generative Geometry</h2>
+          <p class="exp-card-desc">
+            Audio-reactive spring mesh. Triangulated geometry that breathes with simulated audio and fractures on click, reassembling through spring physics.
+          </p>
+          <div class="exp-card-tags">
+            <span class="tag">Canvas 2D</span>
+            <span class="tag">Spring Physics</span>
+            <span class="tag">Audio API</span>
+          </div>
+        </div>
+      </article>
+
+
+      <!-- ════ COMING SOON 02 — SHADER SANDBOX ════ -->
+      <article class="exp-card exp-card--soon">
+        <div class="exp-soon-preview">
+          <span class="exp-soon-label">Coming Soon</span>
+        </div>
+        <div class="exp-card-body">
+          <div class="exp-card-meta">
+            <span class="section-label" style="margin-bottom: 0;">03</span>
+            <span class="tag">UPCOMING</span>
+          </div>
+          <h2 class="exp-card-title">GLSL Shader Playground</h2>
+          <p class="exp-card-desc">
+            Live-editable fragment shaders with real-time preview. Noise fields, signed distance functions, and ray marching — all in the browser.
+          </p>
+          <div class="exp-card-tags">
+            <span class="tag">GLSL</span>
+            <span class="tag">WebGL</span>
+            <span class="tag">SDF</span>
+          </div>
+        </div>
+      </article>
+
+
+      <!-- ════ COMING SOON 03 — PHYSICS CLOTH ════ -->
+      <article class="exp-card exp-card--soon">
+        <div class="exp-soon-preview">
+          <span class="exp-soon-label">Coming Soon</span>
+        </div>
+        <div class="exp-card-body">
+          <div class="exp-card-meta">
+            <span class="section-label" style="margin-bottom: 0;">04</span>
+            <span class="tag">UPCOMING</span>
+          </div>
+          <h2 class="exp-card-title">Verlet Cloth Sim</h2>
+          <p class="exp-card-desc">
+            Position-based cloth physics with wind, gravity, and pinning. Tear it apart with your cursor. The kind of thing that ends up in an installation.
+          </p>
+          <div class="exp-card-tags">
+            <span class="tag">Physics</span>
+            <span class="tag">Verlet</span>
+            <span class="tag">Canvas 2D</span>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ─── FOOTER ────────────────────────────────────────────── -->
+<footer class="exp-footer">
+  <div class="container">
+    <div class="exp-footer-inner">
+      <a href="../" class="exp-footer-logo">
+        <img src="../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <nav class="exp-footer-links" aria-label="Footer navigation">
+        <a href="../#services">Services</a>
+        <a href="../#work">Work</a>
+        <a href="../#contact">Contact</a>
+      </nav>
+      <span class="exp-footer-copy">&copy; <span id="footer-year"></span> Hexagon Misfit</span>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ════════════════════════════════════════════════════════
+  ASCII PARTICLE SYSTEM
+════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ─── CONFIG ─────────────────────────────────────── */
+  const CFG = {
+    maxParticles:        500,
+    spawnRate:           10,
+    spawnIdle:           1,
+    gravity:             0.018,
+    drag:                0.985,
+    turbStrength:        0.06,
+    turbScale:           0.004,
+    trailDecay:          0.88,  // brightness retained per frame
+    particleRadius:      [28, 60],
+    CELL_W:              7,
+    CELL_H:              13,
+    BRIGHTNESS_THRESHOLD: 0.022,
+    GLOW_BLUR:           10,
+  };
+
+  /* ─── ASCII RAMP: index 0 = brightest, last = dimmest ── */
+  const CHAR_ARR = '█▓▒░#@&%$✦*+~-:.,·'.split('');
+  const CHAR_MAX = CHAR_ARR.length - 1;
+
+  /* ─── COLOR THEMES ────────────────────────────────────── */
+  /* Each stop: t = hue position (0 = cool/old/slow → 1 = hot/young/fast) */
+  const THEMES = [
+    {
+      name: 'Nebula',
+      glow: 'rgba(108,99,255,0.55)',
+      stops: [
+        { t: 1.0, r: 230, g: 220, b: 255 },
+        { t: 0.7, r: 108, g:  99, b: 255 },
+        { t: 0.3, r:  45, g: 212, b: 191 },
+        { t: 0.0, r:  20, g:  20, b:  50 },
+      ],
+    },
+    {
+      name: 'Fire',
+      glow: 'rgba(255,100,10,0.55)',
+      stops: [
+        { t: 1.0, r: 255, g: 255, b: 200 },
+        { t: 0.7, r: 255, g: 150, b:  10 },
+        { t: 0.3, r: 200, g:  30, b:   0 },
+        { t: 0.0, r:  35, g:   5, b:   0 },
+      ],
+    },
+    {
+      name: 'Matrix',
+      glow: 'rgba(0,220,60,0.5)',
+      stops: [
+        { t: 1.0, r: 210, g: 255, b: 210 },
+        { t: 0.6, r:   0, g: 255, b:  70 },
+        { t: 0.2, r:   0, g: 130, b:  30 },
+        { t: 0.0, r:   0, g:  25, b:   5 },
+      ],
+    },
+    {
+      name: 'Ice',
+      glow: 'rgba(60,160,255,0.5)',
+      stops: [
+        { t: 1.0, r: 220, g: 240, b: 255 },
+        { t: 0.6, r:  80, g: 180, b: 255 },
+        { t: 0.2, r:  20, g:  80, b: 200 },
+        { t: 0.0, r:   5, g:  10, b:  45 },
+      ],
+    },
+    {
+      name: 'Void',
+      glow: 'rgba(210,50,255,0.5)',
+      stops: [
+        { t: 1.0, r: 255, g: 230, b: 255 },
+        { t: 0.7, r: 210, g:  50, b: 255 },
+        { t: 0.3, r:  80, g:  20, b: 160 },
+        { t: 0.0, r:  10, g:   5, b:  28 },
+      ],
+    },
+  ];
+
+  let activeTheme = 0;
+
+  function lerpColor(stops, t) {
+    let lo = stops[stops.length - 1];
+    let hi = stops[0];
+    for (let i = 0; i < stops.length - 1; i++) {
+      if (t >= stops[i + 1].t && t <= stops[i].t) {
+        hi = stops[i]; lo = stops[i + 1]; break;
+      }
+    }
+    const f = (t - lo.t) / (hi.t - lo.t || 1);
+    return {
+      r: Math.round(lo.r + (hi.r - lo.r) * f),
+      g: Math.round(lo.g + (hi.g - lo.g) * f),
+      b: Math.round(lo.b + (hi.b - lo.b) * f),
+    };
+  }
+
+  /* ─── OPT 2: Pre-baked gaussian LUT ──────────────────── */
+  const LUT_N   = 256;
+  const EXP_LUT = new Float32Array(LUT_N + 1);
+  for (let i = 0; i <= LUT_N; i++) EXP_LUT[i] = Math.exp(-(i / LUT_N) * 3.5);
+
+  /* ─── COLOR LUT: 32 pre-built fill strings, rebuilt on theme switch ── */
+  const LUT_SIZE = 32;
+  let COLOR_LUT  = new Array(LUT_SIZE);
+  let GLOW_COLOR = '';
+
+  function buildColorLUT() {
+    const theme = THEMES[activeTheme];
+    GLOW_COLOR  = theme.glow;
+    for (let i = 0; i < LUT_SIZE; i++) {
+      const hue   = i / (LUT_SIZE - 1);
+      const c     = lerpColor(theme.stops, hue);
+      const alpha = (0.25 + hue * 0.75).toFixed(3);
+      COLOR_LUT[i] = `rgba(${c.r},${c.g},${c.b},${alpha})`;
+    }
+  }
+  buildColorLUT();
+
+  /* Flat bucket arrays — one per LUT slot, reused every frame */
+  const BUCKETS = Array.from({ length: LUT_SIZE }, () => []);
+
+  /* ─── TURBULENCE ─────────────────────────────────── */
+  function turbulence(x, y, t) {
+    const a = Math.sin(x * CFG.turbScale + t * 0.7) *
+              Math.cos(y * CFG.turbScale * 1.3 + t * 0.5);
+    const b = Math.cos(x * CFG.turbScale * 0.8 - t * 0.4) *
+              Math.sin(y * CFG.turbScale + t * 0.9);
+    return { x: a * CFG.turbStrength, y: b * CFG.turbStrength };
+  }
+
+  /* ─── PARTICLE ────────────────────────────────────── */
+  class Particle {
+    constructor(x, y, mvx, mvy) {
+      this.x = x + (Math.random() - 0.5) * 16;
+      this.y = y + (Math.random() - 0.5) * 16;
+      const speed  = 0.8 + Math.random() * 1.6;
+      const spread = (Math.random() - 0.5) * 2.5;
+      const angle  = Math.atan2(mvy, mvx) + spread;
+      this.vx  = Math.cos(angle) * speed * 0.6 + (Math.random() - 0.5) * 1.2;
+      this.vy  = Math.sin(angle) * speed * 0.6 + (Math.random() - 0.5) * 1.2 - 0.3;
+      this.age    = 0;
+      this.maxAge = 90 + Math.floor(Math.random() * 160);
+      this.radius = CFG.particleRadius[0] +
+                    Math.random() * (CFG.particleRadius[1] - CFG.particleRadius[0]);
+    }
+
+    get life()  { return 1 - this.age / this.maxAge; }
+    get alive() { return this.age < this.maxAge; }
+
+    update(t) {
+      const turb = turbulence(this.x, this.y, t);
+      this.vx = (this.vx + turb.x) * CFG.drag;
+      this.vy = (this.vy + turb.y + CFG.gravity) * CFG.drag;
+      this.x += this.vx;
+      this.y += this.vy;
+      this.age++;
+    }
+
+    /* CPU gaussian splat — writes brightness + weighted hue per cell */
+    splat(grid, hueGrid, cols, rows) {
+      const life = this.life;
+      if (life <= 0) return;
+
+      const { CELL_W, CELL_H, trailDecay } = CFG;
+      const scale = life * (1 - trailDecay);
+
+      /* Hue: fast young particles = 1.0 (hot), slow old = 0.0 (cool) */
+      const speed = Math.hypot(this.vx, this.vy);
+      const hue   = Math.min(1, life * 0.6 + Math.min(speed * 0.07, 0.4));
+
+      const cx = this.x / CELL_W;
+      const cy = this.y / CELL_H;
+      const rX = this.radius / CELL_W;
+      const rY = this.radius / CELL_H;
+
+      const c0 = Math.max(0,        Math.floor(cx - rX));
+      const c1 = Math.min(cols - 1, Math.ceil(cx  + rX));
+      const r0 = Math.max(0,        Math.floor(cy - rY));
+      const r1 = Math.min(rows - 1, Math.ceil(cy  + rY));
+
+      const invRX2 = 1 / (rX * rX);
+      const invRY2 = 1 / (rY * rY);
+
+      for (let row = r0; row <= r1; row++) {
+        const dy  = (row + 0.5) - cy;
+        const dy2 = dy * dy * invRY2;
+        if (dy2 >= 1) continue;
+        for (let col = c0; col <= c1; col++) {
+          const dx    = (col + 0.5) - cx;
+          const dist2 = dx * dx * invRX2 + dy2;
+          if (dist2 >= 1) continue;
+          const contrib = scale * EXP_LUT[Math.round(dist2 * LUT_N) | 0];
+          const idx = row * cols + col;
+          const cur = grid[idx] + contrib;
+          grid[idx]    = cur > 1 ? 1 : cur;
+          hueGrid[idx] += contrib * hue; // weighted hue — divided by brightness at render
+        }
+      }
+    }
+  }
+
+  /* ─── SETUP ───────────────────────────────────────── */
+  const canvas = document.getElementById('ascii-canvas');
+  /* OPT 5: willReadFrequently keeps backing store CPU-side */
+  const ctx    = canvas.getContext('2d', { willReadFrequently: true });
+  const wrap   = document.getElementById('ascii-wrap');
+  const hint   = document.getElementById('ascii-hint');
+  const cursor = document.getElementById('exp-cursor');
+
+  let particles    = [];
+  let mouse        = { x: -999, y: -999, vx: 0, vy: 0, inside: false, pressed: false, justReleased: false };
+  let prevMouse    = { x: -999, y: -999 };
+  let frame        = 0;
+  let hintHidden   = false;
+
+  /* Brightness + hue grids — both Float32Arrays, live on CPU */
+  let cols = 0, rows = 0;
+  let grid    = new Float32Array(0); // brightness 0–1
+  let hueGrid = new Float32Array(0); // weighted hue accumulator (divide by grid to normalise)
+
+  function resize() {
+    const dpr = window.devicePixelRatio || 1;
+    const w   = wrap.clientWidth;
+    const h   = wrap.clientHeight;
+    canvas.width  = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width  = w + 'px';
+    canvas.style.height = h + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const newCols = Math.ceil(w / CFG.CELL_W);
+    const newRows = Math.ceil(h / CFG.CELL_H);
+    if (newCols !== cols || newRows !== rows) {
+      cols = newCols;
+      rows = newRows;
+      grid    = new Float32Array(cols * rows);
+      hueGrid = new Float32Array(cols * rows);
+    }
+
+    /* Set text state once here — persists on context, no need to repeat in loop */
+    ctx.font         = `11px 'Space Mono', monospace`;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign    = 'left';
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+
+  /* ─── MOUSE TRACKING ──────────────────────────────── */
+  wrap.addEventListener('mouseenter', () => {
+    mouse.inside = true;
+    cursor.classList.add('inside');
+  });
+
+  wrap.addEventListener('mouseleave', () => {
+    mouse.inside = false;
+    cursor.classList.remove('inside');
+  });
+
+  wrap.addEventListener('mousemove', (e) => {
+    const rect = wrap.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    mouse.vx = x - prevMouse.x;
+    mouse.vy = y - prevMouse.y;
+    prevMouse.x = mouse.x;
+    prevMouse.y = mouse.y;
+    mouse.x = x;
+    mouse.y = y;
+    if (!hintHidden) { hintHidden = true; hint.classList.add('hidden'); }
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top  = e.clientY + 'px';
+  });
+
+  wrap.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    const rect  = wrap.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    mouse.vx = x - prevMouse.x;
+    mouse.vy = y - prevMouse.y;
+    prevMouse.x = mouse.x;
+    prevMouse.y = mouse.y;
+    mouse.x = x;
+    mouse.y = y;
+    mouse.inside = true;
+    if (!hintHidden) { hintHidden = true; hint.classList.add('hidden'); }
+  }, { passive: false });
+
+  wrap.addEventListener('touchend', () => {
+    mouse.inside       = false;
+    mouse.pressed      = false;
+    mouse.justReleased = true;
+  });
+
+  /* ─── PRESS / RELEASE ─────────────────────────────── */
+  wrap.addEventListener('mousedown', () => {
+    mouse.pressed      = true;
+    mouse.justReleased = false;
+    cursor.style.transform = 'translate(-50%,-50%) scale(1.8)';
+  });
+
+  wrap.addEventListener('mouseup', () => {
+    mouse.pressed      = false;
+    mouse.justReleased = true;
+    cursor.style.transform = 'translate(-50%,-50%) scale(1)';
+  });
+
+  wrap.addEventListener('touchstart', (e) => {
+    const rect  = wrap.getBoundingClientRect();
+    const touch = e.touches[0];
+    mouse.x      = touch.clientX - rect.left;
+    mouse.y      = touch.clientY - rect.top;
+    mouse.inside = true;
+    mouse.pressed      = true;
+    mouse.justReleased = false;
+  }, { passive: true });
+
+  /* ─── SPAWN ───────────────────────────────────────── */
+  function spawn(count) {
+    if (mouse.x < 0) return;
+    const cap = CFG.maxParticles - particles.length;
+    const n   = Math.min(count, cap);
+    for (let i = 0; i < n; i++) {
+      particles.push(new Particle(mouse.x, mouse.y, mouse.vx, mouse.vy));
+    }
+  }
+
+  /* ─── RENDER LOOP ─────────────────────────────────── */
+  function loop() {
+    requestAnimationFrame(loop);
+
+    const t = frame * 0.016;
+    const W = wrap.clientWidth;
+    const H = wrap.clientHeight;
+
+    /* Spawn */
+    if (mouse.inside) {
+      const speed   = Math.hypot(mouse.vx, mouse.vy);
+      const dynamic = Math.round(Math.min(CFG.spawnRate, speed * 0.9 + 1));
+      spawn(dynamic);
+    } else if (frame % 4 === 0 && particles.length < 40) {
+      if (mouse.x < 0) { mouse.x = W / 2; mouse.y = H / 2; }
+      spawn(CFG.spawnIdle);
+    }
+
+    /* ── Decay both grids — ratio stays constant so hue weighted avg is preserved ── */
+    const decay = CFG.trailDecay;
+    for (let i = 0, len = grid.length; i < len; i++) {
+      grid[i]    *= decay;
+      hueGrid[i] *= decay;
+    }
+
+    /* ── Update particles + attract/repel + splat ─────────────── */
+    const mx = mouse.x, my = mouse.y;
+    const doAttract  = mouse.pressed && mx >= 0;
+    const doRepel    = mouse.justReleased && mx >= 0;
+
+    const alive = [];
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      p.update(t);
+
+      if (doAttract) {
+        /* Pull every particle toward the cursor — strength falls off with distance */
+        const dx   = mx - p.x;
+        const dy   = my - p.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        const str  = 0.9 / (1 + dist * 0.005); // weaker at range, stronger up close
+        p.vx += (dx / dist) * str;
+        p.vy += (dy / dist) * str;
+      }
+
+      if (doRepel) {
+        /* One-frame outward impulse on release */
+        const dx      = p.x - mx;
+        const dy      = p.y - my;
+        const dist    = Math.hypot(dx, dy) || 1;
+        const maxDist = 320;
+        if (dist < maxDist) {
+          const falloff = (1 - dist / maxDist) * (1 - dist / maxDist); // quadratic taper
+          const impulse = 14 * falloff;
+          p.vx += (dx / dist) * impulse;
+          p.vy += (dy / dist) * impulse;
+        }
+      }
+
+      if (p.alive && p.x > -80 && p.x < W + 80 && p.y > -80 && p.y < H + 80) {
+        p.splat(grid, hueGrid, cols, rows);
+        alive.push(p);
+      }
+    }
+    particles = alive;
+
+    /* Consume the justReleased flag — only active for one frame */
+    if (mouse.justReleased) mouse.justReleased = false;
+
+    /* ── PASS 2: render ASCII chars — per-cell hue + glow, batched by LUT slot ── */
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, W, H);
+
+    for (let b = 0; b < LUT_SIZE; b++) BUCKETS[b].length = 0;
+
+    const { CELL_W, CELL_H, BRIGHTNESS_THRESHOLD } = CFG;
+    const halfH = CELL_H >> 1;
+
+    for (let row = 0; row < rows; row++) {
+      const y   = row * CELL_H + halfH;
+      const off = row * cols;
+      for (let col = 0; col < cols; col++) {
+        const brightness = grid[off + col];
+        if (brightness < BRIGHTNESS_THRESHOLD) continue;
+
+        /* Weighted average hue for this cell: hot center, cool edges */
+        const hue     = brightness > 0.001 ? Math.min(1, hueGrid[off + col] / brightness) : 0;
+        const charIdx = Math.round((1 - brightness) * CHAR_MAX);
+        const lutIdx  = Math.min(LUT_SIZE - 1, (hue * LUT_SIZE) | 0);
+        BUCKETS[lutIdx].push(CHAR_ARR[charIdx], col * CELL_W, y);
+      }
+    }
+
+    /* Glow pass: set shadow once, draw all buckets, clear */
+    ctx.shadowBlur  = CFG.GLOW_BLUR;
+    ctx.shadowColor = GLOW_COLOR;
+    for (let b = 0; b < LUT_SIZE; b++) {
+      const bucket = BUCKETS[b];
+      if (bucket.length === 0) continue;
+      ctx.fillStyle = COLOR_LUT[b];
+      for (let i = 0, len = bucket.length; i < len; i += 3) {
+        ctx.fillText(bucket[i], bucket[i + 1], bucket[i + 2]);
+      }
+    }
+    ctx.shadowBlur = 0;
+
+    frame++;
+  }
+
+  loop();
+
+  /* ─── THEME SWITCHER ─────────────────────────────── */
+  document.querySelectorAll('.exp-theme-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeTheme = parseInt(btn.dataset.theme, 10);
+      buildColorLUT();
+      document.querySelectorAll('.exp-theme-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  /* ─── FOOTER YEAR ─────────────────────────────────── */
+  const yearEl = document.getElementById('footer-year');
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+})();
+</script>
+
+<!-- ── GEO MINI PREVIEW CANVAS ─────────────────────── -->
+<script>
+(function () {
+  'use strict';
+
+  const wrap   = document.getElementById('gg-mini-wrap');
+  const canvas = document.getElementById('gg-mini-canvas');
+  if (!wrap || !canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const CELL = 52;
+  const STOPS = [
+    {t:1,r:230,g:220,b:255},{t:.7,r:108,g:99,b:255},
+    {t:.3,r:45,g:212,b:191},{t:0,r:20,g:20,b:50},
+  ];
+  function lerpC(t) {
+    let lo = STOPS[STOPS.length-1], hi = STOPS[0];
+    for (let i = 0; i < STOPS.length-1; i++) {
+      if (t >= STOPS[i+1].t && t <= STOPS[i].t) { hi = STOPS[i]; lo = STOPS[i+1]; break; }
+    }
+    const f = (t - lo.t) / (hi.t - lo.t || 1);
+    return { r: Math.round(lo.r+(hi.r-lo.r)*f), g: Math.round(lo.g+(hi.g-lo.g)*f), b: Math.round(lo.b+(hi.b-lo.b)*f) };
+  }
+
+  let W, H, verts, edges;
+
+  function build() {
+    W = wrap.clientWidth;
+    H = wrap.clientHeight;
+    const dpr  = window.devicePixelRatio || 1;
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const cols = Math.ceil(W / CELL) + 2;
+    const rows = Math.ceil(H / CELL) + 2;
+    const ox = (W - (cols-1)*CELL) / 2;
+    const oy = (H - (rows-1)*CELL) / 2;
+
+    verts = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        verts.push({ bx: ox+c*CELL, by: oy+r*CELL, phase: Math.random()*Math.PI*2 });
+      }
+    }
+
+    const edgeMap = new Map();
+    const addE = (a, b) => {
+      const key = a < b ? a*65536+b : b*65536+a;
+      if (!edgeMap.has(key)) {
+        const dx = verts[b].bx - verts[a].bx, dy = verts[b].by - verts[a].by;
+        edgeMap.set(key, { a, b, rest: Math.hypot(dx, dy) });
+      }
+    };
+    for (let r = 0; r < rows-1; r++) {
+      for (let c = 0; c < cols-1; c++) {
+        const tl=r*cols+c, tr=r*cols+c+1, bl=(r+1)*cols+c, br=(r+1)*cols+c+1;
+        if ((r+c)%2===0) { addE(tl,tr); addE(tr,br); addE(br,bl); addE(bl,tl); addE(tl,br); }
+        else             { addE(tl,tr); addE(tr,bl); addE(tl,bl); addE(bl,br); addE(tr,br); }
+      }
+    }
+    edges = [...edgeMap.values()];
+  }
+
+  build();
+  window.addEventListener('resize', build);
+
+  let t = 0;
+  const cx_ref = () => W / 2, cy_ref = () => H / 2;
+
+  /* Batch edges into 8 color buckets to keep draw calls low */
+  const NB = 8;
+  const bkts = Array.from({length: NB}, () => []);
+
+  function loop() {
+    requestAnimationFrame(loop);
+    t += 0.016;
+
+    const cx = cx_ref(), cy = cy_ref();
+    const maxD = Math.hypot(cx, cy);
+
+    /* Compute vertex positions with sin-wave animation */
+    const pos = verts.map(v => {
+      const dn  = Math.hypot(v.bx-cx, v.by-cy) / maxD;
+      const amp = (0.28 + 0.22*Math.sin(t*1.7 + dn*3.5)) * (1 - dn*0.25);
+      const wave = Math.sin(t*2.0 + v.phase + dn*4.2) * 14 * amp;
+      const dx = v.bx-cx, dy = v.by-cy, d = Math.hypot(dx,dy)||1;
+      return { x: v.bx + (dx/d)*wave, y: v.by + (dy/d)*wave };
+    });
+
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, W, H);
+
+    /* Sort into buckets */
+    for (let b = 0; b < NB; b++) bkts[b].length = 0;
+
+    for (const e of edges) {
+      const pa = pos[e.a], pb = pos[e.b];
+      const len = Math.hypot(pb.x-pa.x, pb.y-pa.y);
+      const stretch = (len - e.rest) / e.rest;
+      const hue   = Math.max(0, Math.min(1, stretch*2.5 + 0.5));
+      const alpha = 0.07 + Math.abs(stretch) * 1.1;
+      if (alpha < 0.06) continue;
+      const bi = Math.min(NB-1, Math.floor(hue*NB));
+      bkts[bi].push(pa.x, pa.y, pb.x, pb.y, Math.min(0.92, alpha));
+    }
+
+    for (let b = 0; b < NB; b++) {
+      const bkt = bkts[b];
+      if (!bkt.length) continue;
+      const hue = (b+0.5)/NB;
+      const col = lerpC(hue);
+      /* Average alpha across bucket */
+      let sum = 0, n = bkt.length/5;
+      for (let i = 4; i < bkt.length; i += 5) sum += bkt[i];
+      ctx.strokeStyle = `rgba(${col.r},${col.g},${col.b},${(sum/n).toFixed(2)})`;
+      ctx.lineWidth = 0.7 + hue*0.6;
+      ctx.beginPath();
+      for (let i = 0; i < bkt.length; i += 5) {
+        ctx.moveTo(bkt[i], bkt[i+1]);
+        ctx.lineTo(bkt[i+2], bkt[i+3]);
+      }
+      ctx.stroke();
+    }
+  }
+  loop();
+})();
+</script>
+
+</body>
+</html>

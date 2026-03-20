@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generative Geometry — Hexagon Misfit Experiments</title>
+  <meta name="description" content="Audio-reactive spring mesh. A triangulated geometry that breathes, fractures, and reassembles in response to sound." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../css/reset.css" />
+  <link rel="stylesheet" href="../../css/tokens.css" />
+  <link rel="stylesheet" href="../../css/layout.css" />
+  <link rel="stylesheet" href="../../css/components.css" />
+  <link rel="stylesheet" href="../../css/animations.css" />
+
+  <style>
+    /* ── NAV ─────────────────────────────────────────── */
+    .gg-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding-block: var(--space-5);
+      background: rgba(10, 10, 15, 0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .gg-nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .gg-nav-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      text-decoration: none;
+    }
+    .gg-nav-logo img { height: 28px; width: auto; }
+    .gg-nav-right {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+    }
+    .gg-back {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.08em;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .gg-back:hover { color: var(--color-text-primary); }
+    .gg-back svg { width: 12px; height: 12px; }
+
+    /* ── DEMO AREA ────────────────────────────────────── */
+    .gg-demo {
+      position: relative;
+      width: 100%;
+      height: clamp(400px, 65vh, 720px);
+      background: #000;
+      overflow: hidden;
+      cursor: crosshair;
+    }
+    #gg-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── OVERLAY CONTROLS ─────────────────────────────── */
+    .gg-overlay-tl {
+      position: absolute;
+      top: var(--space-5);
+      left: var(--space-5);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      pointer-events: none;
+    }
+    .gg-live-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--color-accent-secondary);
+      box-shadow: 0 0 8px rgba(45,212,191,0.7);
+      animation: gg-pulse 2s ease-in-out infinite;
+    }
+    @keyframes gg-pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+    .gg-exp-label {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      color: rgba(152,152,176,0.6);
+    }
+
+    .gg-overlay-br {
+      position: absolute;
+      bottom: var(--space-5);
+      right: var(--space-5);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: var(--space-3);
+    }
+
+    /* Theme picker */
+    .gg-theme-picker {
+      display: flex;
+      gap: 6px;
+    }
+    .gg-theme-btn {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.15);
+      cursor: pointer;
+      padding: 0;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .gg-theme-btn:hover  { transform: scale(1.35); border-color: rgba(255,255,255,0.45); }
+    .gg-theme-btn.active { border-color: rgba(255,255,255,0.85); transform: scale(1.2); }
+    .gg-theme-btn[data-theme="0"] { background: #6C63FF; }
+    .gg-theme-btn[data-theme="1"] { background: #FF6010; }
+    .gg-theme-btn[data-theme="2"] { background: #00E044; }
+    .gg-theme-btn[data-theme="3"] { background: #50B4FF; }
+    .gg-theme-btn[data-theme="4"] { background: #D232FF; }
+
+    /* Audio button */
+    .gg-mic-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 0.45rem 1rem;
+      border-radius: var(--radius-full);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.08em;
+      background: rgba(10,10,15,0.75);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(240,240,245,0.7);
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+      backdrop-filter: blur(8px);
+    }
+    .gg-mic-btn:hover {
+      border-color: var(--color-accent-secondary);
+      color: var(--color-accent-secondary);
+    }
+    .gg-mic-btn.active {
+      border-color: var(--color-accent-secondary);
+      color: var(--color-accent-secondary);
+      background: rgba(45,212,191,0.08);
+    }
+    .gg-mic-btn svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+    .gg-overlay-bl {
+      position: absolute;
+      bottom: var(--space-5);
+      left: var(--space-5);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.08em;
+      color: rgba(152,152,176,0.4);
+      pointer-events: none;
+      transition: opacity 0.5s;
+    }
+    .gg-overlay-bl.hidden { opacity: 0; }
+
+    /* ── INFO SECTION ─────────────────────────────────── */
+    .gg-info {
+      padding-block: var(--space-10) var(--space-20);
+      border-top: 1px solid var(--color-border);
+    }
+    .gg-info-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-12);
+      align-items: start;
+    }
+    @media (max-width: 720px) {
+      .gg-info-inner { grid-template-columns: 1fr; gap: var(--space-8); }
+    }
+    .gg-info-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+    .gg-info-num {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.12em;
+      color: var(--color-accent-primary);
+    }
+    .gg-info-num::before {
+      content: '';
+      display: inline-block;
+      width: 20px;
+      height: 1px;
+      background: currentColor;
+      margin-right: var(--space-2);
+      vertical-align: middle;
+    }
+    .gg-info h1 {
+      font-family: var(--font-heading);
+      font-size: clamp(1.75rem, 4vw, 2.75rem);
+      font-weight: 700;
+      line-height: var(--leading-tight);
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-5);
+    }
+    .gg-info p {
+      color: var(--color-text-secondary);
+      line-height: var(--leading-normal);
+      margin-bottom: var(--space-4);
+    }
+    .gg-info-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-top: var(--space-6);
+    }
+    .gg-controls-title {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-5);
+    }
+    .gg-control-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+    .gg-control {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-4);
+    }
+    .gg-control-key {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--radius-sm);
+      background: var(--color-bg-elevated);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-secondary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .gg-control-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: var(--leading-snug);
+    }
+
+    /* ── FOOTER ───────────────────────────────────────── */
+    .gg-footer {
+      border-top: 1px solid var(--color-border);
+      padding-block: var(--space-8);
+    }
+    .gg-footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+    }
+    .gg-footer-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-muted);
+      text-decoration: none;
+    }
+    .gg-footer-logo img { height: 22px; width: auto; }
+    .gg-footer-copy {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ──────────────────────────────────────────── -->
+<nav class="gg-nav">
+  <div class="container">
+    <div class="gg-nav-inner">
+      <a href="../../" class="gg-nav-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <div class="gg-nav-right">
+        <a href="../" class="gg-back">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <path d="M8 1L3 6l5 5"/>
+          </svg>
+          Experiments
+        </a>
+        <a href="../../#contact" class="btn btn-outline">Let's Talk</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ── DEMO ─────────────────────────────────────────── -->
+<div class="gg-demo" id="gg-wrap">
+  <canvas id="gg-canvas" aria-label="Audio-reactive generative geometry mesh"></canvas>
+
+  <!-- Top-left label -->
+  <div class="gg-overlay-tl">
+    <div class="gg-live-dot"></div>
+    <span class="gg-exp-label">02 / generative_geometry</span>
+  </div>
+
+  <!-- Bottom-left hint -->
+  <div class="gg-overlay-bl" id="gg-hint">click to fracture</div>
+
+  <!-- Bottom-right: mic + theme -->
+  <div class="gg-overlay-br">
+    <button class="gg-mic-btn" id="gg-mic-btn" title="Enable microphone input">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="1" width="6" height="9" rx="3"/>
+        <path d="M2 8a6 6 0 0 0 12 0"/>
+        <line x1="8" y1="14" x2="8" y2="16"/>
+        <line x1="5" y1="16" x2="11" y2="16"/>
+      </svg>
+      <span id="gg-mic-label">Enable mic</span>
+    </button>
+    <div class="gg-theme-picker">
+      <button class="gg-theme-btn active" data-theme="0" title="Nebula"></button>
+      <button class="gg-theme-btn"        data-theme="1" title="Fire"></button>
+      <button class="gg-theme-btn"        data-theme="2" title="Matrix"></button>
+      <button class="gg-theme-btn"        data-theme="3" title="Ice"></button>
+      <button class="gg-theme-btn"        data-theme="4" title="Void"></button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── INFO ─────────────────────────────────────────── -->
+<section class="gg-info">
+  <div class="container">
+    <div class="gg-info-inner">
+
+      <div>
+        <div class="gg-info-meta">
+          <span class="gg-info-num">02</span>
+          <span class="tag tag-teal">LIVE</span>
+        </div>
+        <h1>Generative Geometry</h1>
+        <p>A triangulated spring mesh that breathes with simulated audio and reacts to microphone input in real time. Every vertex is physically simulated — spring force, damping, and velocity all computed per frame on the CPU.</p>
+        <p>Bass frequencies pulse the center outward. Mids ripple through the middle ring. High frequencies shimmer across the edges. Click or tap the canvas to fracture the mesh and watch it reassemble through spring physics.</p>
+        <div class="gg-info-tags">
+          <span class="tag">Canvas 2D</span>
+          <span class="tag">Spring Physics</span>
+          <span class="tag">Web Audio API</span>
+          <span class="tag">FFT Analysis</span>
+          <span class="tag">Triangulated Mesh</span>
+          <span class="tag">Mouse Interaction</span>
+        </div>
+      </div>
+
+      <div>
+        <p class="gg-controls-title">// controls</p>
+        <div class="gg-control-list">
+          <div class="gg-control">
+            <span class="gg-control-key">click / tap</span>
+            <span class="gg-control-desc">Fracture — scatter all vertices with a radial impulse, then let spring physics reassemble them</span>
+          </div>
+          <div class="gg-control">
+            <span class="gg-control-key">hover</span>
+            <span class="gg-control-desc">Mouse repels nearby vertices with a distance-falloff force</span>
+          </div>
+          <div class="gg-control">
+            <span class="gg-control-key">mic button</span>
+            <span class="gg-control-desc">Route live microphone audio through the Web Audio FFT. Bass beats trigger automatic fractures</span>
+          </div>
+          <div class="gg-control">
+            <span class="gg-control-key">theme dots</span>
+            <span class="gg-control-desc">Switch between 5 color palettes. Compressed edges use the cool end; stretched edges use the hot end</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ── FOOTER ────────────────────────────────────────── -->
+<footer class="gg-footer">
+  <div class="container">
+    <div class="gg-footer-inner">
+      <a href="../../" class="gg-footer-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <a href="../" class="gg-back">← All experiments</a>
+      <span class="gg-footer-copy">&copy; <span id="footer-year"></span> Hexagon Misfit</span>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ══════════════════════════════════════════════════
+  GENERATIVE GEOMETRY ENGINE
+══════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ── CONFIG ───────────────────────────────────────── */
+  const CFG = {
+    CELL:        55,    // px between vertices at rest
+    SPRING:      0.038, // spring constant pulling vertices to base
+    DAMPING:     0.87,  // velocity damping per frame
+    MOUSE_R:     110,   // mouse repulsion radius (px)
+    MOUSE_F:     3.2,   // mouse repulsion force
+    FRAC_MIN:    40,    // fracture impulse min (px/frame)
+    FRAC_MAX:    110,   // fracture impulse max
+    FRAC_CD:     800,   // fracture cooldown (ms)
+    BASS_THRESH: 0.82,  // auto-fracture on bass peak above this
+    GLOW_BLUR:   12,
+    EDGE_BUCKETS: 12,   // color batches for edge rendering
+  };
+
+  /* ── THEMES ───────────────────────────────────────── */
+  const THEMES = [
+    { name:'Nebula', glow:'rgba(108,99,255,0.6)',
+      stops:[{t:1,r:230,g:220,b:255},{t:.7,r:108,g:99,b:255},{t:.3,r:45,g:212,b:191},{t:0,r:20,g:20,b:50}] },
+    { name:'Fire',   glow:'rgba(255,100,10,0.6)',
+      stops:[{t:1,r:255,g:255,b:200},{t:.7,r:255,g:150,b:10},{t:.3,r:200,g:30,b:0},{t:0,r:35,g:5,b:0}] },
+    { name:'Matrix', glow:'rgba(0,220,60,0.55)',
+      stops:[{t:1,r:210,g:255,b:210},{t:.6,r:0,g:255,b:70},{t:.2,r:0,g:130,b:30},{t:0,r:0,g:25,b:5}] },
+    { name:'Ice',    glow:'rgba(60,160,255,0.55)',
+      stops:[{t:1,r:220,g:240,b:255},{t:.6,r:80,g:180,b:255},{t:.2,r:20,g:80,b:200},{t:0,r:5,g:10,b:45}] },
+    { name:'Void',   glow:'rgba(210,50,255,0.55)',
+      stops:[{t:1,r:255,g:230,b:255},{t:.7,r:210,g:50,b:255},{t:.3,r:80,g:20,b:160},{t:0,r:10,g:5,b:28}] },
+  ];
+  let activeTheme = 0;
+
+  function lerpColor(stops, t) {
+    let lo = stops[stops.length - 1], hi = stops[0];
+    for (let i = 0; i < stops.length - 1; i++) {
+      if (t >= stops[i+1].t && t <= stops[i].t) { hi = stops[i]; lo = stops[i+1]; break; }
+    }
+    const f = (t - lo.t) / (hi.t - lo.t || 1);
+    return {
+      r: Math.round(lo.r + (hi.r - lo.r) * f),
+      g: Math.round(lo.g + (hi.g - lo.g) * f),
+      b: Math.round(lo.b + (hi.b - lo.b) * f),
+    };
+  }
+
+  /* ── CANVAS SETUP ─────────────────────────────────── */
+  const wrap   = document.getElementById('gg-wrap');
+  const canvas = document.getElementById('gg-canvas');
+  const ctx    = canvas.getContext('2d');
+
+  let W = 0, H = 0, dpr = 1;
+
+  /* ── MESH STATE ───────────────────────────────────── */
+  let verts = [];   // { bx,by,x,y,vx,vy }
+  let tris  = [];   // [[i,j,k], ...]
+  let edges = [];   // { a,b,rest }
+  let COLS  = 0;
+
+  function buildMesh() {
+    W = wrap.clientWidth;
+    H = wrap.clientHeight;
+
+    const cols = Math.ceil(W / CFG.CELL) + 2;
+    const rows = Math.ceil(H / CFG.CELL) + 2;
+    COLS = cols;
+
+    const ox = (W - (cols - 1) * CFG.CELL) / 2;
+    const oy = (H - (rows - 1) * CFG.CELL) / 2;
+
+    verts = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const bx = ox + c * CFG.CELL;
+        const by = oy + r * CFG.CELL;
+        verts.push({ bx, by, x: bx, y: by, vx: 0, vy: 0 });
+      }
+    }
+
+    tris = [];
+    for (let r = 0; r < rows - 1; r++) {
+      for (let c = 0; c < cols - 1; c++) {
+        const tl = r * cols + c;
+        const tr = r * cols + c + 1;
+        const bl = (r + 1) * cols + c;
+        const br = (r + 1) * cols + c + 1;
+        /* Alternate diagonal for a non-uniform look */
+        if ((r + c) % 2 === 0) {
+          tris.push([tl, tr, br]);
+          tris.push([tl, br, bl]);
+        } else {
+          tris.push([tl, tr, bl]);
+          tris.push([tr, br, bl]);
+        }
+      }
+    }
+
+    /* Build unique edge list */
+    const edgeMap = new Map();
+    const addEdge = (a, b) => {
+      const key = a < b ? a * 65536 + b : b * 65536 + a;
+      if (!edgeMap.has(key)) {
+        const dx = verts[b].bx - verts[a].bx;
+        const dy = verts[b].by - verts[a].by;
+        edgeMap.set(key, { a, b, rest: Math.hypot(dx, dy) });
+      }
+    };
+    tris.forEach(([i, j, k]) => { addEdge(i, j); addEdge(j, k); addEdge(k, i); });
+    edges = [...edgeMap.values()];
+  }
+
+  /* ── CANVAS RESIZE ────────────────────────────────── */
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+    W   = wrap.clientWidth;
+    H   = wrap.clientHeight;
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    buildMesh();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  /* ── AUDIO ────────────────────────────────────────── */
+  let analyser  = null;
+  let freqBins  = null;
+  let audioOn   = false;
+  let simPhase  = 0;
+  let prevBass  = 0;
+
+  async function enableMic() {
+    const btn   = document.getElementById('gg-mic-btn');
+    const label = document.getElementById('gg-mic-label');
+    if (audioOn) return;
+    try {
+      const stream   = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const source   = audioCtx.createMediaStreamSource(stream);
+      analyser       = audioCtx.createAnalyser();
+      analyser.fftSize = 64;
+      analyser.smoothingTimeConstant = 0.75;
+      freqBins = new Uint8Array(analyser.frequencyBinCount);
+      source.connect(analyser);
+      audioOn = true;
+      btn.classList.add('active');
+      label.textContent = 'Mic active';
+    } catch (e) {
+      label.textContent = 'Mic denied';
+      setTimeout(() => { label.textContent = 'Enable mic'; }, 2500);
+    }
+  }
+
+  document.getElementById('gg-mic-btn').addEventListener('click', enableMic);
+
+  function getFreq() {
+    /* Returns a Float32Array of 0–1 normalized frequency amplitudes */
+    if (audioOn && analyser) {
+      analyser.getByteFrequencyData(freqBins);
+      const out = new Float32Array(freqBins.length);
+      for (let i = 0; i < freqBins.length; i++) out[i] = freqBins[i] / 255;
+      return out;
+    }
+    /* Simulated audio — bass beats, mid oscillations, high shimmer */
+    simPhase += 0.016;
+    const N    = 32;
+    const data = new Float32Array(N);
+    const beat = Math.max(0, Math.pow(Math.sin(simPhase * 1.9), 10)) * 0.9;
+    const sway = 0.4 + 0.35 * Math.sin(simPhase * 1.1);
+    for (let i = 0; i < N; i++) {
+      const f = i / (N - 1);
+      if (f < 0.12)      data[i] = sway * 0.7 + beat;
+      else if (f < 0.45) data[i] = 0.2 + 0.18 * Math.sin(simPhase * (2.2 + i * 0.25) + i * 0.8);
+      else               data[i] = 0.06 + 0.07 * Math.abs(Math.sin(simPhase * (3.5 + i * 0.4)));
+    }
+    return data;
+  }
+
+  /* ── MOUSE ────────────────────────────────────────── */
+  let mouseX = -1, mouseY = -1;
+  wrap.addEventListener('mousemove', (e) => {
+    const r = wrap.getBoundingClientRect();
+    mouseX = e.clientX - r.left;
+    mouseY = e.clientY - r.top;
+  });
+  wrap.addEventListener('mouseleave', () => { mouseX = -1; mouseY = -1; });
+  wrap.addEventListener('touchmove', (e) => {
+    const r = wrap.getBoundingClientRect();
+    mouseX = e.touches[0].clientX - r.left;
+    mouseY = e.touches[0].clientY - r.top;
+  }, { passive: true });
+
+  /* ── FRACTURE ─────────────────────────────────────── */
+  let lastFrac = 0;
+  function fracture(cx, cy) {
+    const now = performance.now();
+    if (now - lastFrac < CFG.FRAC_CD) return;
+    lastFrac = now;
+    verts.forEach(v => {
+      /* Radial impulse from fracture origin, weaker at distance */
+      const dx   = v.bx - (cx ?? W / 2);
+      const dy   = v.by - (cy ?? H / 2);
+      const dist = Math.hypot(dx, dy) || 1;
+      const mag  = CFG.FRAC_MIN + Math.random() * (CFG.FRAC_MAX - CFG.FRAC_MIN);
+      const fall = Math.max(0.3, 1 - dist / (Math.max(W, H) * 0.7));
+      const angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * 1.2;
+      v.vx += Math.cos(angle) * mag * fall;
+      v.vy += Math.sin(angle) * mag * fall;
+    });
+  }
+
+  wrap.addEventListener('click', (e) => {
+    const r = wrap.getBoundingClientRect();
+    fracture(e.clientX - r.left, e.clientY - r.top);
+  });
+  wrap.addEventListener('touchstart', (e) => {
+    const r = wrap.getBoundingClientRect();
+    fracture(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
+  }, { passive: true });
+
+  /* ── PHYSICS ──────────────────────────────────────── */
+  function stepPhysics(freq) {
+    const cx    = W / 2;
+    const cy    = H / 2;
+    const maxD  = Math.hypot(cx, cy);
+    const bands = freq.length;
+
+    /* Auto-fracture on strong bass beat */
+    const bass = freq[0];
+    if (bass > CFG.BASS_THRESH && prevBass <= CFG.BASS_THRESH) fracture(cx, cy);
+    prevBass = bass;
+
+    for (let i = 0; i < verts.length; i++) {
+      const v = verts[i];
+
+      /* Map vertex to a frequency band by its distance from center */
+      const distNorm = Math.hypot(v.bx - cx, v.by - cy) / maxD; // 0=center, 1=corner
+      const band     = Math.min(bands - 1, Math.floor(distNorm * bands));
+      const amp      = freq[band];
+
+      /* Outward force from center, scaled by frequency amplitude */
+      const dx = v.bx - cx, dy = v.by - cy;
+      const d  = Math.hypot(dx, dy) || 1;
+      v.vx += (dx / d) * amp * 0.55;
+      v.vy += (dy / d) * amp * 0.55;
+
+      /* Spring toward rest position */
+      v.vx += (v.bx - v.x) * CFG.SPRING;
+      v.vy += (v.by - v.y) * CFG.SPRING;
+
+      /* Damping */
+      v.vx *= CFG.DAMPING;
+      v.vy *= CFG.DAMPING;
+
+      /* Velocity cap — prevents extreme stretch that tanks render performance */
+      if (v.vx > 60) v.vx = 60; else if (v.vx < -60) v.vx = -60;
+      if (v.vy > 60) v.vy = 60; else if (v.vy < -60) v.vy = -60;
+
+      /* Mouse repulsion */
+      if (mouseX >= 0) {
+        const mdx = v.x - mouseX;
+        const mdy = v.y - mouseY;
+        const md  = Math.hypot(mdx, mdy);
+        if (md < CFG.MOUSE_R && md > 0.5) {
+          const f = CFG.MOUSE_F * Math.pow(1 - md / CFG.MOUSE_R, 2);
+          v.vx += (mdx / md) * f;
+          v.vy += (mdy / md) * f;
+        }
+      }
+
+      v.x += v.vx;
+      v.y += v.vy;
+    }
+  }
+
+  /* ── RENDER ───────────────────────────────────────── */
+  /* Edge batching: group edges into N color buckets to minimize strokeStyle changes */
+  const EB = CFG.EDGE_BUCKETS;
+  const edgeBuckets = Array.from({ length: EB }, () => ({ paths: [], alpha: 0, count: 0 }));
+
+  /* Triangle batching: 4 alpha buckets, each drawn as one compound fill path */
+  const TB = 4;
+  const triBuckets = Array.from({ length: TB }, () => []);
+
+  /* Vertex batching: 4 color buckets × 2 radius passes (halo + core) */
+  const VB = 4;
+  const vertHalo = Array.from({ length: VB }, () => []);
+  const vertCore = Array.from({ length: VB }, () => []);
+
+  /* Pre-computed per-bucket colors rebuilt when theme changes */
+  let edgeColCache  = [];
+  let triColCache   = [];
+  let vertColCache  = [];
+
+  function rebuildColorCache() {
+    const stops = THEMES[activeTheme].stops;
+    edgeColCache = Array.from({ length: EB }, (_, b) => {
+      const h = (b + 0.5) / EB;
+      const c = lerpColor(stops, h);
+      return c;
+    });
+    triColCache = Array.from({ length: TB }, (_, b) => {
+      const h = (b + 0.5) / TB;
+      const c = lerpColor(stops, h);
+      return c;
+    });
+    vertColCache = Array.from({ length: VB }, (_, b) => {
+      const h = (b + 0.5) / VB;
+      const c = lerpColor(stops, h);
+      return c;
+    });
+  }
+  rebuildColorCache();
+
+  function render() {
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, W, H);
+
+    /* ── Triangle fills: batched into TB shared compound paths ── */
+    for (let b = 0; b < TB; b++) triBuckets[b].length = 0;
+
+    for (let t = 0; t < tris.length; t++) {
+      const [ai, bi, ci] = tris[t];
+      const va = verts[ai], vb = verts[bi], vc = verts[ci];
+      const avgD = (Math.hypot(va.x-va.bx, va.y-va.by) +
+                    Math.hypot(vb.x-vb.bx, vb.y-vb.by) +
+                    Math.hypot(vc.x-vc.bx, vc.y-vc.by)) / 3;
+      const tn = Math.min(1, avgD / 45);
+      if (tn < 0.04) continue;
+      const bkt = Math.min(TB - 1, (tn * TB) | 0);
+      triBuckets[bkt].push(va.x, va.y, vb.x, vb.y, vc.x, vc.y);
+    }
+
+    for (let b = 0; b < TB; b++) {
+      const pts = triBuckets[b];
+      if (!pts.length) continue;
+      const tn  = (b + 0.5) / TB;
+      const col = triColCache[b];
+      ctx.fillStyle = `rgba(${col.r},${col.g},${col.b},${(0.012 + tn * 0.04).toFixed(3)})`;
+      ctx.beginPath();
+      for (let i = 0; i < pts.length; i += 6) {
+        ctx.moveTo(pts[i],     pts[i+1]);
+        ctx.lineTo(pts[i+2],   pts[i+3]);
+        ctx.lineTo(pts[i+4],   pts[i+5]);
+        ctx.closePath();
+      }
+      ctx.fill();
+    }
+
+    /* ── Edges: batch by stretch bucket ──────────────── */
+    for (let b = 0; b < EB; b++) {
+      edgeBuckets[b].paths.length = 0;
+      edgeBuckets[b].alpha = 0;
+      edgeBuckets[b].count = 0;
+    }
+
+    for (let e = 0; e < edges.length; e++) {
+      const { a, b, rest } = edges[e];
+      const va = verts[a], vb = verts[b];
+      const len     = Math.hypot(vb.x - va.x, vb.y - va.y);
+      const stretch = (len - rest) / rest;
+      const hue     = Math.max(0, Math.min(1, stretch * 2.5 + 0.5));
+      const alpha   = Math.min(0.85, 0.08 + Math.abs(stretch) * 1.1); // capped
+      if (alpha < 0.07) continue;
+      const bi = Math.min(EB - 1, (hue * EB) | 0);
+      edgeBuckets[bi].paths.push(va.x, va.y, vb.x, vb.y);
+      edgeBuckets[bi].alpha += alpha;
+      edgeBuckets[bi].count++;
+    }
+
+    /* Draw each bucket — hot buckets get a fake glow via two-pass stroke:
+       pass 1 = wide + dim (halo), pass 2 = thin + bright (core).
+       Zero shadowBlur calls — same visual result, fraction of the cost. */
+    const hotThresh = EB * 0.6 | 0;
+    for (let b = 0; b < EB; b++) {
+      const bkt = edgeBuckets[b];
+      if (bkt.count === 0) continue;
+
+      const hue   = (b + 0.5) / EB;
+      const col   = edgeColCache[b];
+      const alpha = Math.min(0.92, bkt.alpha / bkt.count);
+      const p     = bkt.paths;
+
+      /* Build the path once, stroke twice for hot buckets */
+      ctx.beginPath();
+      for (let i = 0; i < p.length; i += 4) {
+        ctx.moveTo(p[i], p[i+1]);
+        ctx.lineTo(p[i+2], p[i+3]);
+      }
+
+      if (b >= hotThresh) {
+        /* Halo pass: wide, very dim */
+        const glowW = 1 + (b - hotThresh) * 1.8;
+        ctx.lineWidth   = 0.75 + hue * 0.75 + glowW;
+        ctx.strokeStyle = `rgba(${col.r},${col.g},${col.b},${(alpha * 0.12).toFixed(3)})`;
+        ctx.stroke();
+      }
+      /* Core pass */
+      ctx.lineWidth   = 0.75 + hue * 0.75;
+      ctx.strokeStyle = `rgba(${col.r},${col.g},${col.b},${alpha.toFixed(3)})`;
+      ctx.stroke();
+    }
+
+    /* ── Vertices: batched 2-pass halo+core, no shadowBlur ── */
+    for (let b = 0; b < VB; b++) { vertHalo[b].length = 0; vertCore[b].length = 0; }
+
+    for (let i = 0; i < verts.length; i++) {
+      const v    = verts[i];
+      const disp = Math.hypot(v.x - v.bx, v.y - v.by);
+      if (disp < 8) continue;
+      const tn  = Math.min(1, disp / 55);
+      const bi  = Math.min(VB - 1, (tn * VB) | 0);
+      vertHalo[bi].push(v.x, v.y, 3 + tn * 7);   // x, y, haloRadius
+      vertCore[bi].push(v.x, v.y, 1 + tn * 2.5);  // x, y, coreRadius
+    }
+
+    for (let b = 0; b < VB; b++) {
+      const col = vertColCache[b];
+      const tn  = (b + 0.5) / VB;
+      /* Halo */
+      if (vertHalo[b].length) {
+        ctx.fillStyle = `rgba(${col.r},${col.g},${col.b},${(0.06 + tn * 0.06).toFixed(3)})`;
+        ctx.beginPath();
+        const h = vertHalo[b];
+        for (let i = 0; i < h.length; i += 3) ctx.arc(h[i], h[i+1], h[i+2], 0, 6.2832);
+        ctx.fill();
+      }
+      /* Core */
+      if (vertCore[b].length) {
+        ctx.fillStyle = `rgba(${col.r},${col.g},${col.b},${(0.45 + tn * 0.55).toFixed(3)})`;
+        ctx.beginPath();
+        const c = vertCore[b];
+        for (let i = 0; i < c.length; i += 3) ctx.arc(c[i], c[i+1], c[i+2], 0, 6.2832);
+        ctx.fill();
+      }
+    }
+  }
+
+  /* ── LOOP ─────────────────────────────────────────── */
+  function loop() {
+    requestAnimationFrame(loop);
+    const freq = getFreq();
+    stepPhysics(freq);
+    render();
+  }
+  loop();
+
+  /* ── THEME SWITCHER ───────────────────────────────── */
+  document.querySelectorAll('.gg-theme-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation(); // prevent fracture on theme click
+      activeTheme = parseInt(btn.dataset.theme, 10);
+      rebuildColorCache();
+      document.querySelectorAll('.gg-theme-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  /* ── FOOTER YEAR ──────────────────────────────────── */
+  const yr = document.getElementById('footer-year');
+  if (yr) yr.textContent = new Date().getFullYear();
+
+})();
+</script>
+
+</body>
+</html>
