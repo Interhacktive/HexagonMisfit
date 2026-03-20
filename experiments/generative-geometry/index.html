@@ -70,6 +70,16 @@
       overflow: hidden;
       cursor: crosshair;
     }
+    /* Prevent browser scroll/zoom hijacking touch on the canvas */
+    @media (pointer: coarse) {
+      .gg-demo { touch-action: none; }
+    }
+    /* Fullscreen: canvas fills the screen */
+    #gg-wrap:fullscreen,
+    #gg-wrap:-webkit-full-screen {
+      width: 100vw !important;
+      height: 100vh !important;
+    }
     #gg-canvas {
       display: block;
       width: 100%;
@@ -872,6 +882,43 @@
   /* ── FOOTER YEAR ──────────────────────────────────── */
   const yr = document.getElementById('footer-year');
   if (yr) yr.textContent = new Date().getFullYear();
+
+  /* ── MOBILE LANDSCAPE FULLSCREEN ──────────────────── */
+  const IS_MOBILE = (navigator.maxTouchPoints > 0 || 'ontouchstart' in window)
+                    && Math.min(screen.width, screen.height) < 900;
+
+  function inFS() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement);
+  }
+  function requestFS() {
+    if (inFS()) return;
+    const req = wrap.requestFullscreen || wrap.webkitRequestFullscreen;
+    if (req) req.call(wrap).catch(() => {});
+  }
+  function exitFS() {
+    if (!inFS()) return;
+    const ex = document.exitFullscreen || document.webkitExitFullscreen;
+    if (ex) ex.call(document).catch(() => {});
+  }
+  function checkOrientation() {
+    if (!IS_MOBILE) return;
+    if (window.innerWidth > window.innerHeight) requestFS();
+    else exitFS();
+  }
+
+  /* orientationchange dimensions settle after a short delay */
+  window.addEventListener('orientationchange', () => setTimeout(checkOrientation, 300));
+  window.addEventListener('resize', checkOrientation);
+
+  /* First tap in landscape triggers fullscreen (needed if auto-request needs gesture) */
+  wrap.addEventListener('touchstart', () => {
+    if (IS_MOBILE && window.innerWidth > window.innerHeight) requestFS();
+  }, { passive: true });
+
+  /* Prevent scroll/pull-to-refresh during drags on the canvas */
+  wrap.addEventListener('touchmove', (e) => {
+    if (IS_MOBILE) e.preventDefault();
+  }, { passive: false });
 
 })();
 </script>
