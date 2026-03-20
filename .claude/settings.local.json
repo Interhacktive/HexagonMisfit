@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:www.rojas.design)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(find /q/AI/HexagonMisfit/experiments -type f -name *)"
     ]
   }
 }

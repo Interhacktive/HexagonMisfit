@@ -426,14 +426,17 @@
   /* ── CONFIG ───────────────────────────────────────── */
   const CFG = {
     CELL:        55,    // px between vertices at rest
-    SPRING:      0.038, // spring constant pulling vertices to base
-    DAMPING:     0.87,  // velocity damping per frame
+    SPRING:      0.055, // spring constant pulling vertices to base
+    DAMPING:     0.84,  // velocity damping per frame
     MOUSE_R:     110,   // mouse repulsion radius (px)
-    MOUSE_F:     3.2,   // mouse repulsion force
-    FRAC_MIN:    40,    // fracture impulse min (px/frame)
-    FRAC_MAX:    110,   // fracture impulse max
-    FRAC_CD:     800,   // fracture cooldown (ms)
-    BASS_THRESH: 0.82,  // auto-fracture on bass peak above this
+    MOUSE_F:     2.5,   // mouse repulsion force
+    FRAC_MIN:    6,     // fracture impulse min (px/frame)
+    FRAC_MAX:    18,    // fracture impulse max
+    FRAC_CD:     2000,  // fracture cooldown (ms)
+    BASS_THRESH: 1.1,   // auto-fracture disabled (>1 never triggers)
+    AUDIO_FORCE: 0.07,  // frequency→velocity scale
+    VEL_CAP:     10,    // max velocity per axis per frame
+    DISP_CAP:    1.8,   // max displacement as multiple of CELL
     GLOW_BLUR:   12,
     EDGE_BUCKETS: 12,   // color batches for edge rendering
   };
@@ -547,11 +550,14 @@
   resize();
 
   /* ── AUDIO ────────────────────────────────────────── */
-  let analyser  = null;
-  let freqBins  = null;
-  let audioOn   = false;
-  let simPhase  = 0;
-  let prevBass  = 0;
+  let analyser    = null;
+  let freqBins    = null;
+  let audioOn     = false;
+  let simPhase    = 0;
+  let prevBass    = 0;
+  let smoothFreq  = null; // smoothed frequency buffer
+  let colorPhase  = 0;   // 0–1, drives hue cycling with volume
+  let dynMouseR   = CFG.MOUSE_R; // updated each physics step, read in render
 
   async function enableMic() {
     const btn   = document.getElementById('gg-mic-btn');
@@ -578,41 +584,51 @@
   document.getElementById('gg-mic-btn').addEventListener('click', enableMic);
 
   function getFreq() {
-    /* Returns a Float32Array of 0–1 normalized frequency amplitudes */
+    /* Returns a smoothed Float32Array of 0–1 normalized frequency amplitudes */
+    let raw;
     if (audioOn && analyser) {
       analyser.getByteFrequencyData(freqBins);
-      const out = new Float32Array(freqBins.length);
-      for (let i = 0; i < freqBins.length; i++) out[i] = freqBins[i] / 255;
-      return out;
+      raw = new Float32Array(freqBins.length);
+      for (let i = 0; i < freqBins.length; i++) raw[i] = freqBins[i] / 255;
+    } else {
+      /* Simulated audio — gentle undulation, soft bass throb */
+      simPhase += 0.012;
+      const N    = 32;
+      raw = new Float32Array(N);
+      const beat = Math.max(0, Math.pow(Math.sin(simPhase * 1.4), 14)) * 0.45;
+      const sway = 0.18 + 0.14 * Math.sin(simPhase * 0.9);
+      for (let i = 0; i < N; i++) {
+        const f = i / (N - 1);
+        if (f < 0.12)      raw[i] = sway + beat;
+        else if (f < 0.45) raw[i] = 0.1 + 0.09 * Math.sin(simPhase * (2.0 + i * 0.2) + i * 0.8);
+        else               raw[i] = 0.03 + 0.04 * Math.abs(Math.sin(simPhase * (3.0 + i * 0.3)));
+      }
     }
-    /* Simulated audio — bass beats, mid oscillations, high shimmer */
-    simPhase += 0.016;
-    const N    = 32;
-    const data = new Float32Array(N);
-    const beat = Math.max(0, Math.pow(Math.sin(simPhase * 1.9), 10)) * 0.9;
-    const sway = 0.4 + 0.35 * Math.sin(simPhase * 1.1);
-    for (let i = 0; i < N; i++) {
-      const f = i / (N - 1);
-      if (f < 0.12)      data[i] = sway * 0.7 + beat;
-      else if (f < 0.45) data[i] = 0.2 + 0.18 * Math.sin(simPhase * (2.2 + i * 0.25) + i * 0.8);
-      else               data[i] = 0.06 + 0.07 * Math.abs(Math.sin(simPhase * (3.5 + i * 0.4)));
+    /* Exponential smoothing — prevents sudden spikes from yanking verts */
+    if (!smoothFreq || smoothFreq.length !== raw.length) smoothFreq = new Float32Array(raw.length);
+    for (let i = 0; i < raw.length; i++) {
+      smoothFreq[i] = smoothFreq[i] * 0.82 + raw[i] * 0.18;
     }
-    return data;
+    return smoothFreq;
   }
 
   /* ── MOUSE ────────────────────────────────────────── */
-  let mouseX = -1, mouseY = -1;
+  let mouseX = -1, mouseY = -1, mouseDown = false;
   wrap.addEventListener('mousemove', (e) => {
     const r = wrap.getBoundingClientRect();
     mouseX = e.clientX - r.left;
     mouseY = e.clientY - r.top;
   });
-  wrap.addEventListener('mouseleave', () => { mouseX = -1; mouseY = -1; });
+  wrap.addEventListener('mousedown',  () => { mouseDown = true; });
+  wrap.addEventListener('mouseup',    () => { mouseDown = false; });
+  wrap.addEventListener('mouseleave', () => { mouseX = -1; mouseY = -1; mouseDown = false; });
   wrap.addEventListener('touchmove', (e) => {
     const r = wrap.getBoundingClientRect();
     mouseX = e.touches[0].clientX - r.left;
     mouseY = e.touches[0].clientY - r.top;
   }, { passive: true });
+  wrap.addEventListener('touchstart', () => { mouseDown = true;  }, { passive: true });
+  wrap.addEventListener('touchend',   () => { mouseDown = false; }, { passive: true });
 
   /* ── FRACTURE ─────────────────────────────────────── */
   let lastFrac = 0;
@@ -626,7 +642,7 @@
       const dy   = v.by - (cy ?? H / 2);
       const dist = Math.hypot(dx, dy) || 1;
       const mag  = CFG.FRAC_MIN + Math.random() * (CFG.FRAC_MAX - CFG.FRAC_MIN);
-      const fall = Math.max(0.3, 1 - dist / (Math.max(W, H) * 0.7));
+      const fall = Math.max(0, 1 - dist / 120);
       const angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * 1.2;
       v.vx += Math.cos(angle) * mag * fall;
       v.vy += Math.sin(angle) * mag * fall;
@@ -649,6 +665,14 @@
     const maxD  = Math.hypot(cx, cy);
     const bands = freq.length;
 
+    /* Dynamic mouse radius: audio volume shifts it, holding doubles the base */
+    const avgVol   = freq.reduce((s, v) => s + v, 0) / freq.length;
+    const baseR    = mouseDown ? CFG.MOUSE_R * 2 : CFG.MOUSE_R;
+    dynMouseR = baseR * (1 + avgVol * 2.5);
+
+    /* Advance color phase with volume — louder = faster cycling */
+    colorPhase = (colorPhase + avgVol * 0.02) % 1;
+
     /* Auto-fracture on strong bass beat */
     const bass = freq[0];
     if (bass > CFG.BASS_THRESH && prevBass <= CFG.BASS_THRESH) fracture(cx, cy);
@@ -665,8 +689,8 @@
       /* Outward force from center, scaled by frequency amplitude */
       const dx = v.bx - cx, dy = v.by - cy;
       const d  = Math.hypot(dx, dy) || 1;
-      v.vx += (dx / d) * amp * 0.55;
-      v.vy += (dy / d) * amp * 0.55;
+      v.vx += (dx / d) * amp * CFG.AUDIO_FORCE;
+      v.vy += (dy / d) * amp * CFG.AUDIO_FORCE;
 
       /* Spring toward rest position */
       v.vx += (v.bx - v.x) * CFG.SPRING;
@@ -676,24 +700,32 @@
       v.vx *= CFG.DAMPING;
       v.vy *= CFG.DAMPING;
 
-      /* Velocity cap — prevents extreme stretch that tanks render performance */
-      if (v.vx > 60) v.vx = 60; else if (v.vx < -60) v.vx = -60;
-      if (v.vy > 60) v.vy = 60; else if (v.vy < -60) v.vy = -60;
+      /* Velocity cap */
+      const vc = CFG.VEL_CAP;
+      if (v.vx > vc) v.vx = vc; else if (v.vx < -vc) v.vx = -vc;
+      if (v.vy > vc) v.vy = vc; else if (v.vy < -vc) v.vy = -vc;
 
-      /* Mouse repulsion */
+      /* Mouse repulsion — radius scales with audio volume and doubles when held */
       if (mouseX >= 0) {
         const mdx = v.x - mouseX;
         const mdy = v.y - mouseY;
         const md  = Math.hypot(mdx, mdy);
-        if (md < CFG.MOUSE_R && md > 0.5) {
-          const f = CFG.MOUSE_F * Math.pow(1 - md / CFG.MOUSE_R, 2);
-          v.vx += (mdx / md) * f;
-          v.vy += (mdy / md) * f;
+        if (md < dynMouseR && md > 0.5) {
+          const f = CFG.MOUSE_F * Math.pow(1 - md / dynMouseR, 2);
+          v.vx -= (mdx / md) * f;
+          v.vy -= (mdy / md) * f;
         }
       }
 
       v.x += v.vx;
       v.y += v.vy;
+
+      /* Displacement cap — hard clamp so verts can't fly off-screen */
+      const maxDisp = CFG.CELL * CFG.DISP_CAP;
+      if (v.x > v.bx + maxDisp) { v.x = v.bx + maxDisp; v.vx *= -0.3; }
+      if (v.x < v.bx - maxDisp) { v.x = v.bx - maxDisp; v.vx *= -0.3; }
+      if (v.y > v.by + maxDisp) { v.y = v.by + maxDisp; v.vy *= -0.3; }
+      if (v.y < v.by - maxDisp) { v.y = v.by - maxDisp; v.vy *= -0.3; }
     }
   }
 
@@ -701,6 +733,7 @@
   /* Edge batching: group edges into N color buckets to minimize strokeStyle changes */
   const EB = CFG.EDGE_BUCKETS;
   const edgeBuckets = Array.from({ length: EB }, () => ({ paths: [], alpha: 0, count: 0 }));
+  const hlEdges = []; // flat: ax,ay,bx,by,bucketIdx,proximity — edges near cursor
 
   /* Triangle batching: 4 alpha buckets, each drawn as one compound fill path */
   const TB = 4;
@@ -740,37 +773,6 @@
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, W, H);
 
-    /* ── Triangle fills: batched into TB shared compound paths ── */
-    for (let b = 0; b < TB; b++) triBuckets[b].length = 0;
-
-    for (let t = 0; t < tris.length; t++) {
-      const [ai, bi, ci] = tris[t];
-      const va = verts[ai], vb = verts[bi], vc = verts[ci];
-      const avgD = (Math.hypot(va.x-va.bx, va.y-va.by) +
-                    Math.hypot(vb.x-vb.bx, vb.y-vb.by) +
-                    Math.hypot(vc.x-vc.bx, vc.y-vc.by)) / 3;
-      const tn = Math.min(1, avgD / 45);
-      if (tn < 0.04) continue;
-      const bkt = Math.min(TB - 1, (tn * TB) | 0);
-      triBuckets[bkt].push(va.x, va.y, vb.x, vb.y, vc.x, vc.y);
-    }
-
-    for (let b = 0; b < TB; b++) {
-      const pts = triBuckets[b];
-      if (!pts.length) continue;
-      const tn  = (b + 0.5) / TB;
-      const col = triColCache[b];
-      ctx.fillStyle = `rgba(${col.r},${col.g},${col.b},${(0.012 + tn * 0.04).toFixed(3)})`;
-      ctx.beginPath();
-      for (let i = 0; i < pts.length; i += 6) {
-        ctx.moveTo(pts[i],     pts[i+1]);
-        ctx.lineTo(pts[i+2],   pts[i+3]);
-        ctx.lineTo(pts[i+4],   pts[i+5]);
-        ctx.closePath();
-      }
-      ctx.fill();
-    }
-
     /* ── Edges: batch by stretch bucket ──────────────── */
     for (let b = 0; b < EB; b++) {
       edgeBuckets[b].paths.length = 0;
@@ -784,12 +786,18 @@
       const len     = Math.hypot(vb.x - va.x, vb.y - va.y);
       const stretch = (len - rest) / rest;
       const hue     = Math.max(0, Math.min(1, stretch * 2.5 + 0.5));
-      const alpha   = Math.min(0.85, 0.08 + Math.abs(stretch) * 1.1); // capped
-      if (alpha < 0.07) continue;
+      const alpha   = Math.min(1.0, 0.04 + Math.abs(stretch) * 1.8); // capped
+      if (alpha < 0.03) continue;
       const bi = Math.min(EB - 1, (hue * EB) | 0);
       edgeBuckets[bi].paths.push(va.x, va.y, vb.x, vb.y);
       edgeBuckets[bi].alpha += alpha;
       edgeBuckets[bi].count++;
+      if (mouseX >= 0) {
+        const mx   = (va.x + vb.x) * 0.5;
+        const my   = (va.y + vb.y) * 0.5;
+        const prox = 1 - Math.min(1, Math.hypot(mx - mouseX, my - mouseY) / dynMouseR);
+        if (prox > 0) hlEdges.push(va.x, va.y, vb.x, vb.y, bi, prox);
+      }
     }
 
     /* Draw each bucket — hot buckets get a fake glow via two-pass stroke:
@@ -805,59 +813,40 @@
       const alpha = Math.min(0.92, bkt.alpha / bkt.count);
       const p     = bkt.paths;
 
-      /* Build the path once, stroke twice for hot buckets */
       ctx.beginPath();
       for (let i = 0; i < p.length; i += 4) {
         ctx.moveTo(p[i], p[i+1]);
         ctx.lineTo(p[i+2], p[i+3]);
       }
-
       if (b >= hotThresh) {
-        /* Halo pass: wide, very dim */
         const glowW = 1 + (b - hotThresh) * 1.8;
         ctx.lineWidth   = 0.75 + hue * 0.75 + glowW;
         ctx.strokeStyle = `rgba(${col.r},${col.g},${col.b},${(alpha * 0.12).toFixed(3)})`;
         ctx.stroke();
       }
-      /* Core pass */
       ctx.lineWidth   = 0.75 + hue * 0.75;
       ctx.strokeStyle = `rgba(${col.r},${col.g},${col.b},${alpha.toFixed(3)})`;
       ctx.stroke();
     }
 
-    /* ── Vertices: batched 2-pass halo+core, no shadowBlur ── */
-    for (let b = 0; b < VB; b++) { vertHalo[b].length = 0; vertCore[b].length = 0; }
-
-    for (let i = 0; i < verts.length; i++) {
-      const v    = verts[i];
-      const disp = Math.hypot(v.x - v.bx, v.y - v.by);
-      if (disp < 8) continue;
-      const tn  = Math.min(1, disp / 55);
-      const bi  = Math.min(VB - 1, (tn * VB) | 0);
-      vertHalo[bi].push(v.x, v.y, 3 + tn * 7);   // x, y, haloRadius
-      vertCore[bi].push(v.x, v.y, 1 + tn * 2.5);  // x, y, coreRadius
+    /* ── Proximity highlight: edges near cursor get a bright local glow ── */
+    if (mouseX >= 0 && hlEdges.length) {
+      for (let i = 0; i < hlEdges.length; i += 6) {
+        const col  = edgeColCache[hlEdges[i+4]];
+        const prox = hlEdges[i+5];
+        ctx.beginPath();
+        ctx.moveTo(hlEdges[i],   hlEdges[i+1]);
+        ctx.lineTo(hlEdges[i+2], hlEdges[i+3]);
+        ctx.lineWidth   = 3 + prox * 9;
+        ctx.strokeStyle = `rgba(${col.r},${col.g},${col.b},${(prox * 0.22).toFixed(3)})`;
+        ctx.stroke();
+        ctx.lineWidth   = 1 + prox * 1.5;
+        ctx.strokeStyle = `rgba(${col.r},${col.g},${col.b},${Math.min(1, prox * 1.8).toFixed(3)})`;
+        ctx.stroke();
+      }
+      hlEdges.length = 0;
     }
 
-    for (let b = 0; b < VB; b++) {
-      const col = vertColCache[b];
-      const tn  = (b + 0.5) / VB;
-      /* Halo */
-      if (vertHalo[b].length) {
-        ctx.fillStyle = `rgba(${col.r},${col.g},${col.b},${(0.06 + tn * 0.06).toFixed(3)})`;
-        ctx.beginPath();
-        const h = vertHalo[b];
-        for (let i = 0; i < h.length; i += 3) ctx.arc(h[i], h[i+1], h[i+2], 0, 6.2832);
-        ctx.fill();
-      }
-      /* Core */
-      if (vertCore[b].length) {
-        ctx.fillStyle = `rgba(${col.r},${col.g},${col.b},${(0.45 + tn * 0.55).toFixed(3)})`;
-        ctx.beginPath();
-        const c = vertCore[b];
-        for (let i = 0; i < c.length; i += 3) ctx.arc(c[i], c[i+1], c[i+2], 0, 6.2832);
-        ctx.fill();
-      }
-    }
   }
 
   /* ── LOOP ─────────────────────────────────────────── */
