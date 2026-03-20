@@ -31,6 +31,14 @@
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
+@keyframes ringImgReveal {
+  from { opacity: 0; transform: scale(1.04); }
+  to   { opacity: 0.38; transform: scale(1); }
+}
+@keyframes shimmerWave {
+  0%   { transform: translateX(-35%); }
+  100% { transform: translateX(35%); }
+}
 
 /* ─── Scroll-reveal base states ───────────────────── */
 [data-animate] {
