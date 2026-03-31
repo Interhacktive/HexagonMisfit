@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mariposa Chandelier — Hexagon Misfit</title>
+  <meta name="description" content="120 individually handbuilt lamps suspended in a 4-story Portland atrium — a permanently installed narrative light artwork with spatial audio and elevator interactivity." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/reset.css" />
+  <link rel="stylesheet" href="../css/tokens.css" />
+  <link rel="stylesheet" href="../css/layout.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/animations.css" />
+  <style>
+
+    /* ── NAV ───────────────────────────────────────── */
+    .cs-nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      padding-block: var(--space-5);
+      background: rgba(10, 10, 15, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--color-border);
+      transition: background 0.3s;
+    }
+    .cs-nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .cs-nav-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      text-decoration: none;
+    }
+    .cs-nav-logo img { height: 28px; width: auto; }
+    .cs-nav-right {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+    }
+    .cs-back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .cs-back-link:hover { color: var(--color-text-primary); }
+    .cs-back-link svg { width: 14px; height: 14px; }
+
+    /* ── HERO ──────────────────────────────────────── */
+    .cs-hero {
+      position: relative;
+      height: 100svh;
+      min-height: 600px;
+      max-height: 900px;
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
+    }
+    .cs-hero-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 40%;
+      transform: scale(1.04);
+      animation: heroReveal 1.8s var(--ease-out) forwards;
+    }
+    @keyframes heroReveal {
+      from { transform: scale(1.08); opacity: 0.6; }
+      to   { transform: scale(1.04); opacity: 1; }
+    }
+    .cs-hero-overlay {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to top, rgba(10,10,15,1) 0%, rgba(10,10,15,0.55) 40%, rgba(10,10,15,0.2) 100%),
+        linear-gradient(to right, rgba(10,10,15,0.4) 0%, transparent 60%);
+    }
+    .cs-hero-content {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      padding-bottom: var(--space-16);
+    }
+    .cs-hero-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-accent-secondary);
+      background: rgba(45,212,191,0.08);
+      border: 1px solid rgba(45,212,191,0.25);
+      border-radius: var(--radius-full);
+      padding: var(--space-2) var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+    .cs-hero-chip::before {
+      content: '';
+      display: block;
+      width: 6px;
+      height: 6px;
+      background: var(--color-accent-secondary);
+      border-radius: 50%;
+      animation: pulse 2s ease infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.75); }
+    }
+    .cs-hero-title {
+      font-family: var(--font-heading);
+      font-size: clamp(2.5rem, 7vw, 5.5rem);
+      font-weight: 700;
+      line-height: 1.0;
+      color: var(--color-text-primary);
+      max-width: 16ch;
+      margin-bottom: var(--space-6);
+    }
+    .cs-hero-tagline {
+      font-size: clamp(1rem, 1.8vw, 1.25rem);
+      color: rgba(240,240,245,0.65);
+      line-height: 1.55;
+      max-width: 48ch;
+      margin-bottom: var(--space-8);
+    }
+    .cs-hero-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+    }
+    .cs-hero-scroll {
+      position: absolute;
+      bottom: var(--space-8);
+      right: var(--space-8);
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+    .cs-hero-scroll-line {
+      width: 1px;
+      height: 40px;
+      background: linear-gradient(to bottom, var(--color-border-accent), transparent);
+      animation: scrollLine 2s ease infinite;
+    }
+    @keyframes scrollLine {
+      0%, 100% { opacity: 0.4; transform: scaleY(0.5) translateY(-20%); }
+      50%       { opacity: 1; transform: scaleY(1) translateY(0); }
+    }
+
+    /* ── FACTS BAR ─────────────────────────────────── */
+    .cs-facts-bar {
+      background: var(--color-bg-card);
+      border-bottom: 1px solid var(--color-border);
+      border-top: 1px solid var(--color-border-accent);
+      padding-block: var(--space-6);
+    }
+    .cs-facts-grid {
+      display: flex;
+      align-items: stretch;
+      flex-wrap: wrap;
+      gap: 0;
+    }
+    .cs-fact {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding-inline: var(--space-8);
+      border-right: 1px solid var(--color-border);
+      min-width: 140px;
+    }
+    .cs-fact:first-child { padding-left: 0; }
+    .cs-fact:last-child  { border-right: none; }
+    .cs-fact-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+    .cs-fact-value {
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    /* ── SHARED SECTION STYLES ─────────────────────── */
+    .cs-section { padding-block: var(--space-20); }
+    .cs-section + .cs-section { padding-top: 0; }
+
+    .cs-label {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-accent-secondary);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-5);
+    }
+    .cs-label::before {
+      content: '';
+      display: block;
+      width: 20px;
+      height: 1px;
+      background: var(--color-accent-secondary);
+      flex-shrink: 0;
+    }
+    .cs-h2 {
+      font-family: var(--font-heading);
+      font-size: clamp(1.75rem, 3.5vw, 2.75rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-6);
+    }
+    .cs-body-text {
+      font-size: var(--text-base);
+      color: var(--color-text-secondary);
+      line-height: 1.75;
+      max-width: 62ch;
+    }
+    .cs-body-text + .cs-body-text { margin-top: var(--space-5); }
+
+    /* ── OVERVIEW ──────────────────────────────────── */
+    .cs-overview {
+      padding-block: var(--space-20);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .cs-overview-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: var(--space-16);
+      align-items: start;
+    }
+    .cs-overview-quote {
+      font-family: var(--font-heading);
+      font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+      font-weight: 500;
+      line-height: 1.4;
+      color: var(--color-text-primary);
+      border-left: 3px solid var(--color-accent-primary);
+      padding-left: var(--space-6);
+      margin-bottom: var(--space-8);
+    }
+    .cs-overview-sidebar {
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border-accent);
+      border-radius: var(--radius-xl);
+      padding: var(--space-8);
+      box-shadow: 0 0 40px rgba(108,99,255,0.08);
+    }
+    .cs-overview-sidebar-title {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-5);
+    }
+    .cs-scope-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      list-style: none;
+    }
+    .cs-scope-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+    }
+    .cs-scope-list li::before {
+      content: '';
+      display: block;
+      width: 5px;
+      height: 5px;
+      background: var(--color-accent-primary);
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 7px;
+    }
+
+    /* ── CHALLENGE ─────────────────────────────────── */
+    .cs-challenge {
+      padding-block: var(--space-20);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .cs-challenge-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-16);
+      align-items: start;
+    }
+
+    /* ── APPROACH ──────────────────────────────────── */
+    .cs-approach {
+      padding-block: var(--space-20);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .cs-steps {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-8);
+      margin-top: var(--space-12);
+    }
+    .cs-step {
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-8);
+      position: relative;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .cs-step:hover {
+      border-color: var(--color-border-accent);
+      box-shadow: 0 0 30px rgba(108,99,255,0.08);
+    }
+    .cs-step-num {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      color: var(--color-accent-primary);
+      margin-bottom: var(--space-4);
+    }
+    .cs-step-title {
+      font-family: var(--font-heading);
+      font-size: var(--text-base);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-3);
+    }
+    .cs-step-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: 1.65;
+    }
+
+    /* ── GALLERY ───────────────────────────────────── */
+    .cs-gallery {
+      padding-block: var(--space-20);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .cs-gallery-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      grid-template-rows: 300px 300px;
+      gap: var(--space-3);
+      margin-top: var(--space-10);
+    }
+    .cs-gallery-item {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      position: relative;
+    }
+    .cs-gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+      transition: transform 0.6s var(--ease-out);
+    }
+    .cs-gallery-item:hover img { transform: scale(1.04); }
+    .cs-gallery-item--span-col { grid-row: 1 / 3; }
+
+    /* ── OUTCOME ───────────────────────────────────── */
+    .cs-outcome {
+      padding-block: var(--space-20);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .cs-outcome-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-16);
+      align-items: start;
+    }
+    .cs-outcome-pull {
+      font-family: var(--font-heading);
+      font-size: clamp(1.25rem, 2.2vw, 1.6rem);
+      font-weight: 500;
+      line-height: 1.45;
+      color: var(--color-text-primary);
+      padding: var(--space-8);
+      background: linear-gradient(135deg, rgba(108,99,255,0.07), rgba(45,212,191,0.04));
+      border: 1px solid var(--color-border-accent);
+      border-radius: var(--radius-xl);
+      box-shadow: 0 0 40px rgba(108,99,255,0.07);
+    }
+
+    /* ── STATS ─────────────────────────────────────── */
+    .cs-stats {
+      padding-block: var(--space-20);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .cs-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-4);
+      margin-top: var(--space-12);
+    }
+    .cs-stat-card {
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-8);
+      text-align: center;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .cs-stat-card:hover {
+      border-color: var(--color-border-accent);
+      box-shadow: 0 0 40px rgba(108,99,255,0.1);
+    }
+    .cs-stat-value {
+      display: block;
+      font-family: var(--font-heading);
+      font-size: clamp(2.5rem, 5vw, 3.75rem);
+      font-weight: 700;
+      line-height: 1;
+      color: var(--color-accent-primary);
+      margin-bottom: var(--space-3);
+    }
+    .cs-stat-label {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      line-height: 1.5;
+    }
+    .cs-stat-note {
+      margin-top: var(--space-2);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+    }
+
+    /* ── CTA ───────────────────────────────────────── */
+    .cs-cta {
+      padding-block: var(--space-20);
+      text-align: center;
+    }
+    .cs-cta-inner {
+      max-width: 560px;
+      margin-inline: auto;
+    }
+    .cs-cta-eyebrow {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-accent-secondary);
+      margin-bottom: var(--space-4);
+    }
+    .cs-cta h2 {
+      font-family: var(--font-heading);
+      font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+      font-weight: 700;
+      line-height: 1.15;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-5);
+    }
+    .cs-cta p {
+      color: var(--color-text-secondary);
+      line-height: 1.65;
+      margin-bottom: var(--space-8);
+    }
+
+    /* ── FOOTER ────────────────────────────────────── */
+    .cs-footer {
+      border-top: 1px solid var(--color-border);
+      padding-block: var(--space-8);
+      text-align: center;
+      color: var(--color-text-muted);
+      font-size: var(--text-sm);
+    }
+    .cs-footer a { color: var(--color-accent-primary); text-decoration: none; }
+    .cs-footer a:hover { text-decoration: underline; }
+
+    /* ── RESPONSIVE ────────────────────────────────── */
+    @media (max-width: 900px) {
+      .cs-overview-grid,
+      .cs-challenge-grid,
+      .cs-outcome-grid { grid-template-columns: 1fr; }
+      .cs-steps { grid-template-columns: 1fr; }
+      .cs-stats-grid { grid-template-columns: 1fr 1fr; }
+      .cs-gallery-grid {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 200px 200px 200px;
+      }
+      .cs-gallery-item--span-col { grid-row: auto; }
+      .cs-fact { min-width: auto; }
+    }
+    @media (max-width: 580px) {
+      .cs-hero { max-height: 680px; }
+      .cs-stats-grid { grid-template-columns: 1fr; }
+      .cs-gallery-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
+      .cs-gallery-item { height: 220px; }
+      .cs-facts-grid { gap: var(--space-4); }
+      .cs-fact { border-right: none; padding-inline: 0; border-bottom: 1px solid var(--color-border); padding-bottom: var(--space-3); }
+      .cs-fact:last-child { border-bottom: none; }
+    }
+
+  </style>
+</head>
+<body style="background: var(--color-bg-primary);">
+
+<!-- ═══════════════════════════════════════════════
+  NAV
+══════════════════════════════════════════════════ -->
+<nav class="cs-nav" role="navigation" aria-label="Case study navigation">
+  <div class="container">
+    <div class="cs-nav-inner">
+      <a href="../" class="cs-nav-logo">
+        <img src="../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <div class="cs-nav-right">
+        <a href="../" class="cs-back-link">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 8H1M7 2L1 8l6 6"/></svg>
+          All Work
+        </a>
+        <a href="../#contact" class="btn btn-outline" style="font-size: var(--text-xs); padding: 0.5rem 1rem;">Let's Talk</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ═══════════════════════════════════════════════
+  HERO
+══════════════════════════════════════════════════ -->
+<section class="cs-hero" aria-label="Project hero">
+
+  <img
+    class="cs-hero-img"
+    src="../assets/images/mariposa/chandelier3.jpg"
+    alt="Mariposa Chandelier — 120-lamp LED installation in Portland atrium"
+  />
+  <div class="cs-hero-overlay" aria-hidden="true"></div>
+
+  <div class="cs-hero-content">
+    <div class="container">
+      <div class="cs-hero-chip" aria-label="Project type and year">
+        Permanent Installation &nbsp;·&nbsp; Portland, OR &nbsp;·&nbsp; 2021
+      </div>
+      <h1 class="cs-hero-title">Mariposa<br>Chandelier</h1>
+      <p class="cs-hero-tagline">
+        120 individually handbuilt lamps suspended across four stories of atrium — a living narrative of light, spatial audio, and quiet interactivity.
+      </p>
+      <div class="cs-hero-actions">
+        <a href="../#contact" class="btn btn-primary">Start a Similar Project</a>
+        <a href="#overview" class="btn btn-outline">Read the Story</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="cs-hero-scroll" aria-hidden="true">
+    <span>Scroll</span>
+    <div class="cs-hero-scroll-line"></div>
+  </div>
+
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  FACTS BAR
+══════════════════════════════════════════════════ -->
+<div class="cs-facts-bar">
+  <div class="container">
+    <div class="cs-facts-grid">
+      <div class="cs-fact">
+        <span class="cs-fact-label">Type</span>
+        <span class="cs-fact-value">Permanent Installation</span>
+      </div>
+      <div class="cs-fact">
+        <span class="cs-fact-label">Year</span>
+        <span class="cs-fact-value">2021</span>
+      </div>
+      <div class="cs-fact">
+        <span class="cs-fact-label">Location</span>
+        <span class="cs-fact-value">Portland, OR</span>
+      </div>
+      <div class="cs-fact">
+        <span class="cs-fact-label">Scale</span>
+        <span class="cs-fact-value">4-Story Atrium</span>
+      </div>
+      <div class="cs-fact">
+        <span class="cs-fact-label">Lamps</span>
+        <span class="cs-fact-value">120 handbuilt units</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+  OVERVIEW
+══════════════════════════════════════════════════ -->
+<section class="cs-overview" id="overview" aria-label="Project overview">
+  <div class="container">
+    <div class="cs-overview-grid">
+
+      <div>
+        <span class="cs-label">The Brief</span>
+        <blockquote class="cs-overview-quote">
+          "We want something that lives in the building — something people notice differently every time they pass through."
+        </blockquote>
+        <p class="cs-body-text">
+          Mariposa is a permanent public artwork occupying the full height of a four-story staircase atrium in Portland. The commission called for something that rewarded daily familiarity — a work that would reveal new details to a regular visitor after months, not just a first impression.
+        </p>
+        <p class="cs-body-text">
+          The installation is built around 120 custom lamps, each containing 13 individually addressable LEDs and 12 hand-cut acrylic light strands. Together they form a continuous narrative told in light — characters with moods, seasons, and behaviors that evolve through the day and across the year. Multi-channel spatial audio fills the stairwell, and the elevator triggers a unique sequence each time it arrives on the atrium floor.
+        </p>
+      </div>
+
+      <aside class="cs-overview-sidebar" aria-label="Project scope">
+        <p class="cs-overview-sidebar-title">Scope of Work</p>
+        <ul class="cs-scope-list">
+          <li>Custom lamp fabrication — 120 units</li>
+          <li>Unity lighting choreography system</li>
+          <li>Multi-channel spatial audio composition</li>
+          <li>Elevator interactivity integration</li>
+          <li>Structural rigging across 4-story void</li>
+          <li>Continuous unattended operation</li>
+        </ul>
+      </aside>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  THE CHALLENGE
+══════════════════════════════════════════════════ -->
+<section class="cs-challenge" aria-label="The challenge">
+  <div class="container">
+    <div class="cs-challenge-grid">
+
+      <div>
+        <span class="cs-label">The Challenge</span>
+        <h2 class="cs-h2">120 unique lamps, one unattended narrative, running continuously in a high-traffic public staircase.</h2>
+      </div>
+
+      <div>
+        <p class="cs-body-text">
+          The brief demanded an artwork that could run without intervention — no maintenance calls, no operator, no resets. Every lamp had to be robust enough to withstand years of continuous operation while remaining individually expressive within the choreography.
+        </p>
+        <p class="cs-body-text">
+          The four-story vertical span introduced structural complexity: rigging loads, cable management across floors, and the challenge of creating an experience that read coherently whether you were looking up from the ground floor or down from the fourth. The spatial audio system had to feel like it came from the chandelier itself, not from speakers mounted on walls.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  OUR APPROACH
+══════════════════════════════════════════════════ -->
+<section class="cs-approach" aria-label="Our approach">
+  <div class="container">
+    <span class="cs-label">Our Approach</span>
+    <h2 class="cs-h2">From character sketches to opening night — four phases.</h2>
+    <div class="cs-steps">
+
+      <div class="cs-step">
+        <p class="cs-step-num">01 — Narrative & Character Design</p>
+        <h3 class="cs-step-title">Stories Before Systems</h3>
+        <p class="cs-step-desc">Before any lamp was built, we developed the narrative — a cast of light characters with distinct personalities, moods, and relationships to one another. Each cluster of lamps was assigned a role within the larger story, so the choreography would feel authored rather than algorithmic.</p>
+      </div>
+
+      <div class="cs-step">
+        <p class="cs-step-num">02 — Lamp Fabrication</p>
+        <h3 class="cs-step-title">Handbuilt at ADX Portland</h3>
+        <p class="cs-step-desc">All 120 lamps were fabricated by hand at ADX Portland's makerspace. Each unit contains 13 individually addressable LEDs and 12 acrylic light strands, hand-cut and heat-formed. The fabrication process took months — every lamp is one-of-a-kind while fitting within the overall formal language of the piece.</p>
+      </div>
+
+      <div class="cs-step">
+        <p class="cs-step-num">03 — Unity Choreography</p>
+        <h3 class="cs-step-title">A Living Score</h3>
+        <p class="cs-step-desc">The lighting choreography was built in Unity as a time-layered system with daily, seasonal, and event-driven behaviors. The elevator trigger is handled as a discrete event that temporarily shifts the entire chandelier's state before gradually returning to its ambient narrative — a moment of acknowledgment every time someone arrives.</p>
+      </div>
+
+      <div class="cs-step">
+        <p class="cs-step-num">04 — Audio Tuning & Opening</p>
+        <h3 class="cs-step-title">Spatial Sound, Invisible Sources</h3>
+        <p class="cs-step-desc">Multi-channel audio was tuned on-site over several days before opening. The goal was for the sound to feel like it emanated from the lamps themselves — close-field, intimate, never obviously from a speaker. The opening night performance introduced the work to building residents and invited guests with a live-controlled show sequence.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  GALLERY
+══════════════════════════════════════════════════ -->
+<section class="cs-gallery" aria-label="Project gallery">
+  <div class="container">
+    <span class="cs-label">Gallery</span>
+    <h2 class="cs-h2">120 lamps. One voice.</h2>
+    <div class="cs-gallery-grid">
+
+      <div class="cs-gallery-item cs-gallery-item--span-col">
+        <img src="../assets/images/mariposa/chandelier3.jpg" alt="Mariposa Chandelier — full atrium view" loading="lazy" />
+      </div>
+
+      <div class="cs-gallery-item">
+        <img src="../assets/images/mariposa/chandelier4 copy.jpg" alt="Mariposa Chandelier — detail" loading="lazy" />
+      </div>
+
+      <div class="cs-gallery-item">
+        <img src="../assets/images/mariposa/Mariposa.png" alt="Mariposa — lamp cluster" loading="lazy" />
+      </div>
+
+      <div class="cs-gallery-item">
+        <img src="../assets/images/mariposa/Mariposa2.png" alt="Mariposa — atrium looking up" loading="lazy" />
+      </div>
+
+      <div class="cs-gallery-item">
+        <img src="../assets/images/mariposa/chandelier3.jpg" alt="Mariposa — ambient state" loading="lazy" style="object-position: center 60%;" />
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  OUTCOME
+══════════════════════════════════════════════════ -->
+<section class="cs-outcome" aria-label="Project outcome">
+  <div class="container">
+    <div class="cs-outcome-grid">
+
+      <div>
+        <span class="cs-label">The Outcome</span>
+        <h2 class="cs-h2">A permanent resident of the building — still running.</h2>
+        <p class="cs-body-text">
+          Mariposa has been in continuous operation since its 2021 installation. Residents report noticing changes in the chandelier's mood across seasons — different colors at different hours, moments of stillness that weren't there last week. That sense of discovery, spread over years of familiarity, is the work functioning exactly as intended.
+        </p>
+        <p class="cs-body-text">
+          The elevator interactivity remains one of the most noted details — small enough that first-time visitors miss it, meaningful enough that daily users look forward to it.
+        </p>
+      </div>
+
+      <blockquote class="cs-outcome-pull">
+        "The thing I keep noticing is how different it looks on a rainy afternoon versus a clear morning. It's like it knows."
+        <footer style="margin-top: var(--space-5); font-size: var(--text-sm); color: var(--color-text-muted);">— Building resident, Portland</footer>
+      </blockquote>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  STATS
+══════════════════════════════════════════════════ -->
+<section class="cs-stats" aria-label="Project statistics">
+  <div class="container">
+    <span class="cs-label">By the Numbers</span>
+    <div class="cs-stats-grid">
+
+      <div class="cs-stat-card">
+        <span class="cs-stat-value">120</span>
+        <span class="cs-stat-label">Handbuilt lamps</span>
+        <p class="cs-stat-note">Every one unique, every one identical in behavior interface</p>
+      </div>
+
+      <div class="cs-stat-card">
+        <span class="cs-stat-value">13</span>
+        <span class="cs-stat-label">Addressable LEDs per lamp</span>
+        <p class="cs-stat-note">Plus 12 hand-cut acrylic light strands</p>
+      </div>
+
+      <div class="cs-stat-card">
+        <span class="cs-stat-value">∞</span>
+        <span class="cs-stat-label">Continuous operation since install</span>
+        <p class="cs-stat-note">No unscheduled service calls in 3+ years</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  CTA
+══════════════════════════════════════════════════ -->
+<section class="cs-cta" aria-label="Call to action">
+  <div class="container">
+    <div class="cs-cta-inner">
+      <p class="cs-cta-eyebrow">// Next Project</p>
+      <h2>Have a space that needs something permanent?</h2>
+      <p>Permanent public installations are some of the most demanding and most rewarding work we do. Let's talk about what your space needs.</p>
+      <a href="../#contact" class="btn btn-primary">Start the Conversation</a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  FOOTER
+══════════════════════════════════════════════════ -->
+<footer class="cs-footer" role="contentinfo">
+  <div class="container">
+    <p>&copy; 2025 <a href="../">Hexagon Misfit</a>. All rights reserved.</p>
+  </div>
+</footer>
+
+</body>
+</html>

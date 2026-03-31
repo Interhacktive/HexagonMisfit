@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Webcam Physics Blob — Hexagon Misfit Experiments</title>
+  <meta name="description" content="Interactive physics sandbox using webcam blob tracking. Draw boundaries, detect dark objects, and watch balls interact with generated physics shapes." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../css/reset.css" />
+  <link rel="stylesheet" href="../../css/tokens.css" />
+  <link rel="stylesheet" href="../../css/layout.css" />
+  <link rel="stylesheet" href="../../css/components.css" />
+  <link rel="stylesheet" href="../../css/animations.css" />
+
+  <style>
+    /* ── NAV ─────────────────────────────────────────── */
+    .wpb-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding-block: var(--space-5);
+      background: rgba(10, 10, 15, 0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .wpb-nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .wpb-nav-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      text-decoration: none;
+    }
+    .wpb-nav-logo img { height: 28px; width: auto; }
+    .wpb-nav-right {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+    }
+    .wpb-back {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.08em;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .wpb-back:hover { color: var(--color-text-primary); }
+    .wpb-back svg { width: 12px; height: 12px; }
+
+    /* ── DEMO AREA ────────────────────────────────────── */
+    .wpb-demo {
+      position: relative;
+      width: 100%;
+      height: clamp(500px, 75vh, 800px);
+      background: #000;
+      overflow: hidden;
+    }
+    #wpb-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── START OVERLAY ────────────────────────────────── */
+    .wpb-start-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-5);
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+      transition: opacity 0.5s;
+    }
+    .wpb-start-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .wpb-start-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(240,240,245,0.5);
+    }
+    .wpb-start-icon svg { width: 32px; height: 32px; }
+    .wpb-start-title {
+      font-family: var(--font-heading);
+      font-size: var(--text-xl);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      text-align: center;
+    }
+    .wpb-start-sub {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      color: var(--color-text-muted);
+      text-align: center;
+      max-width: 40ch;
+    }
+    .wpb-start-btn {
+      margin-top: var(--space-2);
+      padding: 0.6rem 1.8rem;
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-text-primary);
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .wpb-start-btn:hover {
+      border-color: rgba(108,99,255,0.7);
+      background: rgba(108,99,255,0.12);
+    }
+    .wpb-error-msg {
+      display: none;
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.08em;
+      color: rgba(255, 80, 80, 0.8);
+      text-align: center;
+      max-width: 38ch;
+      line-height: 1.6;
+    }
+    .wpb-error-msg.visible { display: block; }
+
+    /* ── OVERLAYS ─────────────────────────────────────── */
+    .wpb-overlay-tl {
+      position: absolute;
+      top: var(--space-5);
+      left: var(--space-5);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      pointer-events: none;
+      z-index: 5;
+    }
+    .wpb-live-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--color-accent-secondary);
+      box-shadow: 0 0 8px rgba(45,212,191,0.7);
+      animation: wpb-pulse 2s ease-in-out infinite;
+    }
+    @keyframes wpb-pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+    .wpb-exp-label {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      color: rgba(152,152,176,0.6);
+    }
+
+    .wpb-overlay-br {
+      position: absolute;
+      bottom: var(--space-5);
+      right: var(--space-5);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: var(--space-3);
+      z-index: 5;
+    }
+
+    /* ── CONTROLS ─────────────────────────────────────── */
+    .wpb-controls {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      background: rgba(10,10,15,0.8);
+      padding: var(--space-4);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(255,255,255,0.15);
+      backdrop-filter: blur(8px);
+      width: 280px;
+    }
+    
+    .wpb-control-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+    
+    .wpb-control-title {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.08em;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+    }
+    
+    .wpb-btn {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.08em;
+      padding: 0.4rem 0.8rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.05);
+      color: var(--color-text-primary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .wpb-btn:hover {
+      border-color: rgba(108,99,255,0.6);
+      background: rgba(108,99,255,0.15);
+    }
+    
+    .wpb-btn.active {
+      border-color: rgba(45,212,191,0.8);
+      background: rgba(45,212,191,0.2);
+      color: var(--color-text-primary);
+    }
+    
+    .wpb-slider-group {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    
+    .wpb-slider {
+      flex: 1;
+      cursor: pointer;
+    }
+    
+    .wpb-value {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      min-width: 40px;
+      text-align: right;
+    }
+
+    /* ── INFO SECTION ─────────────────────────────────── */
+    .wpb-info {
+      padding-block: var(--space-10) var(--space-20);
+      border-top: 1px solid var(--color-border);
+    }
+    .wpb-info-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-12);
+      align-items: start;
+    }
+    @media (max-width: 720px) {
+      .wpb-info-inner { grid-template-columns: 1fr; gap: var(--space-8); }
+    }
+    .wpb-info-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+    .wpb-info-num {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.12em;
+      color: var(--color-accent-primary);
+    }
+    .wpb-info-num::before {
+      content: '';
+      display: inline-block;
+      width: 20px; height: 1px;
+      background: currentColor;
+      margin-right: var(--space-2);
+      vertical-align: middle;
+    }
+    .wpb-info h1 {
+      font-family: var(--font-heading);
+      font-size: clamp(1.75rem, 4vw, 2.75rem);
+      font-weight: 700;
+      line-height: var(--leading-tight);
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-5);
+    }
+    .wpb-info p {
+      color: var(--color-text-secondary);
+      line-height: var(--leading-normal);
+      margin-bottom: var(--space-4);
+    }
+    .wpb-info-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-top: var(--space-6);
+    }
+    .wpb-controls-title {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-5);
+    }
+    .wpb-control-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+    .wpb-control {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-4);
+    }
+    .wpb-control-key {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--radius-sm);
+      background: var(--color-bg-elevated);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-secondary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .wpb-control-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: var(--leading-snug);
+    }
+
+    /* ── FOOTER ───────────────────────────────────────── */
+    .wpb-footer {
+      border-top: 1px solid var(--color-border);
+      padding-block: var(--space-8);
+    }
+    .wpb-footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+    }
+    .wpb-footer-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-muted);
+      text-decoration: none;
+    }
+    .wpb-footer-logo img { height: 22px; width: auto; }
+    .wpb-footer-copy {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ──────────────────────────────────────────── -->
+<nav class="wpb-nav">
+  <div class="container">
+    <div class="wpb-nav-inner">
+      <a href="../../" class="wpb-nav-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <div class="wpb-nav-right">
+        <a href="../" class="wpb-back">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <path d="M8 1L3 6l5 5"/>
+          </svg>
+          Experiments
+        </a>
+        <a href="../../#contact" class="btn btn-outline">Let's Talk</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ── DEMO ─────────────────────────────────────────── -->
+<div class="wpb-demo" id="wpb-wrap">
+  <canvas id="wpb-canvas" aria-label="Interactive physics simulation with webcam blob tracking"></canvas>
+
+  <!-- Start / Permission Overlay -->
+  <div class="wpb-start-overlay" id="wpb-overlay">
+    <div class="wpb-start-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="7" width="20" height="14" rx="2"/>
+        <path d="M16 3l-4 4-4-4"/>
+        <circle cx="12" cy="14" r="3"/>
+      </svg>
+    </div>
+    <p class="wpb-start-title">Webcam Physics Blob</p>
+    <p class="wpb-start-sub">Draw a boundary, place dark objects inside, and watch physics balls interact with the detected shapes in real-time.</p>
+    <button class="wpb-start-btn" id="wpb-start-btn">enable camera</button>
+    <p class="wpb-error-msg" id="wpb-error-msg">Camera access was denied or is unavailable.<br>Check your browser permissions and try again.</p>
+  </div>
+
+  <!-- Top-left label -->
+  <div class="wpb-overlay-tl">
+    <div class="wpb-live-dot"></div>
+    <span class="wpb-exp-label">09 / webcam_physics_blob</span>
+  </div>
+
+  <!-- Bottom-right controls -->
+  <div class="wpb-overlay-br">
+    <div class="wpb-controls">
+      <div class="wpb-control-group">
+        <div class="wpb-control-title">Mode</div>
+        <div style="display: flex; gap: 6px;">
+          <button class="wpb-btn active" id="btn-draw">Draw Boundary</button>
+          <button class="wpb-btn" id="btn-drop">Drop Balls</button>
+        </div>
+      </div>
+      
+      <div class="wpb-control-group">
+        <div class="wpb-control-title">Threshold</div>
+        <div class="wpb-slider-group">
+          <input type="range" class="wpb-slider" id="threshold-slider" min="0" max="255" value="60">
+          <span class="wpb-value" id="threshold-value">60</span>
+        </div>
+      </div>
+      
+      <div class="wpb-control-group">
+        <div class="wpb-control-title">Ball Size</div>
+        <div class="wpb-slider-group">
+          <input type="range" class="wpb-slider" id="ball-size-slider" min="5" max="30" value="12">
+          <span class="wpb-value" id="ball-size-value">12</span>
+        </div>
+      </div>
+      
+      <div class="wpb-control-group">
+        <div class="wpb-control-title">Gravity</div>
+        <div class="wpb-slider-group">
+          <input type="range" class="wpb-slider" id="gravity-slider" min="0" max="2" step="0.1" value="1">
+          <span class="wpb-value" id="gravity-value">1.0</span>
+        </div>
+      </div>
+      
+      <div class="wpb-control-group">
+        <button class="wpb-btn" id="btn-clear">Clear Shapes</button>
+        <button class="wpb-btn" id="btn-reset">Reset All</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── INFO ─────────────────────────────────────────── -->
+<section class="wpb-info">
+  <div class="container">
+    <div class="wpb-info-inner">
+      <div>
+        <div class="wpb-info-meta">
+          <span class="wpb-info-num">09</span>
+          <span class="tag tag-teal">LIVE</span>
+        </div>
+        <h1>Webcam Physics Blob</h1>
+        <p>
+          An interactive physics sandbox that uses your webcam to detect dark objects and convert them into physics boundaries. Draw a rectangle to define the play area, place dark objects inside, and watch balls interact with the detected shapes in real-time.
+        </p>
+        <p>
+          The system processes your webcam feed in real-time, applying thresholding to convert the image to black and white, then uses blob detection to find dark objects and convert them into vector shapes that act as fixed physics bodies.
+        </p>
+        <div class="wpb-info-tags">
+          <span class="tag">Webcam Processing</span>
+          <span class="tag">Blob Detection</span>
+          <span class="tag">Physics Simulation</span>
+          <span class="tag">Real-time</span>
+          <span class="tag">Matter.js</span>
+        </div>
+      </div>
+
+      <div>
+        <p class="wpb-controls-title">// interaction</p>
+        <div class="wpb-control-list">
+          <div class="wpb-control">
+            <span class="wpb-control-key">Draw Boundary</span>
+            <span class="wpb-control-desc">Click and drag to draw a rectangle that defines the physics boundary area.</span>
+          </div>
+          <div class="wpb-control">
+            <span class="wpb-control-key">Drop Balls</span>
+            <span class="wpb-control-desc">Click anywhere above the boundary to drop physics balls that will interact with detected objects.</span>
+          </div>
+          <div class="wpb-control">
+            <span class="wpb-control-key">Threshold Slider</span>
+            <span class="wpb-control-desc">Adjust the brightness threshold for detecting dark objects. Lower values detect darker objects.</span>
+          </div>
+          <div class="wpb-control">
+            <span class="wpb-control-key">Ball Size</span>
+            <span class="wpb-control-desc">Control the size of the physics balls that are dropped into the simulation.</span>
+          </div>
+          <div class="wpb-control">
+            <span class="wpb-control-key">Gravity</span>
+            <span class="wpb-control-desc">Adjust the gravity strength in the physics simulation.</span>
+          </div>
+          <div class="wpb-control">
+            <span class="wpb-control-key">Clear Shapes</span>
+            <span class="wpb-control-desc">Remove all detected physics shapes from the simulation.</span>
+          </div>
+          <div class="wpb-control">
+            <span class="wpb-control-key">Reset All</span>
+            <span class="wpb-control-desc">Clear all shapes and balls, returning to the initial state.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ───────────────────────────────────────── -->
+<footer class="wpb-footer">
+  <div class="container">
+    <div class="wpb-footer-inner">
+      <a href="../../" class="wpb-footer-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <a href="../" class="wpb-back">
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <path d="M8 1L3 6l5 5"/>
+        </svg>
+        All Experiments
+      </a>
+      <span class="wpb-footer-copy">&copy; <span id="footer-year"></span> Hexagon Misfit</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ════════════════════════════════════════════════════════
+  EXTERNAL LIBRARIES
+════════════════════════════════════════════════════════ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+
+<!-- ════════════════════════════════════════════════════════
+  WEBCAM PHYSICS BLOB ENGINE
+════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ─── STATE ──────────────────────────────────────────────── */
+  let running = false;
+  let mode = 'draw'; // 'draw' or 'drop'
+  let threshold = 60;
+  let ballSize = 12;
+  let gravity = 1.0;
+  
+  let drawing = false;
+  let rectStart = null;
+  let rectEnd = null;
+  let boundaryRect = null;
+  
+  let detectedBodies = [];
+  let lastDetectionTime = 0;
+  let detectionInterval = 1000; // ms
+
+  /* ─── ELEMENTS ───────────────────────────────────────────── */
+  const canvas = document.getElementById('wpb-canvas');
+  const ctx = canvas.getContext('2d', { alpha: false });
+  const overlay = document.getElementById('wpb-overlay');
+  const startBtn = document.getElementById('wpb-start-btn');
+  const errorMsg = document.getElementById('wpb-error-msg');
+  
+  const btnDraw = document.getElementById('btn-draw');
+  const btnDrop = document.getElementById('btn-drop');
+  const thresholdSlider = document.getElementById('threshold-slider');
+  const thresholdValue = document.getElementById('threshold-value');
+  const ballSizeSlider = document.getElementById('ball-size-slider');
+  const ballSizeValue = document.getElementById('ball-size-value');
+  const gravitySlider = document.getElementById('gravity-slider');
+  const gravityValue = document.getElementById('gravity-value');
+  const btnClear = document.getElementById('btn-clear');
+  const btnReset = document.getElementById('btn-reset');
+
+  /* ─── OFFSCREEN CANVAS FOR VIDEO SAMPLING ────────────────── */
+  const offscreen = document.createElement('canvas');
+  const offCtx = offscreen.getContext('2d', { willReadFrequently: true });
+  offCtx.imageSmoothingEnabled = true;
+  offCtx.imageSmoothingQuality = 'high';
+
+  /* ─── VIDEO ELEMENT ──────────────────────────────────────── */
+  const video = document.createElement('video');
+  video.playsInline = true;
+  video.muted = true;
+  video.autoplay = true;
+
+  /* ─── MATTER.JS SETUP ────────────────────────────────────── */
+  const Engine = Matter.Engine,
+        Render = Matter.Render,
+        Runner = Matter.Runner,
+        Bodies = Matter.Bodies,
+        Composite = Matter.Composite,
+        Events = Matter.Events,
+        Vector = Matter.Vector,
+        Body = Matter.Body;
+
+  const engine = Engine.create();
+  const world = engine.world;
+  
+  // Set gravity
+  engine.gravity.y = gravity;
+
+  /* ─── RESIZE ─────────────────────────────────────────────── */
+  function resize() {
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
+    
+    // Update Matter.js bounds
+    if (boundaryRect) {
+      // Recreate boundary if it exists
+      createBoundary(boundaryRect.x, boundaryRect.y, boundaryRect.w, boundaryRect.h);
+    }
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  /* ─── START CAMERA ───────────────────────────────────────── */
+  startBtn.addEventListener('click', async () => {
+    startBtn.disabled = true;
+    startBtn.textContent = 'connecting...';
+    errorMsg.classList.remove('visible');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
+      });
+      video.srcObject = stream;
+      await video.play();
+      overlay.classList.add('hidden');
+      running = true;
+      raf = requestAnimationFrame(loop);
+    } catch (err) {
+      startBtn.disabled = false;
+      startBtn.textContent = 'try again';
+      errorMsg.classList.add('visible');
+    }
+  });
+
+  /* ─── CONTROLS ───────────────────────────────────────────── */
+  btnDraw.addEventListener('click', () => {
+    mode = 'draw';
+    btnDraw.classList.add('active');
+    btnDrop.classList.remove('active');
+  });
+  
+  btnDrop.addEventListener('click', () => {
+    mode = 'drop';
+    btnDrop.classList.add('active');
+    btnDraw.classList.remove('active');
+  });
+
+  thresholdSlider.addEventListener('input', () => {
+    threshold = parseInt(thresholdSlider.value, 10);
+    thresholdValue.textContent = threshold;
+  });
+
+  ballSizeSlider.addEventListener('input', () => {
+    ballSize = parseInt(ballSizeSlider.value, 10);
+    ballSizeValue.textContent = ballSize;
+  });
+
+  gravitySlider.addEventListener('input', () => {
+    gravity = parseFloat(gravitySlider.value);
+    gravityValue.textContent = gravity.toFixed(1);
+    engine.gravity.y = gravity;
+  });
+
+  btnClear.addEventListener('click', () => {
+    // Remove all detected bodies
+    detectedBodies.forEach(body => {
+      Composite.remove(world, body);
+    });
+    detectedBodies = [];
+  });
+
+  btnReset.addEventListener('click', () => {
+    // Clear all
+    Composite.clear(world, false);
+    detectedBodies = [];
+    boundaryRect = null;
+    rectStart = null;
+    rectEnd = null;
+  });
+
+  /* ─── INPUT HANDLING ─────────────────────────────────────── */
+  canvas.addEventListener('mousedown', (e) => {
+    if (!running) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    if (mode === 'draw') {
+      drawing = true;
+      rectStart = { x, y };
+      rectEnd = { x, y };
+    } else if (mode === 'drop') {
+      dropBall(x, y);
+    }
+  });
+
+  canvas.addEventListener('mousemove', (e) => {
+    if (!running || !drawing) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    rectEnd = { x, y };
+  });
+
+  canvas.addEventListener('mouseup', () => {
+    if (!running || !drawing) return;
+    
+    drawing = false;
+    
+    if (rectStart && rectEnd) {
+      const x = Math.min(rectStart.x, rectEnd.x);
+      const y = Math.min(rectStart.y, rectEnd.y);
+      const w = Math.abs(rectEnd.x - rectStart.x);
+      const h = Math.abs(rectEnd.y - rectStart.y);
+      
+      if (w > 20 && h > 20) {
+        createBoundary(x, y, w, h);
+      }
+    }
+    
+    rectStart = null;
+    rectEnd = null;
+  });
+
+  /* ─── MATTER.JS BOUNDARY CREATION ────────────────────────── */
+  function createBoundary(x, y, w, h) {
+    // Remove existing boundary
+    if (boundaryRect) {
+      Composite.remove(world, boundaryRect.bodies);
+    }
+    
+    // Create new boundary
+    const thickness = 5;
+    const bodies = [
+      Bodies.rectangle(x + w/2, y - thickness/2, w, thickness, { isStatic: true }), // Top
+      Bodies.rectangle(x + w/2, y + h + thickness/2, w, thickness, { isStatic: true }), // Bottom
+      Bodies.rectangle(x - thickness/2, y + h/2, thickness, h, { isStatic: true }), // Left
+      Bodies.rectangle(x + w + thickness/2, y + h/2, thickness, h, { isStatic: true }) // Right
+    ];
+    
+    Composite.add(world, bodies);
+    boundaryRect = { x, y, w, h, bodies };
+  }
+
+  /* ─── DROP BALL ──────────────────────────────────────────── */
+  function dropBall(x, y) {
+    if (!boundaryRect) return;
+    
+    // Only drop if above the boundary
+    if (y < boundaryRect.y) {
+      const ball = Bodies.circle(x, y, ballSize, {
+        restitution: 0.8,
+        friction: 0.005,
+        density: 0.002
+      });
+      Composite.add(world, ball);
+    }
+  }
+
+  /* ─── BLOB DETECTION ─────────────────────────────────────── */
+  function detectBlobs() {
+    if (!boundaryRect || !running) return;
+    
+    const now = Date.now();
+    if (now - lastDetectionTime < detectionInterval) return;
+    lastDetectionTime = now;
+
+    // Set up offscreen canvas to match boundary dimensions
+    offscreen.width = boundaryRect.w;
+    offscreen.height = boundaryRect.h;
+    
+    // Draw video to offscreen canvas (cropped to boundary)
+    offCtx.drawImage(video, 
+      boundaryRect.x, boundaryRect.y, boundaryRect.w, boundaryRect.h,
+      0, 0, boundaryRect.w, boundaryRect.h
+    );
+
+    // Get pixel data
+    const imageData = offCtx.getImageData(0, 0, boundaryRect.w, boundaryRect.h);
+    const data = imageData.data;
+    
+    // Simple thresholding
+    const binary = new Uint8Array(boundaryRect.w * boundaryRect.h);
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const lum = (0.299 * r + 0.587 * g + 0.114 * b);
+      
+      binary[i / 4] = lum < threshold ? 1 : 0;
+    }
+
+    // Find connected components (blobs)
+    const visited = new Uint8Array(binary.length);
+    const blobs = [];
+    
+    for (let y = 0; y < boundaryRect.h; y++) {
+      for (let x = 0; x < boundaryRect.w; x++) {
+        const idx = y * boundaryRect.w + x;
+        if (binary[idx] === 1 && visited[idx] === 0) {
+          const blob = floodFill(binary, visited, x, y, boundaryRect.w, boundaryRect.h);
+          if (blob.length > 100) { // Minimum size threshold
+            blobs.push(blob);
+          }
+        }
+      }
+    }
+
+    // Convert blobs to physics bodies
+    blobs.forEach(blob => {
+      const vertices = simplifyBlob(blob, boundaryRect.w);
+      if (vertices.length >= 3) {
+        const body = Bodies.fromVertices(
+          boundaryRect.x + vertices[0].x,
+          boundaryRect.y + vertices[0].y,
+          [vertices],
+          {
+            isStatic: true,
+            render: { fillStyle: 'rgba(108, 99, 255, 0.3)', strokeStyle: 'rgba(108, 99, 255, 0.8)', lineWidth: 2 }
+          },
+          true
+        );
+        Composite.add(world, body);
+        detectedBodies.push(body);
+      }
+    });
+  }
+
+  /* ─── FLOOD FILL ALGORITHM ───────────────────────────────── */
+  function floodFill(binary, visited, startX, startY, width, height) {
+    const stack = [{ x: startX, y: startY }];
+    const blob = [];
+    const startIdx = startY * width + startX;
+    
+    visited[startIdx] = 1;
+    
+    while (stack.length > 0) {
+      const { x, y } = stack.pop();
+      blob.push({ x, y });
+      
+      // Check 4-connected neighbors
+      const neighbors = [
+        { x: x + 1, y },
+        { x: x - 1, y },
+        { x, y: y + 1 },
+        { x, y: y - 1 }
+      ];
+      
+      for (const n of neighbors) {
+        if (n.x >= 0 && n.x < width && n.y >= 0 && n.y < height) {
+          const idx = n.y * width + n.x;
+          if (binary[idx] === 1 && visited[idx] === 0) {
+            visited[idx] = 1;
+            stack.push(n);
+          }
+        }
+      }
+    }
+    
+    return blob;
+  }
+
+  /* ─── SIMPLIFY BLOB TO VERTICES ──────────────────────────── */
+  function simplifyBlob(blob, width) {
+    // Find bounding box
+    let minX = Infinity, minY = Infinity;
+    let maxX = -Infinity, maxY = -Infinity;
+    
+    blob.forEach(p => {
+      minX = Math.min(minX, p.x);
+      minY = Math.min(minY, p.y);
+      maxX = Math.max(maxX, p.x);
+      maxY = Math.max(maxY, p.y);
+    });
+    
+    // Create a simple rectangular approximation for performance
+    // In a full implementation, you'd use more sophisticated contour detection
+    return [
+      { x: minX, y: minY },
+      { x: maxX, y: minY },
+      { x: maxX, y: maxY },
+      { x: minX, y: maxY }
+    ];
+  }
+
+  /* ─── RENDER LOOP ────────────────────────────────────────── */
+  let raf = null;
+  
+  function loop() {
+    if (!running) return;
+    raf = requestAnimationFrame(loop);
+
+    if (video.readyState < 2) return;
+
+    // Clear canvas
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw video feed (full size)
+    ctx.save();
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+    ctx.restore();
+
+    // Draw boundary rectangle
+    if (boundaryRect) {
+      ctx.strokeStyle = 'rgba(108, 99, 255, 0.8)';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(boundaryRect.x, boundaryRect.y, boundaryRect.w, boundaryRect.h);
+    }
+
+    // Draw drawing rectangle
+    if (drawing && rectStart && rectEnd) {
+      ctx.strokeStyle = 'rgba(45, 212, 191, 0.8)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      const x = Math.min(rectStart.x, rectEnd.x);
+      const y = Math.min(rectStart.y, rectEnd.y);
+      const w = Math.abs(rectEnd.x - rectStart.x);
+      const h = Math.abs(rectEnd.y - rectStart.y);
+      ctx.strokeRect(x, y, w, h);
+      ctx.setLineDash([]);
+    }
+
+    // Update physics
+    Engine.update(engine, 1000 / 60);
+
+    // Draw physics bodies
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.lineWidth = 1;
+    
+    Composite.allBodies(world).forEach(body => {
+      if (!body.isStatic) {
+        // Draw balls
+        ctx.beginPath();
+        ctx.arc(body.position.x, body.position.y, body.circleRadius || ballSize, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+    });
+
+    // Detect blobs periodically
+    detectBlobs();
+  }
+
+  /* ─── FOOTER YEAR ────────────────────────────────────────── */
+  document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+})();
+</script>
+
+</body>
+</html>

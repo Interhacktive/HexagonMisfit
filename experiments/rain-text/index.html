@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rain Text — Hexagon Misfit Experiments</title>
+  <meta name="description" content="ASCII rain falls through a story about rain. Letters ripple horizontally. Click for lightning." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400&family=Inter:wght@400;500;600&family=Fira+Code:wght@400&family=JetBrains+Mono:wght@400&family=IBM+Plex+Mono:wght@400&family=Source+Code+Pro:wght@400&family=Inconsolata:wght@400&family=Roboto+Mono:wght@400&family=Ubuntu+Mono:wght@400&family=DM+Mono:wght@400&family=Anonymous+Pro:wght@400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../css/reset.css" />
+  <link rel="stylesheet" href="../../css/tokens.css" />
+  <link rel="stylesheet" href="../../css/layout.css" />
+  <link rel="stylesheet" href="../../css/components.css" />
+  <link rel="stylesheet" href="../../css/animations.css" />
+
+  <style>
+    /* ── NAV ─────────────────────────────────────────── */
+    .rt-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding-block: var(--space-5);
+      background: rgba(10, 10, 15, 0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .rt-nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .rt-nav-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      text-decoration: none;
+    }
+    .rt-nav-logo img { height: 28px; width: auto; }
+    .rt-nav-right {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+    }
+    .rt-back {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.08em;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .rt-back:hover { color: var(--color-text-primary); }
+    .rt-back svg { width: 12px; height: 12px; }
+
+    /* ── STAGE ───────────────────────────────────────── */
+    .rt-stage {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: #06060e;
+      padding: clamp(2rem, 6vw, 5rem);
+    }
+
+    .rt-frame {
+      position: relative;
+      width: 100%;
+      max-width: 900px;
+      aspect-ratio: 3 / 4;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px;
+      background: #0a0a14;
+      cursor: crosshair;
+    }
+
+    .rt-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Overlay labels */
+    .rt-overlay-tl {
+      position: absolute;
+      top: var(--space-4);
+      left: var(--space-4);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      pointer-events: none;
+      z-index: 10;
+    }
+    .rt-live-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--color-accent-secondary);
+      box-shadow: 0 0 8px rgba(45,212,191,0.7);
+      animation: rt-pulse 2s ease-in-out infinite;
+    }
+    @keyframes rt-pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+    .rt-exp-label {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      color: rgba(152,152,176,0.5);
+    }
+
+    .rt-hint {
+      position: absolute;
+      bottom: var(--space-4);
+      left: var(--space-4);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.06em;
+      color: rgba(152,152,176,0.35);
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* ── CONTROLS PANEL ──────────────────────────────── */
+    .rt-controls {
+      position: absolute;
+      bottom: var(--space-4);
+      right: var(--space-4);
+      z-index: 10;
+      background: rgba(8, 8, 16, 0.82);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      padding: var(--space-3) var(--space-4);
+      min-width: 195px;
+    }
+    .rt-controls-hdr {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(152,152,176,0.5);
+      margin-bottom: var(--space-3);
+    }
+    .rt-slider-row {
+      display: grid;
+      grid-template-columns: 56px 1fr 32px;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .rt-slider-row:last-child { margin-bottom: 0; }
+    .rt-slider-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.06em;
+      color: rgba(152,152,176,0.6);
+      text-align: right;
+    }
+    .rt-slider-val {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: rgba(240,240,255,0.5);
+      text-align: right;
+      white-space: nowrap;
+    }
+    .rt-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 3px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+    .rt-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #7898dc;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 0 5px rgba(120,152,220,0.4);
+    }
+    .rt-slider::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #7898dc;
+      border: none;
+      cursor: pointer;
+    }
+    .rt-select {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 4px;
+      color: rgba(240,240,255,0.7);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      padding: 3px 6px;
+      cursor: pointer;
+      outline: none;
+    }
+    .rt-select:hover { border-color: rgba(255,255,255,0.2); }
+    .rt-select option { background: #12121e; color: #ccc; }
+
+    /* ── INFO SECTION ────────────────────────────────── */
+    .rt-info {
+      padding-block: var(--space-10) var(--space-20);
+      border-top: 1px solid var(--color-border);
+    }
+    .rt-info-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-12);
+      align-items: start;
+    }
+    @media (max-width: 720px) {
+      .rt-info-inner { grid-template-columns: 1fr; gap: var(--space-8); }
+    }
+    .rt-info-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+    .rt-info-num {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.12em;
+      color: var(--color-accent-primary);
+    }
+    .rt-info-num::before {
+      content: '';
+      display: inline-block;
+      width: 20px;
+      height: 1px;
+      background: currentColor;
+      margin-right: var(--space-2);
+      vertical-align: middle;
+    }
+    .rt-info h1 {
+      font-family: var(--font-heading);
+      font-size: clamp(1.75rem, 4vw, 2.75rem);
+      font-weight: 700;
+      line-height: var(--leading-tight);
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-5);
+    }
+    .rt-info p {
+      color: var(--color-text-secondary);
+      line-height: var(--leading-normal);
+      margin-bottom: var(--space-4);
+    }
+    .rt-info-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-top: var(--space-6);
+    }
+    .rt-controls-title {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-5);
+    }
+    .rt-control-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+    .rt-control {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-4);
+    }
+    .rt-control-key {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--radius-sm);
+      background: var(--color-bg-elevated);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-secondary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .rt-control-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: var(--leading-snug);
+    }
+
+    /* ── FOOTER ───────────────────────────────────────── */
+    .rt-footer {
+      border-top: 1px solid var(--color-border);
+      padding-block: var(--space-8);
+    }
+    .rt-footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+    }
+    .rt-footer-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-muted);
+      text-decoration: none;
+    }
+    .rt-footer-logo img { height: 22px; width: auto; }
+    .rt-footer-copy {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ──────────────────────────────────────────── -->
+<nav class="rt-nav">
+  <div class="container">
+    <div class="rt-nav-inner">
+      <a href="../../" class="rt-nav-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <div class="rt-nav-right">
+        <a href="../" class="rt-back">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <path d="M8 1L3 6l5 5"/>
+          </svg>
+          Experiments
+        </a>
+        <a href="../../#contact" class="btn btn-outline">Let's Talk</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ── STAGE ─────────────────────────────────────────── -->
+<div class="rt-stage">
+  <div class="rt-frame" id="rt-frame">
+    <div class="rt-overlay-tl">
+      <div class="rt-live-dot"></div>
+      <span class="rt-exp-label">10 / rain_text</span>
+    </div>
+    <span class="rt-hint">click for lightning</span>
+
+    <!-- Controls panel -->
+    <div class="rt-controls">
+      <p class="rt-controls-hdr">// weather</p>
+      <div class="rt-slider-row">
+        <span class="rt-slider-label">speed</span>
+        <input type="range" class="rt-slider" id="s-speed" min="1" max="40" value="5" step="1">
+        <span class="rt-slider-val" id="v-speed">0.5</span>
+      </div>
+      <div class="rt-slider-row">
+        <span class="rt-slider-label">density</span>
+        <input type="range" class="rt-slider" id="s-density" min="4" max="60" value="4" step="2">
+        <span class="rt-slider-val" id="v-density">4</span>
+      </div>
+      <div class="rt-slider-row">
+        <span class="rt-slider-label">wind</span>
+        <input type="range" class="rt-slider" id="s-wind" min="-200" max="200" value="150" step="5">
+        <span class="rt-slider-val" id="v-wind">+1.50</span>
+      </div>
+      <div class="rt-slider-row">
+        <span class="rt-slider-label">dropsize</span>
+        <input type="range" class="rt-slider" id="s-dropsize" min="1" max="20" value="20" step="1">
+        <span class="rt-slider-val" id="v-dropsize">20</span>
+      </div>
+      <div class="rt-slider-row">
+        <span class="rt-slider-label">elastic</span>
+        <input type="range" class="rt-slider" id="s-elastic" min="1" max="20" value="1" step="1">
+        <span class="rt-slider-val" id="v-elastic">0.01</span>
+      </div>
+      <div class="rt-slider-row">
+        <span class="rt-slider-label">ripple</span>
+        <input type="range" class="rt-slider" id="s-ripple" min="5" max="100" value="20" step="5">
+        <span class="rt-slider-val" id="v-ripple">2.0</span>
+      </div>
+      <div class="rt-slider-row">
+        <span class="rt-slider-label">textsize</span>
+        <input type="range" class="rt-slider" id="s-textsize" min="8" max="72" value="36" step="1">
+        <span class="rt-slider-val" id="v-textsize">36</span>
+      </div>
+      <div class="rt-slider-row">
+        <span class="rt-slider-label">font</span>
+        <select class="rt-select" id="s-font">
+          <option value="'Space Mono', monospace" selected>Space Mono</option>
+          <option value="'Courier New', monospace">Courier New</option>
+          <option value="'Fira Code', monospace">Fira Code</option>
+          <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
+          <option value="'IBM Plex Mono', monospace">IBM Plex Mono</option>
+          <option value="'Source Code Pro', monospace">Source Code Pro</option>
+          <option value="'Inconsolata', monospace">Inconsolata</option>
+          <option value="'Roboto Mono', monospace">Roboto Mono</option>
+          <option value="'Ubuntu Mono', monospace">Ubuntu Mono</option>
+          <option value="'DM Mono', monospace">DM Mono</option>
+          <option value="'Anonymous Pro', monospace">Anonymous Pro</option>
+          <option value="monospace">System Mono</option>
+        </select>
+        <span class="rt-slider-val" id="v-font"></span>
+      </div>
+    </div>
+
+    <canvas class="rt-canvas" id="rt-canvas"></canvas>
+  </div>
+</div>
+
+
+<!-- ── INFO ─────────────────────────────────────────── -->
+<section class="rt-info">
+  <div class="container">
+    <div class="rt-info-inner">
+
+      <div>
+        <div class="rt-info-meta">
+          <span class="rt-info-num">10</span>
+          <span class="tag tag-teal">LIVE</span>
+        </div>
+        <h1>Rain Text</h1>
+        <p>ASCII rain falls through a block of monospaced text. Each raindrop displaces characters horizontally, sending ripple waves that push letters left and right before they spring back. Click anywhere to trigger lightning that illuminates the clouds and makes the text glow white.</p>
+        <p>The story is about rain. The medium is rain. The text reads while it weeps.</p>
+        <div class="rt-info-tags">
+          <span class="tag">Canvas 2D</span>
+          <span class="tag">ASCII Art</span>
+          <span class="tag">Monospace Grid</span>
+          <span class="tag">Horizontal Ripple</span>
+          <span class="tag">Lightning</span>
+          <span class="tag">Fog Clouds</span>
+          <span class="tag">Spring Physics</span>
+          <span class="tag">Variable Text Size</span>
+        </div>
+      </div>
+
+      <div>
+        <p class="rt-controls-title">// controls</p>
+        <div class="rt-control-list">
+          <div class="rt-control">
+            <span class="rt-control-key">speed</span>
+            <span class="rt-control-desc">How fast the raindrops fall. Higher = heavier downpour.</span>
+          </div>
+          <div class="rt-control">
+            <span class="rt-control-key">density</span>
+            <span class="rt-control-desc">Number of concurrent raindrops. More drops = more ripples.</span>
+          </div>
+          <div class="rt-control">
+            <span class="rt-control-key">wind</span>
+            <span class="rt-control-desc">Horizontal wind. Negative = left, positive = right. Tilts the rain and drifts drops sideways.</span>
+          </div>
+          <div class="rt-control">
+            <span class="rt-control-key">dropsize</span>
+            <span class="rt-control-desc">Trail length behind each raindrop. Longer trails = heavier-looking rain.</span>
+          </div>
+          <div class="rt-control">
+            <span class="rt-control-key">elastic</span>
+            <span class="rt-control-desc">Spring return stiffness. High = snappy bounce back. Low = slow, lazy drift.</span>
+          </div>
+          <div class="rt-control">
+            <span class="rt-control-key">textsize</span>
+            <span class="rt-control-desc">Font size in pixels. Rebuilds the character grid — larger text means fewer characters but more presence.</span>
+          </div>
+          <div class="rt-control">
+            <span class="rt-control-key">click</span>
+            <span class="rt-control-desc">Click anywhere on the canvas. A lightning bolt forks down to the click point, illuminating the clouds and making all text glow.</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ── FOOTER ────────────────────────────────────────── -->
+<footer class="rt-footer">
+  <div class="container">
+    <div class="rt-footer-inner">
+      <a href="../../" class="rt-footer-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <a href="../" class="rt-back">← All experiments</a>
+      <span class="rt-footer-copy">&copy; <span id="footer-year"></span> Hexagon Misfit</span>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ══════════════════════════════════════════════════
+  RAIN TEXT ENGINE — horizontal ripple, lightning, fog
+══════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ── STORY TEXT ────────────────────────────────────── */
+  const STORY =
+    'The sky has given over its bitterness. Out of the dark change all day long ' +
+    'rain falls and falls as if it would never end. Still the snow keeps its hold ' +
+    'on the ground. But water, water from a thousand runnels! It collects swiftly, ' +
+    'dappled with black cuts a way for itself through green ice in the gutters. ' +
+    'Drop after drop it falls from the withered grass-stems of the overhanging ' +
+    'embankment. -William Carlos Williams';
+
+  /* ── LIVE CONFIG ──────────────────────────────────── */
+  const CFG = {
+    // Computed at init / slider-driven
+    FONT_SIZE: 36, FONT_FAMILY: "'Space Mono', monospace",
+    COLS: 0, ROWS: 0, _charW: 0, _lineH: 0,
+
+    // Slider-driven
+    DROP_SPEED:     0.5,    // base cells per frame (slider multiplied by individual rand)
+    DROP_COUNT:     4,      // concurrent drops
+    WIND:           1.5,    // -2..+2 horizontal drift
+    DROP_SIZE:      20,     // trail length
+    ELASTIC:        0.01,   // spring return (SPRING_K)
+    RIPPLE_STR:     2.0,    // ripple push strength
+
+    // Fixed
+    SPRING_DAMP:    0.80,
+    RIPPLE_SPEED:   0.55,
+    RIPPLE_DECAY:   0.92,
+    RIPPLE_MAX_R:   10,
+    BASE_ALPHA:     0.32,
+    TEXT_COLOR:     [185, 195, 225],
+    RAIN_COLOR:     [120, 155, 215],
+  };
+
+  /* ── CANVAS SETUP ─────────────────────────────────── */
+  const canvas = document.getElementById('rt-canvas');
+  const ctx    = canvas.getContext('2d');
+  const frame  = document.getElementById('rt-frame');
+  let dpr = 1, W, H;
+
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+    const rect = frame.getBoundingClientRect();
+    W = rect.width;
+    H = rect.height;
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    computeGrid();
+    buildCells();
+    tick._grad = null;
+    syncDropCount();
+  }
+
+  /* ── GRID ─────────────────────────────────────────── */
+  let cells = [];
+  let gridX0, gridY0;
+
+  function computeGrid() {
+    const fs = Math.max(10, CFG.FONT_SIZE);
+    ctx.font = fs + 'px ' + CFG.FONT_FAMILY;
+    const charW = ctx.measureText('M').width;
+    const lineH = fs * 1.5;
+    const pad = fs * 1.2;
+    CFG.COLS = Math.floor((W - pad * 2) / charW);
+    CFG.ROWS = Math.floor((H - pad * 2) / lineH);
+    gridX0 = (W - CFG.COLS * charW) / 2;
+    gridY0 = (H - CFG.ROWS * lineH) / 2 + fs * 0.85;
+    CFG._charW = charW;
+    CFG._lineH = lineH;
+  }
+
+  function buildCells() {
+    cells = [];
+    const lines = [];
+    const words = STORY.split(' ');
+    let cur = '';
+    for (let i = 0; i < words.length; i++) {
+      const test = cur ? cur + ' ' + words[i] : words[i];
+      if (test.length <= CFG.COLS) { cur = test; }
+      else { lines.push(cur); cur = words[i]; }
+    }
+    if (cur) lines.push(cur);
+
+    const startRow = Math.max(0, Math.floor((CFG.ROWS - lines.length) / 2));
+
+    for (let r = 0; r < CFG.ROWS; r++) {
+      const li = r - startRow;
+      const str = (li >= 0 && li < lines.length) ? lines[li] : '';
+      const pad = str.padEnd(CFG.COLS, ' ');
+      for (let c = 0; c < CFG.COLS; c++) {
+        cells.push({
+          ch: pad[c], row: r, col: c,
+          x: gridX0 + c * CFG._charW,
+          y: gridY0 + r * CFG._lineH,
+          dx: 0, dxV: 0,       // horizontal only
+          alpha: CFG.BASE_ALPHA,
+        });
+      }
+    }
+  }
+
+  /* ── RAINDROPS ────────────────────────────────────── */
+  const drops = [];
+
+  function spawnDrop() {
+    const speedMult = 0.6 + Math.random() * 0.8;
+    return {
+      col:   Math.random() * CFG.COLS,
+      row:   -1 - Math.random() * 5,
+      speed: CFG.DROP_SPEED * speedMult,
+      char:  ['|', ':', '.', '|', '|', ';'][Math.floor(Math.random() * 6)],
+      alpha: 0.25 + Math.random() * 0.5,
+      speedMult: speedMult,
+    };
+  }
+
+  function syncDropCount() {
+    while (drops.length < CFG.DROP_COUNT) {
+      const d = spawnDrop();
+      d.row = Math.random() * CFG.ROWS;
+      drops.push(d);
+    }
+    while (drops.length > CFG.DROP_COUNT) drops.pop();
+  }
+
+  for (let i = 0; i < 4; i++) {
+    const d = spawnDrop();
+    d.row = Math.random() * CFG.ROWS;
+    drops.push(d);
+  }
+
+  /* ── RIPPLES ──────────────────────────────────────── */
+  const ripples = [];
+  let rippleFrame = 0;
+
+  function spawnRipple(col, row) {
+    ripples.push({
+      col, row,
+      radius: 0.5,
+      strength: CFG.RIPPLE_STR,
+      age: 0,
+    });
+  }
+
+  /* ── LIGHTNING ────────────────────────────────────── */
+  let lightning = null;
+
+  function strikeLightning(targetX, targetY) {
+    const segments = [];  // { x1,y1,x2,y2, w }
+
+    // Simple iterative bolt — jagged line from top to target with occasional forks
+    function buildBolt(x1, y1, x2, y2, thickness, forkBudget) {
+      const dx = x2 - x1, dy = y2 - y1;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      if (len < 5) return;
+      const steps = Math.min(12, Math.max(4, Math.floor(len / 30)));
+      let px = x1, py = y1;
+
+      for (let i = 1; i <= steps; i++) {
+        const t = i / steps;
+        let nx = x1 + dx * t;
+        let ny = y1 + dy * t;
+        if (i < steps) {
+          nx += (Math.random() - 0.5) * 50 * Math.sin(t * Math.PI);
+          ny += (Math.random() - 0.5) * 12;
+        }
+        segments.push({ x1: px, y1: py, x2: nx, y2: ny, w: thickness });
+
+        // Fork: max 2 per bolt, short side branches
+        if (forkBudget > 0 && i > 1 && i < steps && Math.random() < 0.3) {
+          const angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * 1.6;
+          const fl = len * (0.1 + Math.random() * 0.2);
+          buildBolt(nx, ny, nx + Math.cos(angle) * fl, ny + Math.sin(angle) * fl, thickness * 0.5, 0);
+          forkBudget--;
+        }
+        px = nx; py = ny;
+      }
+    }
+
+    const startX = targetX + (Math.random() - 0.5) * W * 0.2;
+    const startY = H * 0.02 + Math.random() * H * 0.05;
+    buildBolt(startX, startY, targetX, targetY, 1.0, 2);
+
+    lightning = {
+      segments,
+      originX: startX, originY: startY,
+      flash: 1.0,
+      glow: 1.0,
+      targetX, targetY,
+    };
+
+    // Snap all letters to perfect grid position
+    for (let i = 0; i < cells.length; i++) {
+      cells[i].dx  = 0;
+      cells[i].dxV = 0;
+    }
+
+    // Big ripple at strike point
+    const strikeCol = (targetX - gridX0) / CFG._charW;
+    const strikeRow = (targetY - gridY0) / CFG._lineH;
+    ripples.push({
+      col: strikeCol, row: strikeRow,
+      radius: 0.5,
+      strength: CFG.RIPPLE_STR * 4,
+      age: 0,
+    });
+  }
+
+  // Click handler
+  frame.addEventListener('click', (e) => {
+    const rect = frame.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    strikeLightning(x, y);
+  });
+
+  /* ── FOG / CLOUD LAYER ────────────────────────────── */
+  // Pre-generate cloud positions (relative 0-1)
+  const clouds = [];
+  // Large diffuse base layer
+  for (let i = 0; i < 5; i++) {
+    clouds.push({
+      cx: 0.05 + i * 0.2 + (Math.random() - 0.5) * 0.12,
+      cy: 0.01 + Math.random() * 0.06,
+      rx: 0.22 + Math.random() * 0.16,
+      ry: 0.06 + Math.random() * 0.04,
+      drift: (Math.random() - 0.5) * 0.00015,
+      layer: 0,
+    });
+  }
+  // Medium detail puffs
+  for (let i = 0; i < 8; i++) {
+    clouds.push({
+      cx: 0.02 + Math.random() * 0.96,
+      cy: 0.01 + Math.random() * 0.10,
+      rx: 0.10 + Math.random() * 0.14,
+      ry: 0.03 + Math.random() * 0.03,
+      drift: (Math.random() - 0.5) * 0.0002,
+      layer: 1,
+    });
+  }
+  // Small wisps
+  for (let i = 0; i < 6; i++) {
+    clouds.push({
+      cx: 0.05 + Math.random() * 0.9,
+      cy: 0.06 + Math.random() * 0.12,
+      rx: 0.06 + Math.random() * 0.08,
+      ry: 0.015 + Math.random() * 0.02,
+      drift: (Math.random() - 0.5) * 0.0003,
+      layer: 2,
+    });
+  }
+  // Deep background blanket (very wide, very faint)
+  for (let i = 0; i < 3; i++) {
+    clouds.push({
+      cx: 0.1 + i * 0.35 + (Math.random() - 0.5) * 0.15,
+      cy: -0.02 + Math.random() * 0.04,
+      rx: 0.35 + Math.random() * 0.25,
+      ry: 0.08 + Math.random() * 0.05,
+      drift: (Math.random() - 0.5) * 0.00008,
+      layer: 3,
+    });
+  }
+  // Low-hanging mist (near text area, subtle)
+  for (let i = 0; i < 5; i++) {
+    clouds.push({
+      cx: Math.random(),
+      cy: 0.15 + Math.random() * 0.25,
+      rx: 0.12 + Math.random() * 0.18,
+      ry: 0.02 + Math.random() * 0.015,
+      drift: (Math.random() - 0.5) * 0.00025,
+      layer: 4,
+    });
+  }
+
+  function drawClouds(flashIntensity) {
+    for (let i = 0; i < clouds.length; i++) {
+      const c = clouds[i];
+      c.cx += c.drift + CFG.WIND * 0.00012;
+      if (c.cx < -0.3) c.cx = 1.3;
+      if (c.cx > 1.3) c.cx = -0.3;
+
+      const cx = c.cx * W;
+      const cy = c.cy * H;
+      const rx = c.rx * W;
+      const ry = c.ry * H;
+      const outerR = Math.max(rx, ry);
+
+      // Layer-dependent opacity
+      const layerBases = [0.055, 0.035, 0.02, 0.03, 0.012];
+      const layerGlows = [0.22, 0.15, 0.08, 0.12, 0.04];
+      const layerBase = layerBases[c.layer] || 0.02;
+      const layerGlow = layerGlows[c.layer] || 0.06;
+
+      const baseA = layerBase;
+      const glowA = flashIntensity * layerGlow;
+      const peakA = baseA + glowA;
+
+      const r = Math.round(95 + flashIntensity * 160);
+      const g = Math.round(105 + flashIntensity * 150);
+      const b = Math.round(135 + flashIntensity * 120);
+
+      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, outerR);
+      grad.addColorStop(0,    `rgba(${r},${g},${b},${peakA.toFixed(4)})`);
+      grad.addColorStop(0.15, `rgba(${r},${g},${b},${(peakA * 0.75).toFixed(4)})`);
+      grad.addColorStop(0.35, `rgba(${r},${g},${b},${(peakA * 0.45).toFixed(4)})`);
+      grad.addColorStop(0.6,  `rgba(${r},${g},${b},${(peakA * 0.18).toFixed(4)})`);
+      grad.addColorStop(0.8,  `rgba(${r},${g},${b},${(peakA * 0.05).toFixed(4)})`);
+      grad.addColorStop(1,    `rgba(${r},${g},${b},0)`);
+
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  /* ── ANIMATION LOOP ───────────────────────────────── */
+  function tick() {
+    requestAnimationFrame(tick);
+    ctx.clearRect(0, 0, W, H);
+    rippleFrame++;
+
+    // Lightning state
+    let flashI = 0;
+    let glowI = 0;
+    if (lightning) {
+      lightning.flash *= 0.82;
+      lightning.glow  *= 0.94;
+      flashI = lightning.flash;
+      glowI  = lightning.glow;
+      if (lightning.glow < 0.005) lightning = null;
+    }
+
+    // ── Draw fog clouds (behind everything) ──
+    drawClouds(flashI);
+
+    // ── Update drops ──
+    for (let i = 0; i < drops.length; i++) {
+      const d = drops[i];
+      d.speed = CFG.DROP_SPEED * d.speedMult;
+      d.row += d.speed;
+      d.col += CFG.WIND * 0.3;
+
+      if (rippleFrame % 2 === 0 && d.row >= 0 && d.row < CFG.ROWS) {
+        spawnRipple(d.col, d.row);
+      }
+      if (d.row > CFG.ROWS + 4 || d.col < -3 || d.col > CFG.COLS + 3) {
+        Object.assign(d, spawnDrop());
+      }
+    }
+
+    // ── Update ripples ──
+    for (let i = ripples.length - 1; i >= 0; i--) {
+      const rip = ripples[i];
+      rip.radius   += CFG.RIPPLE_SPEED;
+      rip.strength *= CFG.RIPPLE_DECAY;
+      rip.age++;
+      if (rip.radius > CFG.RIPPLE_MAX_R || rip.strength < 0.06) {
+        ripples.splice(i, 1);
+      }
+    }
+
+    // ── Apply forces to cells (horizontal only) ──
+    // During lightning glow, suppress displacement so text stays on-grid
+    const forceScale = 1 - glowI;
+
+    for (let i = 0; i < cells.length; i++) {
+      const cell = cells[i];
+      let forceX = 0;
+      let brighten = 0;
+
+      // Wind nudge on text (very subtle)
+      forceX += CFG.WIND * 0.15;
+
+      for (let j = 0; j < ripples.length; j++) {
+        const rip = ripples[j];
+        const dcol = cell.col - rip.col;
+        const drow = cell.row - rip.row;
+        const dist = Math.sqrt(dcol * dcol + drow * drow);
+
+        const ringDist = Math.abs(dist - rip.radius);
+        if (ringDist < 2.0) {
+          const ringFactor = 1 - ringDist / 2.0;
+          const pushStr = rip.strength * ringFactor;
+
+          // Horizontal push only — use the column difference direction
+          if (Math.abs(dcol) > 0.01) {
+            forceX += (dcol > 0 ? 1 : -1) * pushStr * 0.7;
+          } else {
+            // Directly above/below: small random jitter
+            forceX += (Math.random() - 0.5) * pushStr * 0.3;
+          }
+
+          brighten += ringFactor * rip.strength * 0.08;
+        }
+
+        if (dist < rip.radius && rip.age < 14) {
+          brighten += (1 - dist / rip.radius) * rip.strength * 0.012;
+        }
+      }
+
+      // Spring physics — horizontal only (scaled down during lightning)
+      cell.dxV += (forceX * 0.35 * forceScale - cell.dx * CFG.ELASTIC) * 0.5;
+      cell.dxV *= CFG.SPRING_DAMP;
+      cell.dx  += cell.dxV * forceScale;
+
+      // Clamp: never let a letter drift past half a char-width (prevents overlap)
+      const maxDx = CFG._charW * 0.45;
+      if (cell.dx > maxDx)  { cell.dx = maxDx;  cell.dxV *= -0.3; }
+      if (cell.dx < -maxDx) { cell.dx = -maxDx; cell.dxV *= -0.3; }
+
+      // Lightning glow boost
+      cell.alpha = CFG.BASE_ALPHA + Math.min(brighten, 0.6) + glowI * 0.6;
+    }
+
+    // ── Draw text cells ──
+    ctx.font = Math.max(10, CFG.FONT_SIZE) + 'px ' + CFG.FONT_FAMILY;
+    ctx.textBaseline = 'top';
+
+    const tc = CFG.TEXT_COLOR;
+    for (let i = 0; i < cells.length; i++) {
+      const cell = cells[i];
+      if (cell.ch === ' ') continue;
+
+      let a = Math.min(1, Math.max(0.04, cell.alpha));
+
+      // During flash, shift text color toward white
+      const fB = Math.min(flashI * 2, 1);
+      const r = Math.round(tc[0] + (255 - tc[0]) * fB);
+      const g = Math.round(tc[1] + (255 - tc[1]) * fB);
+      const b = Math.round(tc[2] + (255 - tc[2]) * fB);
+
+      ctx.fillStyle = `rgba(${r},${g},${b},${a.toFixed(3)})`;
+      ctx.fillText(cell.ch, cell.x + cell.dx, cell.y);
+    }
+
+    // ── Draw raindrops ──
+    const rc = CFG.RAIN_COLOR;
+    const trailLen = CFG.DROP_SIZE;
+    for (let i = 0; i < drops.length; i++) {
+      const d = drops[i];
+      if (d.row < -1 || d.row > CFG.ROWS + 2) continue;
+
+      const windOffset = CFG.WIND * 0.15;
+
+      for (let t = 0; t < trailLen; t++) {
+        const trailRow = d.row - t * 0.7;
+        if (trailRow < -1 || trailRow > CFG.ROWS + 1) continue;
+
+        const x = gridX0 + (d.col - t * windOffset) * CFG._charW;
+        const y = gridY0 + trailRow * CFG._lineH;
+        const ta = d.alpha * (1 - t / trailLen) * 0.65;
+
+        ctx.fillStyle = `rgba(${rc[0]},${rc[1]},${rc[2]},${ta.toFixed(3)})`;
+        ctx.fillText(t === 0 ? d.char : (t < 2 ? '|' : '.'), x, y);
+      }
+    }
+
+    // ── Draw lightning bolt (3 batched strokes, no shadowBlur, no radial gradients) ──
+    if (lightning && lightning.flash > 0.01) {
+      const lf = lightning.flash;
+      const segs = lightning.segments;
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      // All segments in one path per pass — 3 passes total
+      // Pass 1: wide faint glow
+      ctx.lineWidth = 8;
+      ctx.strokeStyle = `rgba(120,150,255,${(lf * 0.12).toFixed(3)})`;
+      ctx.beginPath();
+      for (let s = 0; s < segs.length; s++) { ctx.moveTo(segs[s].x1, segs[s].y1); ctx.lineTo(segs[s].x2, segs[s].y2); }
+      ctx.stroke();
+
+      // Pass 2: medium glow
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = `rgba(180,200,255,${(lf * 0.4).toFixed(3)})`;
+      ctx.beginPath();
+      for (let s = 0; s < segs.length; s++) { ctx.moveTo(segs[s].x1, segs[s].y1); ctx.lineTo(segs[s].x2, segs[s].y2); }
+      ctx.stroke();
+
+      // Pass 3: bright white core
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = `rgba(255,255,255,${(lf * 0.9).toFixed(3)})`;
+      ctx.beginPath();
+      for (let s = 0; s < segs.length; s++) { ctx.moveTo(segs[s].x1, segs[s].y1); ctx.lineTo(segs[s].x2, segs[s].y2); }
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // ── Full-canvas flash overlay ──
+    if (flashI > 0.02) {
+      ctx.fillStyle = `rgba(200,210,240,${(flashI * 0.12).toFixed(3)})`;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    // ── Vignette ──
+    if (!tick._grad) {
+      tick._grad = ctx.createRadialGradient(W/2, H/2, W * 0.2, W/2, H/2, W * 0.75);
+      tick._grad.addColorStop(0, 'rgba(10,10,20,0)');
+      tick._grad.addColorStop(1, 'rgba(10,10,20,0.4)');
+    }
+    ctx.fillStyle = tick._grad;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  /* ── SLIDER WIRING ────────────────────────────────── */
+  function wire(id, valId, setter, display) {
+    const inp = document.getElementById(id);
+    const val = document.getElementById(valId);
+    inp.addEventListener('input', () => {
+      setter(+inp.value);
+      val.textContent = display(+inp.value);
+    });
+  }
+
+  wire('s-speed',   'v-speed',   v => { CFG.DROP_SPEED = v / 10; },   v => (v/10).toFixed(1));
+  wire('s-density', 'v-density', v => { CFG.DROP_COUNT = v; syncDropCount(); }, v => v);
+  wire('s-wind',    'v-wind',    v => { CFG.WIND = v / 100; },        v => (v >= 0 ? '+' : '') + (v/100).toFixed(2));
+  wire('s-dropsize','v-dropsize',v => { CFG.DROP_SIZE = v; },          v => v);
+  wire('s-elastic', 'v-elastic', v => { CFG.ELASTIC = v / 100; },     v => (v/100).toFixed(2));
+  wire('s-ripple',  'v-ripple',  v => { CFG.RIPPLE_STR = v / 10; },   v => (v/10).toFixed(1));
+  wire('s-textsize','v-textsize',v => { CFG.FONT_SIZE = v; resize(); }, v => v);
+
+  // Font selector
+  document.getElementById('s-font').addEventListener('change', function () {
+    CFG.FONT_FAMILY = this.value;
+    resize();
+  });
+
+  /* ── RESIZE ───────────────────────────────────────── */
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(resize, 150);
+  });
+
+  /* ── INIT ─────────────────────────────────────────── */
+  resize();
+  document.getElementById('footer-year').textContent = new Date().getFullYear();
+  tick();
+
+})();
+</script>
+
+</body>
+</html>

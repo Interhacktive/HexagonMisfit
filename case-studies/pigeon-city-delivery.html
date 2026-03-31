@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pigeon — City Delivery — Hexagon Misfit</title>
+  <meta name="description" content="A case study in comically serious product design: Pigeon is an iOS app that delivers handwritten paper messages via actual pigeons. Logo, brand, UI — all treated with complete earnestness." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/reset.css" />
+  <link rel="stylesheet" href="../css/tokens.css" />
+  <link rel="stylesheet" href="../css/layout.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/animations.css" />
+  <style>
+
+    /* ── NAV ───────────────────────────────────────── */
+    .cs-nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      padding-block: var(--space-5);
+      background: rgba(10, 10, 15, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--color-border);
+      transition: background 0.3s;
+    }
+    .cs-nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .cs-nav-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      text-decoration: none;
+    }
+    .cs-nav-logo img { height: 28px; width: auto; }
+    .cs-nav-right {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+    }
+    .cs-back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .cs-back-link:hover { color: var(--color-text-primary); }
+    .cs-back-link svg { width: 14px; height: 14px; }
+
+    /* ── HERO ──────────────────────────────────────── */
+    .cs-hero {
+      position: relative;
+      height: 100svh;
+      min-height: 600px;
+      max-height: 900px;
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
+    }
+    .cs-hero-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 40%;
+      transform: scale(1.04);
+      animation: heroReveal 1.8s var(--ease-out) forwards;
+    }
+    @keyframes heroReveal {
+      from { transform: scale(1.08); opacity: 0.6; }
+      to   { transform: scale(1.04); opacity: 1; }
+    }
+    /* Warm overlay for this case study — cream-to-dark instead of pure black */
+    .cs-hero-overlay {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to top, rgba(8,6,4,1) 0%, rgba(8,6,4,0.6) 35%, rgba(8,6,4,0.15) 100%),
+        linear-gradient(to right, rgba(8,6,4,0.5) 0%, transparent 65%);
+    }
+    .cs-hero-content {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      padding-bottom: var(--space-16);
+    }
+    .cs-hero-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-accent-secondary);
+      background: rgba(45,212,191,0.08);
+      border: 1px solid rgba(45,212,191,0.25);
+      border-radius: var(--radius-full);
+      padding: var(--space-2) var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+    .cs-hero-chip::before {
+      content: '';
+      display: block;
+      width: 6px;
+      height: 6px;
+      background: var(--color-accent-secondary);
+      border-radius: 50%;
+      animation: pulse 2s ease infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.75); }
+    }
+    .cs-hero-title {
+      font-family: var(--font-heading);
+      font-size: clamp(2.5rem, 7vw, 5.5rem);
+      font-weight: 700;
+      line-height: 1.0;
+      color: var(--color-text-primary);
+      max-width: 14ch;
+      margin-bottom: var(--space-6);
+    }
+    .cs-hero-tagline {
+      font-size: clamp(1rem, 1.8vw, 1.25rem);
+      color: rgba(240,240,245,0.65);
+      line-height: 1.55;
+      max-width: 48ch;
+      margin-bottom: var(--space-8);
+    }
+    .cs-hero-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+    }
+    .cs-hero-scroll {
+      position: absolute;
+      bottom: var(--space-8);
+      right: var(--space-8);
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+    .cs-hero-scroll-line {
+      width: 1px;
+      height: 40px;
+      background: linear-gradient(to bottom, var(--color-border-accent), transparent);
+      animation: scrollLine 2s ease infinite;
+    }
+    @keyframes scrollLine {
+      0%, 100% { opacity: 0.4; transform: scaleY(0.5) translateY(-20%); }
+      50%       { opacity: 1; transform: scaleY(1) translateY(0); }
+    }
+
+    /* ── FACTS BAR ─────────────────────────────────── */
+    .cs-facts-bar {
+      background: var(--color-bg-card);
+      border-bottom: 1px solid var(--color-border);
+      border-top: 1px solid var(--color-border-accent);
+      padding-block: var(--space-6);
+    }
+    .cs-facts-grid {
+      display: flex;
+      align-items: stretch;
+      flex-wrap: wrap;
+      gap: 0;
+    }
+    .cs-fact {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding-inline: var(--space-8);
+      border-right: 1px solid var(--color-border);
+      min-width: 140px;
+    }
+    .cs-fact:first-child { padding-left: 0; }
+    .cs-fact:last-child  { border-right: none; }
+    .cs-fact-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+    .cs-fact-value {
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    /* ── SHARED SECTION STYLES ─────────────────────── */
+    .cs-section { padding-block: var(--space-20); }
+    .cs-section + .cs-section { padding-top: 0; }
+
+    .cs-label {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-accent-secondary);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-5);
+    }
+    .cs-label::before {
+      content: '';
+      display: block;
+      width: 20px;
+      height: 1px;
+      background: var(--color-accent-secondary);
+      flex-shrink: 0;
+    }
+    .cs-h2 {
+      font-family: var(--font-heading);
+      font-size: clamp(1.75rem, 3.5vw, 2.75rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-6);
+    }
+    .cs-body-text {
+      font-size: var(--text-base);
+      color: var(--color-text-secondary);
+      line-height: 1.75;
+      max-width: 62ch;
+    }
+    .cs-body-text + .cs-body-text { margin-top: var(--space-5); }
+
+    /* ── OVERVIEW ──────────────────────────────────── */
+    .cs-overview {
+      padding-block: var(--space-20);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .cs-overview-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: var(--space-16);
+      align-items: start;
+    }
+    .cs-overview-quote {
+      font-family: var(--font-heading);
+      font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+      font-weight: 500;
+      line-height: 1.4;
+      color: var(--color-text-primary);
+      border-left: 3px solid var(--color-accent-primary);
+      padding-left: var(--space-6);
+      margin-bottom: var(--space-8);
+    }
+    .cs-overview-sidebar {
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border-accent);
+      border-radius: var(--radius-xl);
+      padding: var(--space-8);
+      box-shadow: 0 0 40px rgba(108,99,255,0.08);
+    }
+    .cs-overview-sidebar-title {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-5);
+    }
+    .cs-scope-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      list-style: none;
+    }
+    .cs-scope-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+    }
+    .cs-scope-list li::before {
+      content: '';
+      display: block;
+      width: 5px;
+      height: 5px;
+      background: var(--color-accent-primary);
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 7px;
+    }
+
+    /* ── CHALLENGE ─────────────────────────────────── */
+    .cs-challenge {
+      padding-block: var(--space-20);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .cs-challenge-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-16);
+      align-items: start;
+    }
+
+    /* ── APPROACH ──────────────────────────────────── */
+    .cs-approach {
+      padding-block: var(--space-20);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .cs-steps {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-8);
+      margin-top: var(--space-12);
+    }
+    .cs-step {
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-8);
+      position: relative;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .cs-step:hover {
+      border-color: var(--color-border-accent);
+      box-shadow: 0 0 30px rgba(108,99,255,0.08);
+    }
+    .cs-step-num {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      color: var(--color-accent-primary);
+      margin-bottom: var(--space-4);
+    }
+    .cs-step-title {
+      font-family: var(--font-heading);
+      font-size: var(--text-base);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-3);
+    }
+    .cs-step-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: 1.65;
+    }
+
+    /* ── PROTOTYPE EMBED ───────────────────────────── */
+    .cs-embed {
+      padding-block: var(--space-20);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .cs-embed-frame {
+      margin-top: var(--space-10);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      border: 1px solid var(--color-border-accent);
+      background: var(--color-bg-card);
+      position: relative;
+    }
+    .cs-embed-frame iframe {
+      display: block;
+      width: 100%;
+      height: 680px;
+      border: none;
+    }
+    /* Shown when the iframe src is still a placeholder */
+    .cs-embed-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-4);
+      height: 400px;
+      text-align: center;
+      padding: var(--space-8);
+    }
+    .cs-embed-placeholder-icon {
+      width: 56px;
+      height: 56px;
+      border: 1.5px dashed var(--color-border);
+      border-radius: var(--radius-xl);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-muted);
+    }
+    .cs-embed-placeholder-icon svg { width: 24px; height: 24px; }
+    .cs-embed-placeholder p {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      max-width: 36ch;
+      line-height: 1.6;
+    }
+    .cs-embed-placeholder code {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--color-accent-primary);
+      background: rgba(108,99,255,0.08);
+      padding: 0.2em 0.5em;
+      border-radius: 4px;
+    }
+
+    /* ── GALLERY ───────────────────────────────────── */
+    .cs-gallery {
+      padding-block: var(--space-20);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .cs-gallery-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      grid-template-rows: 300px 300px;
+      gap: var(--space-3);
+      margin-top: var(--space-10);
+    }
+    .cs-gallery-item {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      position: relative;
+    }
+    .cs-gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+      transition: transform 0.6s var(--ease-out);
+    }
+    .cs-gallery-item:hover img { transform: scale(1.04); }
+    .cs-gallery-item--span-col { grid-row: 1 / 3; }
+    .cs-gallery-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-3);
+      color: var(--color-text-muted);
+    }
+    .cs-gallery-placeholder-icon {
+      width: 40px;
+      height: 40px;
+      border: 1.5px dashed var(--color-border);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-muted);
+    }
+    .cs-gallery-placeholder-icon svg { width: 18px; height: 18px; }
+    .cs-gallery-placeholder span {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* ── OUTCOME ───────────────────────────────────── */
+    .cs-outcome {
+      padding-block: var(--space-20);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .cs-outcome-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-16);
+      align-items: start;
+    }
+    .cs-outcome-pull {
+      font-family: var(--font-heading);
+      font-size: clamp(1.25rem, 2.2vw, 1.6rem);
+      font-weight: 500;
+      line-height: 1.45;
+      color: var(--color-text-primary);
+      padding: var(--space-8);
+      background: linear-gradient(135deg, rgba(108,99,255,0.07), rgba(45,212,191,0.04));
+      border: 1px solid var(--color-border-accent);
+      border-radius: var(--radius-xl);
+      box-shadow: 0 0 40px rgba(108,99,255,0.07);
+    }
+
+    /* ── STATS ─────────────────────────────────────── */
+    .cs-stats {
+      padding-block: var(--space-20);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .cs-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-4);
+      margin-top: var(--space-12);
+    }
+    .cs-stat-card {
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-8);
+      text-align: center;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .cs-stat-card:hover {
+      border-color: var(--color-border-accent);
+      box-shadow: 0 0 40px rgba(108,99,255,0.1);
+    }
+    .cs-stat-value {
+      display: block;
+      font-family: var(--font-heading);
+      font-size: clamp(2.5rem, 5vw, 3.75rem);
+      font-weight: 700;
+      line-height: 1;
+      color: var(--color-accent-primary);
+      margin-bottom: var(--space-3);
+    }
+    .cs-stat-label {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      line-height: 1.5;
+    }
+
+    /* ── CTA ───────────────────────────────────────── */
+    .cs-cta {
+      padding-block: var(--space-20);
+      text-align: center;
+    }
+    .cs-cta-inner {
+      max-width: 560px;
+      margin-inline: auto;
+    }
+    .cs-cta-eyebrow {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-accent-secondary);
+      margin-bottom: var(--space-4);
+    }
+    .cs-cta h2 {
+      font-family: var(--font-heading);
+      font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+      font-weight: 700;
+      line-height: 1.15;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-5);
+    }
+    .cs-cta p {
+      color: var(--color-text-secondary);
+      line-height: 1.65;
+      margin-bottom: var(--space-8);
+    }
+
+    /* ── FOOTER ────────────────────────────────────── */
+    .cs-footer {
+      border-top: 1px solid var(--color-border);
+      padding-block: var(--space-8);
+      text-align: center;
+      color: var(--color-text-muted);
+      font-size: var(--text-sm);
+    }
+    .cs-footer a { color: var(--color-accent-primary); text-decoration: none; }
+    .cs-footer a:hover { text-decoration: underline; }
+
+    /* ── RESPONSIVE ────────────────────────────────── */
+    @media (max-width: 900px) {
+      .cs-overview-grid,
+      .cs-challenge-grid,
+      .cs-outcome-grid { grid-template-columns: 1fr; }
+      .cs-steps { grid-template-columns: 1fr; }
+      .cs-stats-grid { grid-template-columns: 1fr 1fr; }
+      .cs-gallery-grid {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 200px 200px 200px;
+      }
+      .cs-gallery-item--span-col { grid-row: auto; }
+      .cs-fact { min-width: auto; }
+      .cs-embed-frame iframe { height: 520px; }
+    }
+    @media (max-width: 580px) {
+      .cs-hero { max-height: 680px; }
+      .cs-stats-grid { grid-template-columns: 1fr; }
+      .cs-gallery-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
+      .cs-gallery-item { height: 220px; }
+      .cs-facts-grid { gap: var(--space-4); }
+      .cs-fact { border-right: none; padding-inline: 0; border-bottom: 1px solid var(--color-border); padding-bottom: var(--space-3); }
+      .cs-fact:last-child { border-bottom: none; }
+      .cs-embed-frame iframe { height: 420px; }
+    }
+
+  </style>
+</head>
+<body style="background: var(--color-bg-primary);">
+
+<!-- ═══════════════════════════════════════════════
+  NAV
+══════════════════════════════════════════════════ -->
+<nav class="cs-nav" role="navigation" aria-label="Case study navigation">
+  <div class="container">
+    <div class="cs-nav-inner">
+      <a href="../" class="cs-nav-logo">
+        <img src="../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <div class="cs-nav-right">
+        <a href="index.html" class="cs-back-link">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 8H1M7 2L1 8l6 6"/></svg>
+          All Case Studies
+        </a>
+        <a href="../#contact" class="btn btn-outline" style="font-size: var(--text-xs); padding: 0.5rem 1rem;">Let's Talk</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ═══════════════════════════════════════════════
+  HERO
+══════════════════════════════════════════════════ -->
+<section class="cs-hero" aria-label="Project hero">
+
+  <img
+    class="cs-hero-img"
+    src="../experiments/Pigeon/pigeons/pigeon02.png"
+    alt="A pigeon — Pigeon app hero"
+  />
+  <div class="cs-hero-overlay" aria-hidden="true"></div>
+
+  <div class="cs-hero-content">
+    <div class="container">
+      <div class="cs-hero-chip" aria-label="Project type">
+        Conceptual &nbsp;·&nbsp; iOS App &nbsp;·&nbsp; 2025
+      </div>
+      <h1 class="cs-hero-title">Pigeon</h1>
+      <p class="cs-hero-tagline">
+        Because your feelings deserve to arrive by wing.
+      </p>
+      <div class="cs-hero-actions">
+        <a href="#prototype" class="btn btn-primary">Try the Prototype</a>
+        <a href="#overview" class="btn btn-outline">Read the Case Study</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="cs-hero-scroll" aria-hidden="true">
+    <span>Scroll</span>
+    <div class="cs-hero-scroll-line"></div>
+  </div>
+
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  FACTS BAR
+══════════════════════════════════════════════════ -->
+<div class="cs-facts-bar">
+  <div class="container">
+    <div class="cs-facts-grid">
+      <div class="cs-fact">
+        <span class="cs-fact-label">Type</span>
+        <span class="cs-fact-value">Mobile App Concept</span>
+      </div>
+      <div class="cs-fact">
+        <span class="cs-fact-label">Year</span>
+        <span class="cs-fact-value">2025</span>
+      </div>
+      <div class="cs-fact">
+        <span class="cs-fact-label">Platform</span>
+        <span class="cs-fact-value">iOS</span>
+      </div>
+      <div class="cs-fact">
+        <span class="cs-fact-label">Category</span>
+        <span class="cs-fact-value">Brand · UI · Humor</span>
+      </div>
+      <div class="cs-fact">
+        <span class="cs-fact-label">Pigeon Count</span>
+        <span class="cs-fact-value">3 (and counting)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+  OVERVIEW
+══════════════════════════════════════════════════ -->
+<section class="cs-overview" id="overview" aria-label="Project overview">
+  <div class="container">
+    <div class="cs-overview-grid">
+
+      <div>
+        <span class="cs-label">The Brief</span>
+        <blockquote class="cs-overview-quote">
+          "In a world drowning in push notifications, we asked the obvious question: what if your message arrived by bird?"
+        </blockquote>
+        <p class="cs-body-text">
+          Digital messages are weightless. They arrive in milliseconds and disappear just as fast — buried under a hundred more before you've had a chance to feel them. A handwritten letter, on the other hand, has gravity. It has a smell. It has the person's actual pen pressure. It was clearly worth the effort.
+        </p>
+        <p class="cs-body-text">
+          Pigeon bridges this gap with complete sincerity. You compose a note on your phone. We print it on paper, attach it to one of our certified city pigeons, and dispatch it to the recipient's window. No data plan required. No read receipts. No typing indicators. Just the soft thud of a bird landing and a small folded note that says what it says.
+        </p>
+        <p class="cs-body-text">
+          The brief was treated with the same earnestness we bring to any serious product. The logistics are absurd. The design is not.
+        </p>
+      </div>
+
+      <aside class="cs-overview-sidebar" aria-label="Project scope">
+        <p class="cs-overview-sidebar-title">Scope of Work</p>
+        <ul class="cs-scope-list">
+          <li>Brand Strategy &amp; Naming</li>
+          <li>Logo Design &amp; Mark System</li>
+          <li>Color &amp; Typography System</li>
+          <li>iOS UI Design (3 screens)</li>
+          <li>Interaction Design &amp; Prototype</li>
+          <li>Ornithological Research (light)</li>
+        </ul>
+      </aside>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  THE CHALLENGE
+══════════════════════════════════════════════════ -->
+<section class="cs-challenge" aria-label="The challenge">
+  <div class="container">
+    <div class="cs-challenge-grid">
+
+      <div>
+        <span class="cs-label">The Problem</span>
+        <h2 class="cs-h2">Modern messaging is too easy. That's the problem.</h2>
+      </div>
+
+      <div>
+        <p class="cs-body-text">
+          Sending a message today requires almost zero friction — and that frictionlessness has made messages feel disposable. When it costs nothing to send a thought, the thought costs nothing. The medium has eaten the meaning.
+        </p>
+        <p class="cs-body-text">
+          Email had a brief moment of formality before becoming a dumping ground. Texting elevated the casual to the dominant. Every subsequent platform has competed to make communication faster, lighter, cheaper. Nobody asked whether that was good.
+        </p>
+        <p class="cs-body-text">
+          Pigeon deliberately reintroduces friction. Not because we're nostalgists, but because friction is what makes something feel worth sending. A message carried by a real, living bird — a bird that someone trained, that has a name, that got tired halfway — that message means something. The design brief was to make the app feel as considered as the gesture itself.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  OUR APPROACH
+══════════════════════════════════════════════════ -->
+<section class="cs-approach" aria-label="Design process">
+  <div class="container">
+    <span class="cs-label">Design Process</span>
+    <h2 class="cs-h2">Four phases. One bird. Zero shortcuts.</h2>
+    <div class="cs-steps">
+
+      <div class="cs-step">
+        <p class="cs-step-num">01 — Research</p>
+        <h3 class="cs-step-title">Ornithological Constraints</h3>
+        <p class="cs-step-desc">We began where any responsible product team begins: with the hardware. Pigeons carry roughly 75g comfortably on a leg band. A standard Post-it note weighs 1g. This left significant design headroom. We also researched homing accuracy (within 1 mile in urban environments), average cruising speed (77 km/h), and the UX implications of a wet bird arriving at your fourth-floor window.</p>
+      </div>
+
+      <div class="cs-step">
+        <p class="cs-step-num">02 — Logo &amp; Mark</p>
+        <h3 class="cs-step-title">The Pigeon as Wordmark</h3>
+        <p class="cs-step-desc">The logo brief: look like you mean it. We distilled a pigeon silhouette from photo reference into a clean geometric mark — rounded, confident, slightly puffed, as pigeons are. The gold (#C4A35A) was chosen for its warmth and its slight absurdity: this is a regal bird. The wordmark pairs Space Grotesk in medium weight with the mark, giving it the gravity of a financial institution and the plausibility of a startup.</p>
+      </div>
+
+      <div class="cs-step">
+        <p class="cs-step-num">03 — Color &amp; Type</p>
+        <h3 class="cs-step-title">Warm, Aged, Slightly Official</h3>
+        <p class="cs-step-desc">The palette was built around the physical object being delivered: paper. Cream (#FAFAF8) as the base, aged gold (#C4A35A) as the primary action color, sage (#3D6B4F) as a supporting accent suggesting parks, rooftops, and the places pigeons tend to be. DM Sans for body copy — approachable, human. Space Grotesk for headings — just serious enough to be funny.</p>
+      </div>
+
+      <div class="cs-step">
+        <p class="cs-step-num">04 — Prototype</p>
+        <h3 class="cs-step-title">Three Screens, Full Flow</h3>
+        <p class="cs-step-desc">The app is three screens: Compose, Select Your Bird, and Track Delivery. Compose is a simple note editor with a paper texture and a word count limit (pigeons can only carry so much). Select Your Bird surfaces your assigned pigeon — name, breed, current mood estimate. Track Delivery shows a live map with a slowly, honestly moving pigeon icon. The entire flow was prototyped at full fidelity in Paper.design.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  LIVE PROTOTYPE
+══════════════════════════════════════════════════ -->
+<section class="cs-embed" id="prototype" aria-label="Live prototype">
+  <div class="container">
+    <span class="cs-label">// live prototype</span>
+    <h2 class="cs-h2">Try it yourself.</h2>
+    <p class="cs-body-text">
+      The full clickable prototype, embedded from Paper.design. Tap through the flow — compose your note, choose your bird, watch it go. No actual pigeons were harmed in the making of this interaction model.
+    </p>
+
+    <div class="cs-embed-frame" id="cs-embed-frame">
+      <!--
+        TO ENABLE: Replace the placeholder div below with an iframe.
+        1. In Paper.design: Share → Enable public link → Copy embed URL
+        2. Replace the .cs-embed-placeholder div with:
+           <iframe
+             src="YOUR_PAPER_EMBED_URL_HERE"
+             title="Pigeon — City Delivery prototype"
+             allow="fullscreen"
+           ></iframe>
+
+        Expected embed URL format:
+        https://app.paper.design/embed/01KKM7BJSWCE0DTHDQ69539GVW
+        (Enable public sharing in Paper first)
+      -->
+      <div class="cs-embed-placeholder" aria-label="Prototype placeholder">
+        <div class="cs-embed-placeholder-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg>
+        </div>
+        <p>
+          To embed the live prototype, make the Paper.design file public and replace this placeholder with an iframe.<br><br>
+          Expected URL: <code>https://app.paper.design/embed/01KKM7BJSWCE0DTHDQ69539GVW</code>
+        </p>
+      </div>
+    </div>
+
+    <p style="margin-top: var(--space-4); font-size: var(--text-xs); font-family: var(--font-mono); color: var(--color-text-muted); letter-spacing: 0.08em;">
+      Prototype built in Paper.design &nbsp;·&nbsp;
+      <a href="https://app.paper.design/file/01KKM7BJSWCE0DTHDQ69539GVW" target="_blank" rel="noopener" style="color: var(--color-accent-primary); text-decoration: none;">Open in Paper ↗</a>
+    </p>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  GALLERY
+══════════════════════════════════════════════════ -->
+<section class="cs-gallery" aria-label="Project gallery">
+  <div class="container">
+    <span class="cs-label">The Fleet</span>
+    <h2 class="cs-h2">Meet the delivery team.</h2>
+
+    <div class="cs-gallery-grid" role="list">
+
+      <div class="cs-gallery-item cs-gallery-item--span-col" role="listitem">
+        <img
+          src="../experiments/Pigeon/pigeons/pigeon01.png"
+          alt="Pigeon — delivery fleet member 01"
+          loading="lazy"
+        />
+      </div>
+
+      <div class="cs-gallery-item" role="listitem">
+        <img
+          src="../experiments/Pigeon/pigeons/pigeon03.png"
+          alt="Pigeon — delivery fleet member 03"
+          loading="lazy"
+        />
+      </div>
+
+      <!-- Placeholder for iPhone mockup screenshot -->
+      <!-- Replace with: <img src="../assets/images/pigeon/mockup.png" alt="Pigeon app iPhone mockup" loading="lazy" /> -->
+      <!-- Export a screenshot from experiments/Pigeon/index.html or from Paper.design and save to assets/images/pigeon/mockup.png -->
+      <div class="cs-gallery-item cs-gallery-placeholder" role="listitem" aria-label="App mockup placeholder">
+        <div class="cs-gallery-placeholder-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg>
+        </div>
+        <span>Add mockup</span>
+      </div>
+
+      <div class="cs-gallery-item cs-gallery-placeholder" role="listitem" aria-label="Photo placeholder">
+        <div class="cs-gallery-placeholder-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        </div>
+        <span>Add photo</span>
+      </div>
+
+      <div class="cs-gallery-item cs-gallery-placeholder" role="listitem" aria-label="Photo placeholder">
+        <div class="cs-gallery-placeholder-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        </div>
+        <span>Add photo</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  OUTCOME
+══════════════════════════════════════════════════ -->
+<section class="cs-outcome" aria-label="Project outcome">
+  <div class="container">
+    <div class="cs-outcome-grid">
+
+      <div>
+        <span class="cs-label">The Result</span>
+        <h2 class="cs-h2">A complete product identity, designed to be taken completely seriously.</h2>
+        <p class="cs-body-text">
+          From the first logo sketch to the final prototype screen, Pigeon was designed as though it were real — because the only way a joke lands is if it's told straight. Every design decision was made earnestly: the color palette earns its warmth, the typography earns its authority, the interactions earn their restraint.
+        </p>
+        <p class="cs-body-text">
+          The result is a product that looks, moves, and feels like something you'd actually download. Whether you would actually use it to send a note via bird is, at this point, your business.
+        </p>
+      </div>
+
+      <div>
+        <p class="cs-outcome-pull">
+          "Users reported feeling 'delighted,' 'genuinely charmed,' and 'mildly concerned about bird logistics.'"
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  STATS
+══════════════════════════════════════════════════ -->
+<section class="cs-stats" aria-label="Key project statistics">
+  <div class="container">
+    <span class="cs-label">By the Numbers</span>
+    <div class="cs-stats-grid">
+
+      <div class="cs-stat-card">
+        <span class="cs-stat-value">3</span>
+        <span class="cs-stat-label">Screens designed<br>(Home, Compose, Track)</span>
+      </div>
+
+      <div class="cs-stat-card">
+        <span class="cs-stat-value">∞</span>
+        <span class="cs-stat-label">Theoretical delivery range<br>(pigeons fly far)</span>
+      </div>
+
+      <div class="cs-stat-card">
+        <span class="cs-stat-value">0</span>
+        <span class="cs-stat-label">Push notifications<br>sent</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  CTA
+══════════════════════════════════════════════════ -->
+<section class="cs-cta" aria-label="Contact call to action">
+  <div class="container">
+    <div class="cs-cta-inner">
+      <p class="cs-cta-eyebrow">Work with us</p>
+      <h2>Have a project that deserves this level of commitment?</h2>
+      <p>Serious or otherwise — we bring the same rigor to everything we make. Tell us what you're building and we'll respond within 24 hours.</p>
+      <div style="display: flex; justify-content: center; gap: var(--space-4); flex-wrap: wrap;">
+        <a href="../#contact" class="btn btn-primary">Start a Conversation</a>
+        <a href="index.html" class="btn btn-outline">More Case Studies</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  FOOTER
+══════════════════════════════════════════════════ -->
+<footer class="cs-footer">
+  <div class="container">
+    <p>
+      &copy; <span id="footer-year"></span> Hexagon Misfit &nbsp;·&nbsp;
+      <a href="../#contact">Get in Touch</a> &nbsp;·&nbsp;
+      <a href="index.html">All Case Studies</a> &nbsp;·&nbsp;
+      <a href="../#work">All Work</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('footer-year').textContent = new Date().getFullYear();
+</script>
+
+</body>
+</html>

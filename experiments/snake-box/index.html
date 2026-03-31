@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Snake in a Box — Hexagon Misfit Experiments</title>
+  <meta name="description" content="A draggable rectangle contains a snake that reshapes itself to fit the available space. Drag the corner handles to resize the box." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../css/reset.css" />
+  <link rel="stylesheet" href="../../css/tokens.css" />
+  <link rel="stylesheet" href="../../css/layout.css" />
+  <link rel="stylesheet" href="../../css/components.css" />
+  <link rel="stylesheet" href="../../css/animations.css" />
+
+  <style>
+    /* ── NAV ─────────────────────────────────────────── */
+    .sb-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding-block: var(--space-5);
+      background: rgba(10, 10, 15, 0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .sb-nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .sb-nav-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      text-decoration: none;
+    }
+    .sb-nav-logo img { height: 28px; width: auto; }
+    .sb-nav-right {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+    }
+    .sb-back {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.08em;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .sb-back:hover { color: var(--color-text-primary); }
+    .sb-back svg { width: 12px; height: 12px; }
+
+    /* ── DEMO AREA ────────────────────────────────────── */
+    .sb-demo {
+      position: relative;
+      width: 100%;
+      height: clamp(420px, 68vh, 740px);
+      background: #000;
+      overflow: hidden;
+    }
+    @media (pointer: coarse) {
+      .sb-demo { touch-action: none; }
+    }
+    #sb-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── OVERLAY ──────────────────────────────────────── */
+    .sb-overlay-tl {
+      position: absolute;
+      top: var(--space-5);
+      left: var(--space-5);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      pointer-events: none;
+    }
+    .sb-live-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--color-accent-secondary);
+      box-shadow: 0 0 8px rgba(45,212,191,0.7);
+      animation: sb-pulse 2s ease-in-out infinite;
+    }
+    @keyframes sb-pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+    .sb-exp-label {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      color: rgba(152,152,176,0.6);
+    }
+
+    .sb-overlay-br {
+      position: absolute;
+      bottom: var(--space-5);
+      right: var(--space-5);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: var(--space-3);
+    }
+
+    /* Theme picker */
+    .sb-theme-picker { display: flex; gap: 6px; }
+    .sb-theme-btn {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.15);
+      cursor: pointer;
+      padding: 0;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .sb-theme-btn:hover  { transform: scale(1.35); border-color: rgba(255,255,255,0.45); }
+    .sb-theme-btn.active { border-color: rgba(255,255,255,0.85); transform: scale(1.2); }
+    .sb-theme-btn[data-theme="0"] { background: #2DD4BF; }
+    .sb-theme-btn[data-theme="1"] { background: #FF6010; }
+    .sb-theme-btn[data-theme="2"] { background: #00E044; }
+    .sb-theme-btn[data-theme="3"] { background: #50B4FF; }
+    .sb-theme-btn[data-theme="4"] { background: #D232FF; }
+
+    .sb-overlay-bl {
+      position: absolute;
+      bottom: var(--space-5);
+      left: var(--space-5);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.08em;
+      color: rgba(152,152,176,0.4);
+      pointer-events: none;
+      transition: opacity 0.6s;
+    }
+    .sb-overlay-bl.hidden { opacity: 0; }
+
+    /* ── INFO SECTION ─────────────────────────────────── */
+    .sb-info {
+      padding-block: var(--space-10) var(--space-20);
+      border-top: 1px solid var(--color-border);
+    }
+    .sb-info-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-12);
+      align-items: start;
+    }
+    @media (max-width: 720px) {
+      .sb-info-inner { grid-template-columns: 1fr; gap: var(--space-8); }
+    }
+    .sb-info-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+    .sb-info-num {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.12em;
+      color: var(--color-accent-primary);
+    }
+    .sb-info-num::before {
+      content: '';
+      display: inline-block;
+      width: 20px; height: 1px;
+      background: currentColor;
+      margin-right: var(--space-2);
+      vertical-align: middle;
+    }
+    .sb-info h1 {
+      font-family: var(--font-heading);
+      font-size: clamp(1.75rem, 4vw, 2.75rem);
+      font-weight: 700;
+      line-height: var(--leading-tight);
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-5);
+    }
+    .sb-info p {
+      color: var(--color-text-secondary);
+      line-height: var(--leading-normal);
+      margin-bottom: var(--space-4);
+    }
+    .sb-info-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-top: var(--space-6);
+    }
+    .sb-controls-title {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-5);
+    }
+    .sb-control-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+    .sb-control {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-4);
+    }
+    .sb-control-key {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--radius-sm);
+      background: var(--color-bg-elevated);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-secondary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .sb-control-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: var(--leading-snug);
+    }
+
+    /* ── FOOTER ───────────────────────────────────────── */
+    .sb-footer {
+      border-top: 1px solid var(--color-border);
+      padding-block: var(--space-8);
+    }
+    .sb-footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+    }
+    .sb-footer-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-muted);
+      text-decoration: none;
+    }
+    .sb-footer-logo img { height: 22px; width: auto; }
+    .sb-footer-copy {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ──────────────────────────────────────────── -->
+<nav class="sb-nav">
+  <div class="container">
+    <div class="sb-nav-inner">
+      <a href="../../" class="sb-nav-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <div class="sb-nav-right">
+        <a href="../" class="sb-back">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <path d="M8 1L3 6l5 5"/>
+          </svg>
+          Experiments
+        </a>
+        <a href="../../#contact" class="btn btn-outline">Let's Talk</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ── DEMO ─────────────────────────────────────────── -->
+<div class="sb-demo" id="sb-wrap">
+  <canvas id="sb-canvas" aria-label="Draggable box containing an autonomous snake that reshapes to fit the space"></canvas>
+
+  <div class="sb-overlay-tl">
+    <div class="sb-live-dot"></div>
+    <span class="sb-exp-label">03 / snake_in_a_box</span>
+  </div>
+
+  <div class="sb-overlay-bl" id="sb-hint">drag a corner to resize</div>
+
+  <div class="sb-overlay-br">
+    <div class="sb-theme-picker" id="sb-theme-picker">
+      <button class="sb-theme-btn active" data-theme="0" title="Nebula"></button>
+      <button class="sb-theme-btn"        data-theme="1" title="Fire"></button>
+      <button class="sb-theme-btn"        data-theme="2" title="Matrix"></button>
+      <button class="sb-theme-btn"        data-theme="3" title="Ice"></button>
+      <button class="sb-theme-btn"        data-theme="4" title="Void"></button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── INFO ─────────────────────────────────────────── -->
+<section class="sb-info">
+  <div class="container">
+    <div class="sb-info-inner">
+
+      <div>
+        <div class="sb-info-meta">
+          <span class="sb-info-num">03</span>
+          <span class="tag tag-teal">LIVE</span>
+        </div>
+        <h1>Snake in a Box</h1>
+        <p>A rectangle with draggable corner handles contains an autonomous snake with a fixed body length. Drag a corner inward and the walls press the entire body flat — the tail piles against the boundary as the chain tries to stay intact.</p>
+        <p>The head steers away from its own body to avoid self-crossing. The body uses constraint relaxation: each frame runs three passes of chain-follow and box-clamp, so the walls act as hard boundaries for every segment, not just the head. A final separation pass pushes any overlapping non-adjacent segments apart, tail-side first.</p>
+        <div class="sb-info-tags">
+          <span class="tag">Canvas 2D</span>
+          <span class="tag">Chain Constraint</span>
+          <span class="tag">Self-Avoidance</span>
+          <span class="tag">Constraint Relaxation</span>
+          <span class="tag">Drag Interaction</span>
+        </div>
+      </div>
+
+      <div>
+        <p class="sb-controls-title">// controls</p>
+        <div class="sb-control-list">
+          <div class="sb-control">
+            <span class="sb-control-key">drag corner</span>
+            <span class="sb-control-desc">Resize the box by pulling any of the four circular corner handles. A minimum size is enforced so the snake always fits.</span>
+          </div>
+          <div class="sb-control">
+            <span class="sb-control-key">theme dots</span>
+            <span class="sb-control-desc">Switch between 5 color palettes — changes both the snake gradient and the box border color.</span>
+          </div>
+          <div class="sb-control">
+            <span class="sb-control-key">watch</span>
+            <span class="sb-control-desc">The snake moves autonomously and avoids crossing its own body. Shrink the box to press the tail against the walls. Expand it to let the snake uncoil and roam.</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ── FOOTER ────────────────────────────────────────── -->
+<footer class="sb-footer">
+  <div class="container">
+    <div class="sb-footer-inner">
+      <a href="../../" class="sb-footer-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <a href="../" class="sb-back">← All experiments</a>
+      <span class="sb-footer-copy">&copy; <span id="footer-year"></span> Hexagon Misfit</span>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ══════════════════════════════════════════════════
+  SNAKE IN A BOX
+══════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ─── CONSTANTS ───────────────────────────────────── */
+  const SEGMENTS  = 32;     // number of body segments
+  const SEG_LEN   = 14;     // px between segment centers (fixed body length = 32×14 = 448px)
+  const SEG_R     = 9;      // segment draw radius
+  const MIN_W     = 200;    // minimum box width
+  const MIN_H     = 170;    // minimum box height
+  const HIT_R     = 22;     // corner hit-test radius (generous for touch)
+  const CORNER_R  = 10;     // corner visual radius
+  const BOX_CURVE = 10;     // box corner rounding
+
+  const THEMES = [
+    { name:'Nebula', head:'#2DD4BF', mid:'#6C63FF', tail:'rgba(108,99,255,0.25)',  glow:'rgba(45,212,191,0.13)',  box:'rgba(108,99,255,0.55)', boxFill:'rgba(108,99,255,0.04)' },
+    { name:'Fire',   head:'#FF9050', mid:'#FF2820', tail:'rgba(180,20,50,0.25)',   glow:'rgba(255,144,80,0.13)',  box:'rgba(255,80,16,0.55)',  boxFill:'rgba(255,80,16,0.04)'  },
+    { name:'Matrix', head:'#7FFF60', mid:'#00CC44', tail:'rgba(0,90,28,0.25)',     glow:'rgba(127,255,96,0.13)',  box:'rgba(0,200,68,0.5)',    boxFill:'rgba(0,200,68,0.04)'   },
+    { name:'Ice',    head:'#C8F0FF', mid:'#2090FF', tail:'rgba(16,48,180,0.25)',   glow:'rgba(200,240,255,0.13)', box:'rgba(80,180,255,0.5)',  boxFill:'rgba(80,180,255,0.04)' },
+    { name:'Void',   head:'#FF88FF', mid:'#CC22FF', tail:'rgba(110,8,200,0.25)',   glow:'rgba(255,136,255,0.13)', box:'rgba(210,50,255,0.5)',  boxFill:'rgba(210,50,255,0.04)' },
+  ];
+
+  /* ─── STATE ───────────────────────────────────────── */
+  let canvas, ctx, dpr = 1, W = 0, H = 0;
+  let box     = { x: 0, y: 0, w: 0, h: 0 };
+  let segs    = [];           // [{ x, y }], head at [0]
+  let headVx  = 2.2, headVy = 0.4;
+  let wanderAngle = 0.3;
+  let themeIdx    = 0;
+  let dragging    = null;     // 'tl'|'tr'|'br'|'bl'|null
+  let dragStart   = {};       // snapshot at drag start
+  let hovered     = null;     // which corner is under cursor
+  let hintTimer   = null;
+  let snakeTime   = 0;        // traveling-wave phase for body wiggle
+
+  /* ─── SETUP ───────────────────────────────────────── */
+  function init() {
+    canvas = document.getElementById('sb-canvas');
+    ctx    = canvas.getContext('2d');
+
+    // Round-rect polyfill for older browsers
+    if (!ctx.roundRect) {
+      CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+        r = Math.min(r, w / 2, h / 2);
+        this.moveTo(x + r, y);
+        this.lineTo(x + w - r, y);
+        this.arcTo(x + w, y, x + w, y + r, r);
+        this.lineTo(x + w, y + h - r);
+        this.arcTo(x + w, y + h, x + w - r, y + h, r);
+        this.lineTo(x + r, y + h);
+        this.arcTo(x, y + h, x, y + h - r, r);
+        this.lineTo(x, y + r);
+        this.arcTo(x, y, x + r, y, r);
+        this.closePath();
+      };
+    }
+
+    resize();
+    bindEvents();
+    requestAnimationFrame(loop);
+
+    document.getElementById('footer-year').textContent = new Date().getFullYear();
+  }
+
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+    const wrap = document.getElementById('sb-wrap');
+    const rect = wrap.getBoundingClientRect();
+    W = rect.width;
+    H = rect.height;
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    box = {
+      x: W * 0.13,
+      y: H * 0.1,
+      w: W * 0.74,
+      h: H * 0.78,
+    };
+    initSnake();
+  }
+
+  function initSnake() {
+    const cx = box.x + box.w / 2;
+    const cy = box.y + box.h / 2;
+    segs = [];
+    for (let i = 0; i < SEGMENTS; i++) {
+      segs.push({ x: cx - i * (SEG_LEN * 0.65), y: cy });
+    }
+    headVx = 2.2;
+    headVy = 0.4;
+    wanderAngle = 0.3;
+  }
+
+  /* ─── RAY CASTING ────────────────────────────────── */
+  // Returns distance from (ox, oy) in unit direction (dx, dy) to the nearest
+  // obstacle — box wall or own body segment — up to MAX_LOOK pixels ahead.
+  function castRay(ox, oy, dx, dy) {
+    const MAX_LOOK = 160;
+    const r        = SEG_R;
+    let   dist     = MAX_LOOK;
+
+    // Wall intersections
+    if (dx > 0) dist = Math.min(dist, (box.x + box.w - r - ox) / dx);
+    if (dx < 0) dist = Math.min(dist, (box.x + r - ox) / dx);
+    if (dy > 0) dist = Math.min(dist, (box.y + box.h - r - oy) / dy);
+    if (dy < 0) dist = Math.min(dist, (box.y + r - oy) / dy);
+    dist = Math.max(0, dist);
+
+    // Body segment intersections (skip neck — first 5 segments)
+    const blockR = SEG_R * 2.0;
+    for (let i = 5; i < segs.length; i++) {
+      const sx = segs[i].x - ox;
+      const sy = segs[i].y - oy;
+      const t  = sx * dx + sy * dy;       // projection along ray
+      if (t <= 0 || t >= dist) continue;  // behind or past current best
+      const pd = Math.hypot(sx - dx * t, sy - dy * t); // perp distance to ray
+      if (pd < blockR) {
+        const hit = t - Math.sqrt(blockR * blockR - pd * pd);
+        if (hit > 0) dist = Math.min(dist, hit);
+      }
+    }
+    return dist;
+  }
+
+  /* ─── PHYSICS ─────────────────────────────────────── */
+  function updateSnake() {
+    const head   = segs[0];
+    const margin = SEG_R + 26;
+    const push   = 0.12;
+    const r      = SEG_R;
+
+    // Soft wall avoidance — backstop for corners (ray sensing handles most cases)
+    if (head.x < box.x + margin)         headVx += push;
+    if (head.x > box.x + box.w - margin) headVx -= push;
+    if (head.y < box.y + margin)         headVy += push;
+    if (head.y > box.y + box.h - margin) headVy -= push;
+
+    // Lateral self-avoidance: handles body proximity outside the forward cone
+    const selfR = SEG_R * 3.6;
+    for (let i = 7; i < segs.length; i++) {
+      const dx = head.x - segs[i].x;
+      const dy = head.y - segs[i].y;
+      const d  = Math.hypot(dx, dy);
+      if (d < selfR && d > 0) {
+        const str = (1 - d / selfR) * 0.28;
+        headVx += (dx / d) * str;
+        headVy += (dy / d) * str;
+      }
+    }
+
+    // Open-space seeking: cast 9 rays across a ±65° forward cone and steer
+    // toward whichever direction has the most clearance from walls and body.
+    const NUM_RAYS = 9;
+    const SPREAD   = Math.PI * 0.72;   // total cone width
+    const curAngle = Math.atan2(headVy, headVx);
+    let   bestScore = -1, bestDx = 0, bestDy = 0;
+
+    for (let i = 0; i < NUM_RAYS; i++) {
+      const angle = curAngle + SPREAD * (i / (NUM_RAYS - 1) - 0.5);
+      const rdx   = Math.cos(angle), rdy = Math.sin(angle);
+      const dist  = castRay(head.x, head.y, rdx, rdy);
+      // Tiny centre-cone bias keeps turns smooth rather than snapping 180°
+      const score = dist * (1 + Math.cos(angle - curAngle) * 0.2);
+      if (score > bestScore) { bestScore = score; bestDx = rdx; bestDy = rdy; }
+    }
+    headVx += bestDx * 0.14;
+    headVy += bestDy * 0.14;
+
+    // Tiny wander noise — keeps motion organic rather than perfectly mechanical
+    wanderAngle += (Math.random() - 0.5) * 0.06;
+    headVx += Math.cos(wanderAngle) * 0.018;
+    headVy += Math.sin(wanderAngle) * 0.018;
+
+    // Speed limits
+    const spd     = Math.hypot(headVx, headVy);
+    const MAX_SPD = 2.8;
+    const MIN_SPD = 1.2;
+    if (spd > MAX_SPD && spd > 0) { headVx *= MAX_SPD / spd; headVy *= MAX_SPD / spd; }
+    if (spd < MIN_SPD && spd > 0) { headVx *= MIN_SPD / spd; headVy *= MIN_SPD / spd; }
+
+    // Move head
+    head.x += headVx;
+    head.y += headVy;
+
+    // Hard bounce head at box walls
+    if (head.x < box.x + r)          { head.x = box.x + r;          headVx =  Math.abs(headVx); }
+    if (head.x > box.x + box.w - r)  { head.x = box.x + box.w - r;  headVx = -Math.abs(headVx); }
+    if (head.y < box.y + r)          { head.y = box.y + r;          headVy =  Math.abs(headVy); }
+    if (head.y > box.y + box.h - r)  { head.y = box.y + box.h - r;  headVy = -Math.abs(headVy); }
+
+    // Constraint relaxation: 3 iterations of [chain follow → clamp all to box].
+    // The box clamp on every segment means the walls physically press the whole
+    // body inward when the box is resized — tail gets pushed flat against the wall.
+    for (let iter = 0; iter < 3; iter++) {
+      for (let i = 1; i < segs.length; i++) {
+        const p = segs[i - 1], c = segs[i];
+        const dx = c.x - p.x, dy = c.y - p.y;
+        const d  = Math.hypot(dx, dy);
+        if (d > SEG_LEN && d > 0) {
+          const f = (d - SEG_LEN) / d;
+          c.x -= dx * f;
+          c.y -= dy * f;
+        }
+      }
+      for (let i = 0; i < segs.length; i++) {
+        segs[i].x = Math.max(box.x + r, Math.min(box.x + box.w - r, segs[i].x));
+        segs[i].y = Math.max(box.y + r, Math.min(box.y + box.h - r, segs[i].y));
+      }
+    }
+
+    // Segment separation: gently push non-adjacent overlapping segments apart.
+    // Tail-side segments (higher index) give way more than head-side ones.
+    const sepD = SEG_R * 2.05;
+    for (let i = 0; i < segs.length - 4; i++) {
+      for (let j = i + 4; j < segs.length; j++) {
+        const dx = segs[i].x - segs[j].x;
+        const dy = segs[i].y - segs[j].y;
+        const d  = Math.hypot(dx, dy);
+        if (d < sepD && d > 0) {
+          const overlap = (sepD - d) / d * 0.28;
+          segs[i].x += dx * overlap * 0.35;
+          segs[i].y += dy * overlap * 0.35;
+          segs[j].x -= dx * overlap * 0.65;
+          segs[j].y -= dy * overlap * 0.65;
+        }
+      }
+    }
+
+    // Final clamp after separation — keeps everything inside the box
+    for (let i = 0; i < segs.length; i++) {
+      segs[i].x = Math.max(box.x + r, Math.min(box.x + box.w - r, segs[i].x));
+      segs[i].y = Math.max(box.y + r, Math.min(box.y + box.h - r, segs[i].y));
+    }
+  }
+
+  /* ─── CORNER HELPERS ──────────────────────────────── */
+  function getCorners() {
+    return {
+      tl: { x: box.x,          y: box.y          },
+      tr: { x: box.x + box.w,  y: box.y          },
+      br: { x: box.x + box.w,  y: box.y + box.h  },
+      bl: { x: box.x,          y: box.y + box.h  },
+    };
+  }
+
+  function hitCorner(mx, my) {
+    const c = getCorners();
+    for (const k of ['tl','tr','br','bl']) {
+      if (Math.hypot(mx - c[k].x, my - c[k].y) < HIT_R) return k;
+    }
+    return null;
+  }
+
+  /* ─── DRAW ────────────────────────────────────────── */
+  function drawBox() {
+    const t = THEMES[themeIdx];
+    ctx.save();
+
+    // Subtle fill
+    ctx.beginPath();
+    ctx.roundRect(box.x, box.y, box.w, box.h, BOX_CURVE);
+    ctx.fillStyle = t.boxFill;
+    ctx.fill();
+
+    // Border glow
+    ctx.beginPath();
+    ctx.roundRect(box.x, box.y, box.w, box.h, BOX_CURVE);
+    ctx.strokeStyle  = t.box;
+    ctx.lineWidth    = 1.5;
+    ctx.shadowColor  = t.box;
+    ctx.shadowBlur   = 16;
+    ctx.stroke();
+    ctx.shadowBlur   = 0;
+
+    // Corner handles
+    const corners = getCorners();
+    for (const k of ['tl','tr','br','bl']) {
+      const p   = corners[k];
+      const hot = (dragging === k || hovered === k);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, CORNER_R, 0, Math.PI * 2);
+      ctx.fillStyle   = hot ? t.box : 'rgba(12, 10, 22, 0.85)';
+      ctx.strokeStyle = t.box;
+      ctx.lineWidth   = 1.5;
+      ctx.shadowColor = t.box;
+      ctx.shadowBlur  = hot ? 20 : 8;
+      ctx.fill();
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    ctx.restore();
+  }
+
+  /* ─── WIGGLE DISPLAY POSITIONS ───────────────────── */
+  // Returns a copy of segs with a traveling lateral sine wave applied.
+  // Physics spine stays untouched — this is render-only.
+  function getDisplaySegs() {
+    const W_AMP  = 7.0;    // max lateral displacement (px)
+    const W_FREQ = 0.40;   // radians per segment — ~2 S-curves along the body
+
+    // Advance wave phase proportional to head speed: fast = fast wiggle
+    snakeTime += Math.max(Math.hypot(headVx, headVy) * 0.072, 0.05);
+
+    // Pre-compute perpendicular direction at each segment from the physics spine.
+    // Using neighbours of the ORIGINAL segs so modifications don't compound.
+    const perps = new Array(segs.length);
+    perps[0] = { px: 0, py: 0 };
+    for (let i = 1; i < segs.length - 1; i++) {
+      const sx = segs[i + 1].x - segs[i - 1].x;
+      const sy = segs[i + 1].y - segs[i - 1].y;
+      const sl = Math.hypot(sx, sy);
+      perps[i] = sl > 0.5 ? { px: -sy / sl, py: sx / sl } : { px: 0, py: 0 };
+    }
+    perps[segs.length - 1] = { px: 0, py: 0 };
+
+    return segs.map((s, i) => {
+      // Ramp in over first 4 segs, ramp out over last 3 — keeps endpoints clean
+      const taper = Math.min(1, i / 4) * Math.min(1, (segs.length - 1 - i) / 3);
+
+      // Reduce wiggle when pressed against a wall so body stays inside the box
+      const wallDist = Math.min(
+        s.x - (box.x + SEG_R),
+        (box.x + box.w - SEG_R) - s.x,
+        s.y - (box.y + SEG_R),
+        (box.y + box.h - SEG_R) - s.y
+      );
+      const wallFade = Math.max(0, Math.min(1, wallDist / (W_AMP + 1)));
+
+      // Wave travels from head toward tail: phase = time − index × frequency
+      const offset = W_AMP * Math.sin(snakeTime - i * W_FREQ) * taper * wallFade;
+      return { x: s.x + perps[i].px * offset, y: s.y + perps[i].py * offset };
+    });
+  }
+
+  function drawSnake() {
+    if (segs.length < 2) return;
+    const t    = THEMES[themeIdx];
+    const d    = getDisplaySegs();       // wiggled display positions
+    const head = d[0];
+    const tail = d[d.length - 1];
+    ctx.save();
+    ctx.lineCap  = 'round';
+    ctx.lineJoin = 'round';
+
+    // Build smooth bezier path through display segment midpoints
+    ctx.beginPath();
+    ctx.moveTo(head.x, head.y);
+    for (let i = 1; i < d.length - 1; i++) {
+      const mx = (d[i].x + d[i + 1].x) * 0.5;
+      const my = (d[i].y + d[i + 1].y) * 0.5;
+      ctx.quadraticCurveTo(d[i].x, d[i].y, mx, my);
+    }
+    ctx.lineTo(tail.x, tail.y);
+
+    // Pass 1: wide outer glow
+    ctx.strokeStyle = t.glow;
+    ctx.lineWidth   = SEG_R * 4.8;
+    ctx.stroke();
+
+    // Pass 2: main body gradient (head → tail)
+    const grad = ctx.createLinearGradient(head.x, head.y, tail.x, tail.y);
+    grad.addColorStop(0,   t.head);
+    grad.addColorStop(0.55, t.mid);
+    grad.addColorStop(1,   t.tail);
+    ctx.strokeStyle = grad;
+    ctx.lineWidth   = SEG_R * 1.85;
+    ctx.stroke();
+
+    // Head cap
+    ctx.beginPath();
+    ctx.arc(head.x, head.y, SEG_R * 1.45, 0, Math.PI * 2);
+    ctx.fillStyle  = t.head;
+    ctx.shadowColor = t.head;
+    ctx.shadowBlur  = 16;
+    ctx.fill();
+    ctx.shadowBlur  = 0;
+
+    // Eyes — offset perpendicular to heading direction
+    const angle  = Math.atan2(headVy, headVx);
+    const fwd    = SEG_R * 0.38;
+    const perp   = SEG_R * 0.58;
+    const eyeR   = 2.4;
+    const pupilR = 1.2;
+    for (const side of [-1, 1]) {
+      const ex = head.x + Math.cos(angle) * fwd - Math.sin(angle) * perp * side;
+      const ey = head.y + Math.sin(angle) * fwd + Math.cos(angle) * perp * side;
+      // White sclera
+      ctx.beginPath();
+      ctx.arc(ex, ey, eyeR, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(240,240,245,0.9)';
+      ctx.fill();
+      // Dark pupil
+      ctx.beginPath();
+      ctx.arc(ex, ey, pupilR, 0, Math.PI * 2);
+      ctx.fillStyle = '#08070F';
+      ctx.fill();
+    }
+
+    // Tail tip — fades out
+    ctx.beginPath();
+    ctx.arc(tail.x, tail.y, SEG_R * 0.65, 0, Math.PI * 2);
+    ctx.fillStyle = t.tail;
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    updateSnake();
+    drawBox();
+    drawSnake();
+  }
+
+  function loop() {
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  /* ─── EVENTS ──────────────────────────────────────── */
+  function pointerPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    if (e.touches) {
+      return {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top,
+      };
+    }
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  function onDown(e) {
+    const { x, y } = pointerPos(e);
+    const corner   = hitCorner(x, y);
+    if (corner) {
+      e.preventDefault();
+      dragging  = corner;
+      dragStart = { x, y, bx: box.x, by: box.y, bw: box.w, bh: box.h };
+      canvas.style.cursor = 'grabbing';
+      clearHint();
+    }
+  }
+
+  function onMove(e) {
+    const { x, y } = pointerPos(e);
+
+    if (dragging) {
+      e.preventDefault();
+      const dx = x - dragStart.x;
+      const dy = y - dragStart.y;
+
+      switch (dragging) {
+        case 'tl':
+          box.x = Math.min(dragStart.bx + dx, dragStart.bx + dragStart.bw - MIN_W);
+          box.y = Math.min(dragStart.by + dy, dragStart.by + dragStart.bh - MIN_H);
+          box.w = dragStart.bw - (box.x - dragStart.bx);
+          box.h = dragStart.bh - (box.y - dragStart.by);
+          break;
+        case 'tr':
+          box.w = Math.max(dragStart.bw + dx, MIN_W);
+          box.y = Math.min(dragStart.by + dy, dragStart.by + dragStart.bh - MIN_H);
+          box.h = dragStart.bh - (box.y - dragStart.by);
+          break;
+        case 'br':
+          box.w = Math.max(dragStart.bw + dx, MIN_W);
+          box.h = Math.max(dragStart.bh + dy, MIN_H);
+          break;
+        case 'bl':
+          box.x = Math.min(dragStart.bx + dx, dragStart.bx + dragStart.bw - MIN_W);
+          box.w = dragStart.bw - (box.x - dragStart.bx);
+          box.h = Math.max(dragStart.bh + dy, MIN_H);
+          break;
+      }
+    } else {
+      // Hover detection
+      hovered = hitCorner(x, y);
+      canvas.style.cursor = hovered ? 'grab' : 'default';
+    }
+  }
+
+  function onUp() {
+    if (dragging) {
+      dragging = null;
+      canvas.style.cursor = hovered ? 'grab' : 'default';
+    }
+  }
+
+  function clearHint() {
+    const hint = document.getElementById('sb-hint');
+    if (hintTimer) clearTimeout(hintTimer);
+    hint.classList.add('hidden');
+  }
+
+  function bindEvents() {
+    // Mouse
+    canvas.addEventListener('mousedown',  onDown);
+    window.addEventListener('mousemove',  onMove);
+    window.addEventListener('mouseup',    onUp);
+
+    // Touch
+    canvas.addEventListener('touchstart', onDown, { passive: false });
+    window.addEventListener('touchmove',  onMove, { passive: false });
+    window.addEventListener('touchend',   onUp);
+
+    // Resize
+    window.addEventListener('resize', () => {
+      resize();
+    });
+
+    // Theme buttons
+    document.getElementById('sb-theme-picker').addEventListener('click', e => {
+      const btn = e.target.closest('.sb-theme-btn');
+      if (!btn) return;
+      themeIdx = parseInt(btn.dataset.theme, 10);
+      document.querySelectorAll('.sb-theme-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+
+    // Hide hint after first interaction
+    canvas.addEventListener('mousedown', clearHint, { once: true });
+    canvas.addEventListener('touchstart', clearHint, { once: true });
+    hintTimer = setTimeout(() => {
+      document.getElementById('sb-hint').classList.add('hidden');
+    }, 5000);
+  }
+
+  /* ─── START ───────────────────────────────────────── */
+  document.addEventListener('DOMContentLoaded', init);
+
+}());
+</script>
+</body>
+</html>

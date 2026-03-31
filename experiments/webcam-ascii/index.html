@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Webcam ASCII — Hexagon Misfit Experiments</title>
+  <meta name="description" content="Live webcam feed rendered in real-time ASCII art. Color or monochrome, three density presets. No libraries — pure Canvas 2D and getUserMedia." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../css/reset.css" />
+  <link rel="stylesheet" href="../../css/tokens.css" />
+  <link rel="stylesheet" href="../../css/layout.css" />
+  <link rel="stylesheet" href="../../css/components.css" />
+  <link rel="stylesheet" href="../../css/animations.css" />
+
+  <style>
+    /* ── NAV ─────────────────────────────────────────── */
+    .wa-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding-block: var(--space-5);
+      background: rgba(10, 10, 15, 0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .wa-nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .wa-nav-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      text-decoration: none;
+    }
+    .wa-nav-logo img { height: 28px; width: auto; }
+    .wa-nav-right {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+    }
+    .wa-back {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.08em;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .wa-back:hover { color: var(--color-text-primary); }
+    .wa-back svg { width: 12px; height: 12px; }
+
+    /* ── DEMO AREA ────────────────────────────────────── */
+    .wa-demo {
+      position: relative;
+      width: 100%;
+      height: clamp(420px, 68vh, 740px);
+      background: #000;
+      overflow: hidden;
+    }
+    #wa-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── START OVERLAY ────────────────────────────────── */
+    .wa-start-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-5);
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+      transition: opacity 0.5s;
+    }
+    .wa-start-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .wa-start-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(240,240,245,0.5);
+    }
+    .wa-start-icon svg { width: 26px; height: 26px; }
+    .wa-start-title {
+      font-family: var(--font-heading);
+      font-size: var(--text-xl);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      text-align: center;
+    }
+    .wa-start-sub {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      color: var(--color-text-muted);
+      text-align: center;
+      max-width: 30ch;
+    }
+    .wa-start-btn {
+      margin-top: var(--space-2);
+      padding: 0.6rem 1.8rem;
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-text-primary);
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .wa-start-btn:hover {
+      border-color: rgba(108,99,255,0.7);
+      background: rgba(108,99,255,0.12);
+    }
+    .wa-error-msg {
+      display: none;
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.08em;
+      color: rgba(255, 80, 80, 0.8);
+      text-align: center;
+      max-width: 38ch;
+      line-height: 1.6;
+    }
+    .wa-error-msg.visible { display: block; }
+
+    /* ── OVERLAYS ─────────────────────────────────────── */
+    .wa-overlay-tl {
+      position: absolute;
+      top: var(--space-5);
+      left: var(--space-5);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      pointer-events: none;
+      z-index: 5;
+    }
+    .wa-live-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--color-accent-secondary);
+      box-shadow: 0 0 8px rgba(45,212,191,0.7);
+      animation: wa-pulse 2s ease-in-out infinite;
+    }
+    @keyframes wa-pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+    .wa-exp-label {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      color: rgba(152,152,176,0.6);
+    }
+
+    .wa-overlay-bl {
+      position: absolute;
+      bottom: var(--space-5);
+      left: var(--space-5);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.08em;
+      color: rgba(152,152,176,0.4);
+      pointer-events: none;
+      z-index: 5;
+      transition: opacity 0.6s;
+    }
+    .wa-overlay-bl.hidden { opacity: 0; }
+
+    .wa-overlay-br {
+      position: absolute;
+      bottom: var(--space-5);
+      right: var(--space-5);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: var(--space-3);
+      z-index: 5;
+    }
+
+    /* ── MODE TOGGLES ─────────────────────────────────── */
+    .wa-mode-btns {
+      display: flex;
+      gap: 6px;
+    }
+    .wa-mode-btn {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.08em;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(10,10,15,0.6);
+      color: rgba(152,152,176,0.7);
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+    .wa-mode-btn:hover {
+      border-color: rgba(255,255,255,0.35);
+      color: var(--color-text-primary);
+    }
+    .wa-mode-btn.active {
+      border-color: rgba(108,99,255,0.7);
+      background: rgba(108,99,255,0.18);
+      color: var(--color-text-primary);
+    }
+
+    /* ── DENSITY TOGGLES ──────────────────────────────── */
+    .wa-density-btns {
+      display: flex;
+      gap: 6px;
+    }
+    .wa-density-btn {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.06em;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(10,10,15,0.6);
+      color: rgba(152,152,176,0.5);
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .wa-density-btn:hover {
+      border-color: rgba(255,255,255,0.3);
+      color: var(--color-text-primary);
+    }
+    .wa-density-btn.active {
+      border-color: rgba(45,212,191,0.6);
+      color: rgba(45,212,191,0.9);
+    }
+
+    /* ── THEME PICKER ─────────────────────────────────── */
+    .wa-theme-picker { display: flex; gap: 6px; }
+    .wa-theme-btn {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.15);
+      cursor: pointer;
+      padding: 0;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .wa-theme-btn:hover  { transform: scale(1.35); border-color: rgba(255,255,255,0.45); }
+    .wa-theme-btn.active { border-color: rgba(255,255,255,0.85); transform: scale(1.2); }
+    .wa-theme-btn[data-theme="0"] { background: #6C63FF; }
+    .wa-theme-btn[data-theme="1"] { background: #2DD4BF; }
+    .wa-theme-btn[data-theme="2"] { background: #FF6010; }
+    .wa-theme-btn[data-theme="3"] { background: #F0F0F5; }
+    .wa-theme-btn[data-theme="4"] { background: #00E044; }
+
+    /* ── INFO SECTION ─────────────────────────────────── */
+    .wa-info {
+      padding-block: var(--space-10) var(--space-20);
+      border-top: 1px solid var(--color-border);
+    }
+    .wa-info-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-12);
+      align-items: start;
+    }
+    @media (max-width: 720px) {
+      .wa-info-inner { grid-template-columns: 1fr; gap: var(--space-8); }
+    }
+    .wa-info-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+    .wa-info-num {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.12em;
+      color: var(--color-accent-primary);
+    }
+    .wa-info-num::before {
+      content: '';
+      display: inline-block;
+      width: 20px; height: 1px;
+      background: currentColor;
+      margin-right: var(--space-2);
+      vertical-align: middle;
+    }
+    .wa-info h1 {
+      font-family: var(--font-heading);
+      font-size: clamp(1.75rem, 4vw, 2.75rem);
+      font-weight: 700;
+      line-height: var(--leading-tight);
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-5);
+    }
+    .wa-info p {
+      color: var(--color-text-secondary);
+      line-height: var(--leading-normal);
+      margin-bottom: var(--space-4);
+    }
+    .wa-info-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-top: var(--space-6);
+    }
+    .wa-controls-title {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-5);
+    }
+    .wa-control-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+    .wa-control {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-4);
+    }
+    .wa-control-key {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--radius-sm);
+      background: var(--color-bg-elevated);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-secondary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .wa-control-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: var(--leading-snug);
+    }
+
+    /* ── FOOTER ───────────────────────────────────────── */
+    .wa-footer {
+      border-top: 1px solid var(--color-border);
+      padding-block: var(--space-8);
+    }
+    .wa-footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+    }
+    .wa-footer-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-muted);
+      text-decoration: none;
+    }
+    .wa-footer-logo img { height: 22px; width: auto; }
+    .wa-footer-copy {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ──────────────────────────────────────────── -->
+<nav class="wa-nav">
+  <div class="container">
+    <div class="wa-nav-inner">
+      <a href="../../" class="wa-nav-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <div class="wa-nav-right">
+        <a href="../" class="wa-back">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <path d="M8 1L3 6l5 5"/>
+          </svg>
+          Experiments
+        </a>
+        <a href="../../#contact" class="btn btn-outline">Let's Talk</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ── DEMO ─────────────────────────────────────────── -->
+<div class="wa-demo" id="wa-wrap">
+  <canvas id="wa-canvas" aria-label="Live webcam feed rendered as ASCII art characters"></canvas>
+
+  <!-- Start / Permission Overlay -->
+  <div class="wa-start-overlay" id="wa-overlay">
+    <div class="wa-start-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="7" width="20" height="14" rx="2"/>
+        <path d="M16 3l-4 4-4-4"/>
+        <circle cx="12" cy="14" r="3"/>
+      </svg>
+    </div>
+    <p class="wa-start-title">Webcam ASCII</p>
+    <p class="wa-start-sub">Your camera feed will be rendered as real-time ASCII art — nothing is recorded or sent anywhere.</p>
+    <button class="wa-start-btn" id="wa-start-btn">enable camera</button>
+    <p class="wa-error-msg" id="wa-error-msg">Camera access was denied or is unavailable.<br>Check your browser permissions and try again.</p>
+  </div>
+
+  <!-- Top-left label -->
+  <div class="wa-overlay-tl">
+    <div class="wa-live-dot"></div>
+    <span class="wa-exp-label">07 / webcam_ascii</span>
+  </div>
+
+  <!-- Bottom-left hint -->
+  <div class="wa-overlay-bl" id="wa-hint">move to explore controls</div>
+
+  <!-- Bottom-right controls -->
+  <div class="wa-overlay-br">
+    <div class="wa-mode-btns" id="wa-mode-btns">
+      <button class="wa-mode-btn active" data-mode="mono">mono</button>
+      <button class="wa-mode-btn"        data-mode="color">color</button>
+    </div>
+    <div class="wa-density-btns" id="wa-density-btns">
+      <button class="wa-density-btn"        data-density="coarse">coarse</button>
+      <button class="wa-density-btn active" data-density="medium">medium</button>
+      <button class="wa-density-btn"        data-density="fine">fine</button>
+    </div>
+    <div class="wa-theme-picker" id="wa-theme-picker">
+      <button class="wa-theme-btn active" data-theme="0" title="Nebula"></button>
+      <button class="wa-theme-btn"        data-theme="1" title="Teal"></button>
+      <button class="wa-theme-btn"        data-theme="2" title="Ember"></button>
+      <button class="wa-theme-btn"        data-theme="3" title="Ghost"></button>
+      <button class="wa-theme-btn"        data-theme="4" title="Matrix"></button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── INFO ─────────────────────────────────────────── -->
+<section class="wa-info">
+  <div class="container">
+    <div class="wa-info-inner">
+
+      <div>
+        <div class="wa-info-meta">
+          <span class="wa-info-num">07</span>
+          <span class="tag tag-teal">LIVE</span>
+        </div>
+        <h1>Webcam ASCII</h1>
+        <p>
+          Your camera feed, translated into characters in real time. Every frame the video is sampled down to a grid, each cell's luminance mapped to a position in the ASCII ramp — dense characters for dark areas, sparse for bright.
+        </p>
+        <p>
+          Switch to color mode and each character inherits the actual RGB of its source pixel. Nothing is stored or transmitted — the entire pipeline runs locally in your browser using <code>getUserMedia</code> and Canvas 2D.
+        </p>
+        <div class="wa-info-tags">
+          <span class="tag">Canvas 2D</span>
+          <span class="tag">getUserMedia</span>
+          <span class="tag">ASCII Art</span>
+          <span class="tag">Real-time Video</span>
+          <span class="tag">Image Processing</span>
+        </div>
+      </div>
+
+      <div>
+        <p class="wa-controls-title">// controls</p>
+        <div class="wa-control-list">
+          <div class="wa-control">
+            <span class="wa-control-key">mono / color</span>
+            <span class="wa-control-desc">Toggle between a single theme color or full per-pixel color sampled from the webcam.</span>
+          </div>
+          <div class="wa-control">
+            <span class="wa-control-key">coarse / medium / fine</span>
+            <span class="wa-control-desc">Change character grid density. Coarse uses large cells for a bold, readable look; fine packs in more detail.</span>
+          </div>
+          <div class="wa-control">
+            <span class="wa-control-key">color dots</span>
+            <span class="wa-control-desc">Pick the monochrome accent color — active in mono mode only.</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ── FOOTER ───────────────────────────────────────── -->
+<footer class="wa-footer">
+  <div class="container">
+    <div class="wa-footer-inner">
+      <a href="../../" class="wa-footer-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <a href="../" class="wa-back">
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <path d="M8 1L3 6l5 5"/>
+        </svg>
+        All Experiments
+      </a>
+      <span class="wa-footer-copy">&copy; <span id="footer-year"></span> Hexagon Misfit</span>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ════════════════════════════════════════════════════════
+  WEBCAM ASCII ENGINE
+════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ─── ASCII RAMP: index 0 = brightest pixel → lightest char ── */
+  const RAMP = ' .`\':;|!i1tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8B@$'.split('');
+  const RAMP_LEN = RAMP.length;
+
+  /* ─── DENSITY PRESETS: [charW, charH] in px ──────────────── */
+  const DENSITY = {
+    coarse: [12, 22],
+    medium: [8,  15],
+    fine:   [5,  9],
+  };
+
+  /* ─── MONO THEME COLORS ──────────────────────────────────── */
+  const THEMES = [
+    '#6C63FF',  // Nebula
+    '#2DD4BF',  // Teal
+    '#FF6010',  // Ember
+    '#F0F0F5',  // Ghost
+    '#00E044',  // Matrix
+  ];
+
+  /* ─── STATE ──────────────────────────────────────────────── */
+  let activeMode    = 'mono';
+  let activeDensity = 'medium';
+  let activeTheme   = 0;
+  let running       = false;
+  let raf           = null;
+
+  /* ─── ELEMENTS ───────────────────────────────────────────── */
+  const canvas   = document.getElementById('wa-canvas');
+  const ctx      = canvas.getContext('2d', { alpha: false });
+  const wrap     = document.getElementById('wa-wrap');
+  const overlay  = document.getElementById('wa-overlay');
+  const startBtn = document.getElementById('wa-start-btn');
+  const errorMsg = document.getElementById('wa-error-msg');
+  const hint     = document.getElementById('wa-hint');
+
+  /* ─── OFFSCREEN CANVAS FOR VIDEO SAMPLING ────────────────── */
+  const offscreen    = document.createElement('canvas');
+  const offCtx       = offscreen.getContext('2d', { willReadFrequently: true });
+  offCtx.imageSmoothingEnabled = true;
+  offCtx.imageSmoothingQuality = 'high';
+
+  /* ─── COLOR BOOST ────────────────────────────────────────────
+     In color mode each character only covers a fraction of its
+     cell, making raw RGB look muddy/dark on the black background.
+     We preserve hue + saturation from the pixel but boost lightness
+     into 0.50–0.88 so every character is clearly readable. The
+     character density already carries the brightness information.
+  ─────────────────────────────────────────────────────────── */
+  function boostedColor(r, g, b) {
+    const rn = r / 255, gn = g / 255, bn = b / 255;
+    const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
+    const d = max - min;
+    const l = (max + min) * 0.5;
+    let h = 0, s = 0;
+    if (d > 0.001) {
+      s = d / (1 - Math.abs(2 * l - 1));
+      if (max === rn)      h = ((gn - bn) / d % 6 + 6) % 6;
+      else if (max === gn) h = (bn - rn) / d + 2;
+      else                 h = (rn - gn) / d + 4;
+    }
+    // Lift lightness: 0→0.50, 0.5→0.69, 1→0.88 — always visible, still contrasty
+    const bl = 0.50 + l * 0.38;
+    return `hsl(${(h * 60).toFixed(0)},${Math.round(s * 100)}%,${Math.round(bl * 100)}%)`;
+  }
+
+  /* ─── VIDEO ELEMENT ──────────────────────────────────────── */
+  const video = document.createElement('video');
+  video.playsInline = true;
+  video.muted       = true;
+  video.autoplay    = true;
+
+  /* ─── RESIZE ─────────────────────────────────────────────── */
+  function resize() {
+    canvas.width  = wrap.clientWidth;
+    canvas.height = wrap.clientHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  /* ─── START CAMERA ───────────────────────────────────────── */
+  startBtn.addEventListener('click', async () => {
+    startBtn.disabled = true;
+    startBtn.textContent = 'connecting...';
+    errorMsg.classList.remove('visible');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
+      });
+      video.srcObject = stream;
+      await video.play();
+      overlay.classList.add('hidden');
+      running = true;
+      hideHint();
+      raf = requestAnimationFrame(loop);
+    } catch (err) {
+      startBtn.disabled   = false;
+      startBtn.textContent = 'try again';
+      errorMsg.classList.add('visible');
+    }
+  });
+
+  /* ─── HINT FADE ──────────────────────────────────────────── */
+  let hintTimer = null;
+  function hideHint() {
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(() => hint.classList.add('hidden'), 3000);
+  }
+  wrap.addEventListener('pointerenter', () => {
+    if (!running) return;
+    hint.classList.remove('hidden');
+    hideHint();
+  });
+
+  /* ─── RENDER LOOP ────────────────────────────────────────── */
+  function loop() {
+    if (!running) return;
+    raf = requestAnimationFrame(loop);
+
+    if (video.readyState < 2) return;
+
+    const [cw, ch] = DENSITY[activeDensity];
+    const W = canvas.width;
+    const H = canvas.height;
+
+    /* Compute grid dimensions */
+    const cols = Math.floor(W / cw);
+    const rows = Math.floor(H / ch);
+    if (cols < 1 || rows < 1) return;
+
+    /* Sample video into tiny offscreen canvas */
+    offscreen.width  = cols;
+    offscreen.height = rows;
+
+    /* Mirror horizontally so it acts like a mirror */
+    offCtx.save();
+    offCtx.scale(-1, 1);
+    offCtx.drawImage(video, -cols, 0, cols, rows);
+    offCtx.restore();
+
+    const px = offCtx.getImageData(0, 0, cols, rows).data;
+
+    /* Clear main canvas */
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, W, H);
+
+    /* Set font once */
+    ctx.font = `${ch - 1}px "Space Mono", "Courier New", monospace`;
+    ctx.textBaseline = 'top';
+
+    const monoColor = THEMES[activeTheme];
+    const isColor   = activeMode === 'color';
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const i = (row * cols + col) * 4;
+        const r = px[i];
+        const g = px[i + 1];
+        const b = px[i + 2];
+
+        /* Luminance (perceptual) */
+        const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+        /* Map luminance to char — bright=sparse, dark=dense */
+        const charIdx = Math.floor((1 - lum) * (RAMP_LEN - 1));
+        const ch2 = RAMP[charIdx];
+
+        /* Skip space (fully dark) — slight perf win */
+        if (ch2 === ' ') continue;
+
+        /* Color */
+        if (isColor) {
+          ctx.fillStyle = boostedColor(r, g, b);
+        } else {
+          /* Mono: tint the theme color by luminance — append alpha as hex byte */
+          ctx.fillStyle = monoColor + Math.round((0.20 + lum * 0.80) * 255).toString(16).padStart(2, '0');
+        }
+
+        ctx.fillText(ch2, col * cw, row * ch);
+      }
+    }
+  }
+
+  /* ─── CONTROLS ───────────────────────────────────────────── */
+
+  /* Mode buttons */
+  document.getElementById('wa-mode-btns').addEventListener('click', (e) => {
+    const btn = e.target.closest('.wa-mode-btn');
+    if (!btn) return;
+    document.querySelectorAll('.wa-mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeMode = btn.dataset.mode;
+
+    /* Theme picker only visible in mono mode */
+    document.getElementById('wa-theme-picker').style.opacity = activeMode === 'mono' ? '' : '0.25';
+    document.getElementById('wa-theme-picker').style.pointerEvents = activeMode === 'mono' ? '' : 'none';
+  });
+
+  /* Density buttons */
+  document.getElementById('wa-density-btns').addEventListener('click', (e) => {
+    const btn = e.target.closest('.wa-density-btn');
+    if (!btn) return;
+    document.querySelectorAll('.wa-density-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeDensity = btn.dataset.density;
+  });
+
+  /* Theme buttons */
+  document.getElementById('wa-theme-picker').addEventListener('click', (e) => {
+    const btn = e.target.closest('.wa-theme-btn');
+    if (!btn) return;
+    document.querySelectorAll('.wa-theme-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeTheme = parseInt(btn.dataset.theme, 10);
+  });
+
+  /* ─── FOOTER YEAR ────────────────────────────────────────── */
+  document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+})();
+</script>
+
+</body>
+</html>

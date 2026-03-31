@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unicorn Studio II — Hexagon Misfit Experiments</title>
+  <meta name="description" content="An interactive Unicorn Studio visual experiment embedded live in the browser." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../css/reset.css" />
+  <link rel="stylesheet" href="../../css/tokens.css" />
+  <link rel="stylesheet" href="../../css/layout.css" />
+  <link rel="stylesheet" href="../../css/components.css" />
+  <link rel="stylesheet" href="../../css/animations.css" />
+
+  <style>
+    /* ── NAV ─────────────────────────────────────────── */
+    .us-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding-block: var(--space-5);
+      background: rgba(10, 10, 15, 0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .us-nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .us-nav-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      text-decoration: none;
+    }
+    .us-nav-logo img { height: 28px; width: auto; }
+    .us-nav-right {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+    }
+    .us-back {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.08em;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .us-back:hover { color: var(--color-text-primary); }
+    .us-back svg { width: 12px; height: 12px; }
+
+    /* ── DEMO AREA ──────────────────────────────────────── */
+    .us-demo {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1440 / 900;
+      max-height: 80vh;
+      background: #000;
+      overflow: hidden;
+    }
+    .us-demo [data-us-project] {
+      width: 100%;
+      height: 100%;
+    }
+
+    .us-overlay-tl {
+      position: absolute;
+      top: var(--space-5);
+      left: var(--space-5);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      pointer-events: none;
+      z-index: 2;
+    }
+    .us-live-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--color-accent-secondary);
+      box-shadow: 0 0 8px rgba(45,212,191,0.7);
+      animation: us-pulse 2s ease-in-out infinite;
+    }
+    @keyframes us-pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+    .us-exp-label {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      color: rgba(152,152,176,0.6);
+    }
+
+    /* ── INFO SECTION ───────────────────────────────────── */
+    .us-info {
+      padding-block: var(--space-10) var(--space-20);
+      border-top: 1px solid var(--color-border);
+    }
+    .us-info-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-12);
+      align-items: start;
+    }
+    @media (max-width: 720px) {
+      .us-info-inner { grid-template-columns: 1fr; gap: var(--space-8); }
+    }
+    .us-info-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+    .us-info-num {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.12em;
+      color: var(--color-accent-primary);
+    }
+    .us-info-num::before {
+      content: '';
+      display: inline-block;
+      width: 20px; height: 1px;
+      background: currentColor;
+      margin-right: var(--space-2);
+      vertical-align: middle;
+    }
+    .us-info h1 {
+      font-family: var(--font-heading);
+      font-size: clamp(1.75rem, 4vw, 2.75rem);
+      font-weight: 700;
+      line-height: var(--leading-tight);
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-5);
+    }
+    .us-info p {
+      color: var(--color-text-secondary);
+      font-size: var(--text-base);
+      line-height: var(--leading-normal);
+      margin-bottom: var(--space-4);
+    }
+    .us-info-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-top: var(--space-5);
+    }
+    .us-controls-title {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-5);
+    }
+    .us-control-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+    .us-control {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-4);
+    }
+    .us-control-key {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--radius-sm);
+      background: var(--color-bg-elevated);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-secondary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .us-control-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: var(--leading-snug);
+    }
+
+    /* ── FOOTER ─────────────────────────────────────────── */
+    .us-footer {
+      border-top: 1px solid var(--color-border);
+      padding-block: var(--space-8);
+    }
+    .us-footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+    }
+    .us-footer-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-muted);
+      text-decoration: none;
+    }
+    .us-footer-logo img { height: 22px; width: auto; }
+    .us-footer-copy {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ──────────────────────────────────────────────── -->
+<nav class="us-nav">
+  <div class="container">
+    <div class="us-nav-inner">
+      <a href="../../" class="us-nav-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <div class="us-nav-right">
+        <a href="../" class="us-back">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 1L3 6l5 5"/></svg>
+          Experiments
+        </a>
+        <a href="../../#contact" class="btn btn-outline">Let's Talk</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ── DEMO ─────────────────────────────────────────────── -->
+<div class="us-demo">
+  <div class="us-overlay-tl">
+    <div class="us-live-dot"></div>
+    <span class="us-exp-label">08 / unicorn_studio_ii</span>
+  </div>
+
+  <div style="width: 100%; height: 100%" data-us-project="wTy5UptKQsMuqDEfscyZ"></div>
+</div>
+
+
+<!-- ── INFO ─────────────────────────────────────────────── -->
+<section class="us-info">
+  <div class="container">
+    <div class="us-info-inner">
+
+      <div>
+        <div class="us-info-meta">
+          <span class="us-info-num">08</span>
+          <span class="tag tag-teal">LIVE</span>
+        </div>
+        <h1>Unicorn Studio II</h1>
+        <p>A real-time visual experiment built with Unicorn Studio and embedded live in the browser. The scene renders interactively using WebGL, responding to cursor movement and viewport changes.</p>
+        <div class="us-info-tags">
+          <span class="tag">Unicorn Studio</span>
+          <span class="tag">WebGL</span>
+          <span class="tag">Interactive</span>
+          <span class="tag">Real-time</span>
+        </div>
+      </div>
+
+      <div>
+        <p class="us-controls-title">// interaction</p>
+        <div class="us-control-list">
+          <div class="us-control">
+            <span class="us-control-key">cursor</span>
+            <span class="us-control-desc">Move your mouse over the scene to interact with the visual.</span>
+          </div>
+          <div class="us-control">
+            <span class="us-control-key">resize</span>
+            <span class="us-control-desc">The embed scales responsively to fill the available width while maintaining its aspect ratio.</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ── FOOTER ──────────────────────────────────────────── -->
+<footer class="us-footer">
+  <div class="container">
+    <div class="us-footer-inner">
+      <a href="../../" class="us-footer-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <a href="../" class="us-back">&larr; All experiments</a>
+      <span class="us-footer-copy">&copy; <span id="footer-year"></span> Hexagon Misfit</span>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ══════════════════════════════════════════════════════
+  UNICORN STUDIO LOADER + FOOTER YEAR
+══════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+  var u = window.UnicornStudio;
+  if (u && u.init) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () { u.init(); });
+    } else {
+      u.init();
+    }
+  } else {
+    window.UnicornStudio = { isInitialized: false };
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v2.1.4/dist/unicornStudio.umd.js';
+    s.onload = function () {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () { UnicornStudio.init(); });
+      } else {
+        UnicornStudio.init();
+      }
+    };
+    (document.head || document.body).appendChild(s);
+  }
+})();
+</script>
+</body>
+</html>

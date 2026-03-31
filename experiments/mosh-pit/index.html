@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mosh Pit — Hexagon Misfit Experiments</title>
+  <meta name="description" content="Individual letters with spring physics. Six sliders control the chaos in real time." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../css/reset.css" />
+  <link rel="stylesheet" href="../../css/tokens.css" />
+  <link rel="stylesheet" href="../../css/layout.css" />
+  <link rel="stylesheet" href="../../css/components.css" />
+  <link rel="stylesheet" href="../../css/animations.css" />
+
+  <style>
+    /* ── NAV ─────────────────────────────────────────── */
+    .mp-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding-block: var(--space-5);
+      background: rgba(10, 10, 15, 0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .mp-nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .mp-nav-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      text-decoration: none;
+    }
+    .mp-nav-logo img { height: 28px; width: auto; }
+    .mp-nav-right {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+    }
+    .mp-back {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.08em;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .mp-back:hover { color: var(--color-text-primary); }
+    .mp-back svg { width: 12px; height: 12px; }
+
+    /* ── STAGE ───────────────────────────────────────── */
+    .mp-stage {
+      position: relative;
+      width: 100%;
+      min-height: 100vh;
+      background: #080810;
+      overflow: hidden;
+      cursor: none;
+      user-select: none;
+    }
+
+    /* Custom cursor */
+    .mp-cursor {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.6);
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 999;
+      mix-blend-mode: difference;
+      transition: opacity 0.2s;
+    }
+
+    /* Top-left: live label + theme dots */
+    .mp-overlay-tl {
+      position: absolute;
+      top: var(--space-5);
+      left: var(--space-5);
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      pointer-events: none;
+      z-index: 10;
+    }
+    .mp-live-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--color-accent-secondary);
+      box-shadow: 0 0 8px rgba(45,212,191,0.7);
+      animation: mp-pulse 2s ease-in-out infinite;
+    }
+    @keyframes mp-pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+    .mp-exp-label {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      color: rgba(152,152,176,0.6);
+    }
+    .mp-theme-picker {
+      display: flex;
+      gap: 6px;
+      pointer-events: auto;
+    }
+    .mp-theme-btn {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.15);
+      cursor: pointer;
+      padding: 0;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .mp-theme-btn:hover  { transform: scale(1.4); border-color: rgba(255,255,255,0.5); }
+    .mp-theme-btn.active { border-color: rgba(255,255,255,0.9); transform: scale(1.25); }
+    .mp-theme-btn[data-theme="0"] { background: #6C63FF; }
+    .mp-theme-btn[data-theme="1"] { background: #FF6010; }
+    .mp-theme-btn[data-theme="2"] { background: #00E044; }
+    .mp-theme-btn[data-theme="3"] { background: #50B4FF; }
+    .mp-theme-btn[data-theme="4"] { background: #D232FF; }
+
+    /* Hint */
+    .mp-hint {
+      position: absolute;
+      bottom: var(--space-5);
+      left: var(--space-5);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.08em;
+      color: rgba(152,152,176,0.4);
+      pointer-events: none;
+      z-index: 10;
+      transition: opacity 0.8s;
+    }
+    .mp-hint.hidden { opacity: 0; }
+
+    /* ── CONTROLS PANEL ──────────────────────────────── */
+    .mp-controls {
+      position: absolute;
+      bottom: var(--space-5);
+      right: var(--space-5);
+      z-index: 10;
+      background: rgba(8, 8, 16, 0.82);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px;
+      padding: var(--space-4) var(--space-5);
+      min-width: 210px;
+    }
+    .mp-controls-hdr {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(152,152,176,0.5);
+      margin-bottom: var(--space-4);
+    }
+    .mp-slider-row {
+      display: grid;
+      grid-template-columns: 52px 1fr 34px;
+      align-items: center;
+      gap: var(--space-2);
+      margin-bottom: var(--space-3);
+    }
+    .mp-slider-row:last-child { margin-bottom: 0; }
+    .mp-slider-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: rgba(152,152,176,0.65);
+      text-align: right;
+    }
+    .mp-slider-val {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: rgba(240,240,255,0.55);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    /* Range slider styling */
+    .mp-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+    .mp-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--mp-accent, #6C63FF);
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 0 6px rgba(108,99,255,0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .mp-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.25);
+      box-shadow: 0 0 10px rgba(108,99,255,0.6);
+    }
+    .mp-slider::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--mp-accent, #6C63FF);
+      border: none;
+      cursor: pointer;
+    }
+
+    /* ── LETTER FIELD ────────────────────────────────── */
+    .mp-field {
+      position: relative;
+      padding: clamp(3rem, 6vw, 6rem) clamp(1.5rem, 4vw, 4rem);
+      line-height: 1.2;
+    }
+
+    .mp-letter {
+      display: inline-block;
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(1.8rem, 3.5vw, 3.5rem);
+      font-weight: 400;
+      letter-spacing: 0.015em;
+      color: rgba(240, 238, 255, 0.88);
+      transform-origin: center center;
+      will-change: transform;
+      backface-visibility: hidden;
+    }
+    .mp-letter.is-space {
+      width: 0.3em;
+      pointer-events: none;
+    }
+
+    /* ── INFO SECTION ────────────────────────────────── */
+    .mp-info {
+      padding-block: var(--space-10) var(--space-20);
+      border-top: 1px solid var(--color-border);
+    }
+    .mp-info-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-12);
+      align-items: start;
+    }
+    @media (max-width: 720px) {
+      .mp-info-inner { grid-template-columns: 1fr; gap: var(--space-8); }
+    }
+    .mp-info-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+    .mp-info-num {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.12em;
+      color: var(--color-accent-primary);
+    }
+    .mp-info-num::before {
+      content: '';
+      display: inline-block;
+      width: 20px;
+      height: 1px;
+      background: currentColor;
+      margin-right: var(--space-2);
+      vertical-align: middle;
+    }
+    .mp-info h1 {
+      font-family: var(--font-heading);
+      font-size: clamp(1.75rem, 4vw, 2.75rem);
+      font-weight: 700;
+      line-height: var(--leading-tight);
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-5);
+    }
+    .mp-info p {
+      color: var(--color-text-secondary);
+      line-height: var(--leading-normal);
+      margin-bottom: var(--space-4);
+    }
+    .mp-info-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-top: var(--space-6);
+    }
+    .mp-controls-title {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-5);
+    }
+    .mp-control-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+    .mp-control {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-4);
+    }
+    .mp-control-key {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--radius-sm);
+      background: var(--color-bg-elevated);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-secondary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .mp-control-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: var(--leading-snug);
+    }
+
+    /* ── FOOTER ───────────────────────────────────────── */
+    .mp-footer {
+      border-top: 1px solid var(--color-border);
+      padding-block: var(--space-8);
+    }
+    .mp-footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+    }
+    .mp-footer-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-muted);
+      text-decoration: none;
+    }
+    .mp-footer-logo img { height: 22px; width: auto; }
+    .mp-footer-copy {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+    }
+  </style>
+</head>
+<body>
+
+<!-- Custom cursor -->
+<div class="mp-cursor" id="mp-cursor"></div>
+
+<!-- ── NAV ──────────────────────────────────────────── -->
+<nav class="mp-nav">
+  <div class="container">
+    <div class="mp-nav-inner">
+      <a href="../../" class="mp-nav-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <div class="mp-nav-right">
+        <a href="../" class="mp-back">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <path d="M8 1L3 6l5 5"/>
+          </svg>
+          Experiments
+        </a>
+        <a href="../../#contact" class="btn btn-outline">Let's Talk</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ── STAGE ─────────────────────────────────────────── -->
+<div class="mp-stage" id="mp-stage">
+
+  <!-- Top-left: live label + theme dots -->
+  <div class="mp-overlay-tl">
+    <div class="mp-live-dot"></div>
+    <span class="mp-exp-label">06 / mosh_pit</span>
+    <div class="mp-theme-picker">
+      <button class="mp-theme-btn active" data-theme="0" title="Nebula"></button>
+      <button class="mp-theme-btn"        data-theme="1" title="Fire"></button>
+      <button class="mp-theme-btn"        data-theme="2" title="Matrix"></button>
+      <button class="mp-theme-btn"        data-theme="3" title="Ice"></button>
+      <button class="mp-theme-btn"        data-theme="4" title="Void"></button>
+    </div>
+  </div>
+
+  <!-- Hint -->
+  <div class="mp-hint" id="mp-hint">move your cursor through the crowd</div>
+
+  <!-- Controls panel -->
+  <div class="mp-controls" id="mp-controls">
+    <p class="mp-controls-hdr">// physics</p>
+
+    <div class="mp-slider-row">
+      <span class="mp-slider-label">radius</span>
+      <input type="range" class="mp-slider" id="s-radius" min="80" max="500" value="240" step="10">
+      <span class="mp-slider-val" id="v-radius">240</span>
+    </div>
+    <div class="mp-slider-row">
+      <span class="mp-slider-label">spring</span>
+      <input type="range" class="mp-slider" id="s-spring" min="1" max="20" value="6" step="1">
+      <span class="mp-slider-val" id="v-spring">0.06</span>
+    </div>
+    <div class="mp-slider-row">
+      <span class="mp-slider-label">chaos</span>
+      <input type="range" class="mp-slider" id="s-chaos" min="0" max="100" value="50" step="5">
+      <span class="mp-slider-val" id="v-chaos">0.50</span>
+    </div>
+    <div class="mp-slider-row">
+      <span class="mp-slider-label">scale</span>
+      <input type="range" class="mp-slider" id="s-scale" min="10" max="60" value="25" step="1">
+      <span class="mp-slider-val" id="v-scale">2.5×</span>
+    </div>
+    <div class="mp-slider-row">
+      <span class="mp-slider-label">rotate</span>
+      <input type="range" class="mp-slider" id="s-rotate" min="0" max="45" value="15" step="1">
+      <span class="mp-slider-val" id="v-rotate">15°</span>
+    </div>
+    <div class="mp-slider-row">
+      <span class="mp-slider-label">weight</span>
+      <input type="range" class="mp-slider" id="s-weight" min="0" max="600" value="400" step="50">
+      <span class="mp-slider-val" id="v-weight">400</span>
+    </div>
+  </div>
+
+  <!-- The letter field — populated by JS -->
+  <div class="mp-field" id="mp-field" aria-label="Mosh pit typographic experiment"></div>
+
+</div>
+
+
+<!-- ── INFO ─────────────────────────────────────────── -->
+<section class="mp-info">
+  <div class="container">
+    <div class="mp-info-inner">
+
+      <div>
+        <div class="mp-info-meta">
+          <span class="mp-info-num">06</span>
+          <span class="tag tag-teal">LIVE</span>
+        </div>
+        <h1>Mosh Pit</h1>
+        <p>Two hundred and eighty individual letters, each with its own spring constant, damping coefficient, rotation bias, and scale ceiling. No two letters behave the same way when the cursor moves through them.</p>
+        <p>The six sliders change the physics in real time — pull chaos up for wild overshoot, push spring up for snappier response, drop scale down for a subtler crowd. All letters recompute their personality from the new parameters instantly.</p>
+        <div class="mp-info-tags">
+          <span class="tag">Per-letter Physics</span>
+          <span class="tag">Spring Integration</span>
+          <span class="tag">Variable Fonts</span>
+          <span class="tag">Live Config</span>
+          <span class="tag">RAF Loop</span>
+          <span class="tag">Range Sliders</span>
+        </div>
+      </div>
+
+      <div>
+        <p class="mp-controls-title">// sliders</p>
+        <div class="mp-control-list">
+          <div class="mp-control">
+            <span class="mp-control-key">radius</span>
+            <span class="mp-control-desc">Cursor influence radius in pixels. Higher = more letters react at once.</span>
+          </div>
+          <div class="mp-control">
+            <span class="mp-control-key">spring</span>
+            <span class="mp-control-desc">Spring stiffness. High values snap letters back fast; low values are sluggish.</span>
+          </div>
+          <div class="mp-control">
+            <span class="mp-control-key">chaos</span>
+            <span class="mp-control-desc">Inverse damping. High chaos = low damping = overshooting, bouncing letters.</span>
+          </div>
+          <div class="mp-control">
+            <span class="mp-control-key">scale</span>
+            <span class="mp-control-desc">Maximum letter growth at full cursor activation.</span>
+          </div>
+          <div class="mp-control">
+            <span class="mp-control-key">rotate</span>
+            <span class="mp-control-desc">Maximum rotation in degrees. Each letter has a random direction bias.</span>
+          </div>
+          <div class="mp-control">
+            <span class="mp-control-key">weight</span>
+            <span class="mp-control-desc">Font-weight variation amplitude. High = heavy bold swells on activation.</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ── FOOTER ────────────────────────────────────────── -->
+<footer class="mp-footer">
+  <div class="container">
+    <div class="mp-footer-inner">
+      <a href="../../" class="mp-footer-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <a href="../" class="mp-back">← All experiments</a>
+      <span class="mp-footer-copy">&copy; <span id="footer-year"></span> Hexagon Misfit</span>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ══════════════════════════════════════════════════
+  MOSH PIT ENGINE — per-letter spring physics
+══════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ── LIVE CONFIG (driven by sliders) ──────────────── */
+  const CFG = {
+    RADIUS: 240,   // px — cursor influence radius
+    SPRING: 0.06,  // spring stiffness base
+    CHAOS:  0.50,  // inverse damping (0 = very damped, 1 = wild)
+    SCALE:  2.5,   // max scale multiplier
+    ROTATE: 15,    // max rotation degrees
+    WEIGHT: 400,   // font-weight variation amplitude
+  };
+
+  /* ── THEMES ───────────────────────────────────────── */
+  const THEMES = [
+    { text: 'rgba(210,206,255,0.88)', accent: '#6C63FF', glow: 'rgba(108,99,255,0.22)', sliderAccent: '#6C63FF' },
+    { text: 'rgba(255,220,190,0.88)', accent: '#FF6010', glow: 'rgba(255,96,16,0.22)',  sliderAccent: '#FF6010' },
+    { text: 'rgba(160,255,180,0.88)', accent: '#00E044', glow: 'rgba(0,224,68,0.22)',   sliderAccent: '#00E044' },
+    { text: 'rgba(190,230,255,0.88)', accent: '#50B4FF', glow: 'rgba(80,180,255,0.22)', sliderAccent: '#50B4FF' },
+    { text: 'rgba(240,190,255,0.88)', accent: '#D232FF', glow: 'rgba(210,50,255,0.22)', sliderAccent: '#D232FF' },
+  ];
+  let activeTheme = 0;
+
+  /* ── UTILITIES ────────────────────────────────────── */
+  function rand(lo, hi) { return lo + Math.random() * (hi - lo); }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+
+  /* ── LETTER DATA ──────────────────────────────────── */
+  const letters = [];
+
+  function buildLetters() {
+    const field = document.getElementById('mp-field');
+    field.innerHTML = '';
+    letters.length = 0;
+
+    // Generate source text: "MOSH PIT " repeated 40 times (360 chars)
+    const source = 'MOSH PIT '.repeat(40);
+
+    for (let i = 0; i < source.length; i++) {
+      const ch = source[i];
+      const span = document.createElement('span');
+
+      if (ch === ' ') {
+        span.className = 'mp-letter is-space';
+        span.textContent = '\u00A0';
+        field.appendChild(span);
+        continue;
+      }
+
+      span.className = 'mp-letter';
+      span.textContent = ch;
+
+      // Baked personality — stable random ratios in [0,1] used to offset CFG
+      const personality = {
+        spring:     Math.random(),         // 0–1: maps to [0.4×, 2.2×] of CFG.SPRING
+        chaos:      rand(-0.18, 0.18),     // personal chaos ±offset
+        scale:      rand(0.45, 1.0),       // fraction of CFG.SCALE range
+        rotateSgn:  Math.random() > 0.5 ? 1 : -1,
+        rotateAmt:  rand(0.2, 1.0),        // fraction of CFG.ROTATE
+        weight:     Math.random(),         // 0–1: weight variation fraction
+        baseOpacity: rand(0.55, 0.95),
+      };
+
+      // Physics state
+      const state = { act: 0, actV: 0 };
+
+      // Cached computed physics (rebuilt when sliders change)
+      const phys = { springK: 0, damping: 0, maxScale: 0, rotateGain: 0, weightGain: 0 };
+
+      span.style.opacity = personality.baseOpacity;
+      field.appendChild(span);
+
+      letters.push({
+        el: span,
+        personality,
+        state,
+        phys,
+        cx: 0, cy: 0,
+        _lastAct: -1,
+      });
+    }
+
+    rebuildPhysics();
+  }
+
+  /* ── PHYSICS REBUILD ──────────────────────────────── */
+  // Called once on init and whenever a slider changes.
+  // Computes per-letter spring/damping/scale/rotate/weight
+  // from each letter's baked personality + current CFG values.
+  function rebuildPhysics() {
+    for (let i = 0; i < letters.length; i++) {
+      const l = letters[i];
+      const p = l.personality;
+
+      l.phys.springK    = lerp(CFG.SPRING * 0.4, CFG.SPRING * 2.2, p.spring);
+      l.phys.damping    = lerp(0.975, 0.665, clamp(CFG.CHAOS + p.chaos, 0, 1));
+      l.phys.maxScale   = 1 + (CFG.SCALE - 1) * p.scale;
+      l.phys.rotateGain = p.rotateSgn * CFG.ROTATE * p.rotateAmt;
+      l.phys.weightGain = CFG.WEIGHT * p.weight;
+
+      // Reset dirty flag so DOM gets refreshed with new values
+      l._lastAct = -999;
+    }
+  }
+
+  /* ── CENTER CACHE ─────────────────────────────────── */
+  function updateCenters() {
+    const scroll = window.scrollY;
+    for (let i = 0; i < letters.length; i++) {
+      const l = letters[i];
+      const r = l.el.getBoundingClientRect();
+      l.cx = r.left + r.width  / 2;
+      l.cy = r.top  + r.height / 2 + scroll;
+    }
+  }
+
+  /* ── MOUSE ────────────────────────────────────────── */
+  let mouseX = -9999, mouseY = -9999;
+  let hintHidden = false;
+
+  const cursor = document.getElementById('mp-cursor');
+  const stage  = document.getElementById('mp-stage');
+  const hint   = document.getElementById('mp-hint');
+
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY + window.scrollY;
+
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top  = e.clientY + 'px';
+
+    if (!hintHidden) {
+      hint.classList.add('hidden');
+      hintHidden = true;
+    }
+  });
+
+  stage.addEventListener('mouseleave', () => {
+    mouseX = -9999;
+    mouseY = -9999;
+  });
+
+  /* ── ANIMATION LOOP ───────────────────────────────── */
+  const EPS = 0.0005; // dirty threshold
+
+  function tick() {
+    requestAnimationFrame(tick);
+
+    const theme = THEMES[activeTheme];
+    const R = CFG.RADIUS;
+    const R2 = R * R;
+
+    for (let i = 0; i < letters.length; i++) {
+      const l = letters[i];
+      const s = l.state;
+      const ph = l.phys;
+
+      // Distance from cursor to letter center (scroll-adjusted)
+      const dy = mouseY - l.cy;
+      const dx = mouseX - l.cx;
+      const dist2 = dx * dx + dy * dy;
+
+      // Smooth falloff 0→1
+      const falloff = dist2 < R2
+        ? Math.pow(1 - Math.sqrt(dist2) / R, 1.8)
+        : 0;
+
+      // Spring-integrate activation toward falloff target
+      s.actV += (falloff - s.act) * ph.springK;
+      s.actV *= ph.damping;
+      s.act  += s.actV;
+      s.act   = clamp(s.act, 0, 1.5); // allow slight overshoot
+
+      const act = s.act;
+
+      // Skip DOM write if activation hasn't changed meaningfully
+      if (Math.abs(act - l._lastAct) < EPS) continue;
+      l._lastAct = act;
+
+      // Derived visual values
+      const sc  = lerp(1, ph.maxScale, act);
+      const rot = ph.rotateGain * act;
+      const wt  = Math.round(clamp(400 + ph.weightGain * act, 100, 900) / 50) * 50;
+      const op  = clamp(l.personality.baseOpacity + act * 0.15, 0.05, 1);
+
+      l.el.style.transform   = `scale(${sc.toFixed(3)}) rotate(${rot.toFixed(2)}deg)`;
+      l.el.style.fontWeight  = wt;
+      l.el.style.opacity     = op.toFixed(3);
+      l.el.style.textShadow  = act > 0.35
+        ? `0 0 ${Math.round(act * 28)}px ${theme.glow}`
+        : '';
+    }
+  }
+
+  /* ── THEME PICKER ─────────────────────────────────── */
+  function applyTheme(idx) {
+    activeTheme = idx;
+    const theme = THEMES[idx];
+    document.getElementById('mp-field').style.color = theme.text;
+
+    // Update slider thumb color via CSS variable
+    document.documentElement.style.setProperty('--mp-accent', theme.sliderAccent);
+
+    document.querySelectorAll('.mp-theme-btn').forEach((btn) => {
+      btn.classList.toggle('active', +btn.dataset.theme === idx);
+    });
+  }
+
+  document.querySelectorAll('.mp-theme-btn').forEach((btn) => {
+    btn.addEventListener('click', () => applyTheme(+btn.dataset.theme));
+  });
+
+  /* ── SLIDER WIRING ────────────────────────────────── */
+  function wireSlider(id, valId, getter, setter, display) {
+    const input = document.getElementById(id);
+    const valEl = document.getElementById(valId);
+    input.addEventListener('input', () => {
+      setter(+input.value);
+      valEl.textContent = display(+input.value);
+      rebuildPhysics();
+    });
+  }
+
+  wireSlider('s-radius', 'v-radius',
+    () => CFG.RADIUS,
+    v  => { CFG.RADIUS = v; },
+    v  => v
+  );
+  wireSlider('s-spring', 'v-spring',
+    () => CFG.SPRING,
+    v  => { CFG.SPRING = v / 100; },
+    v  => (v / 100).toFixed(2)
+  );
+  wireSlider('s-chaos', 'v-chaos',
+    () => CFG.CHAOS,
+    v  => { CFG.CHAOS = v / 100; },
+    v  => (v / 100).toFixed(2)
+  );
+  wireSlider('s-scale', 'v-scale',
+    () => CFG.SCALE,
+    v  => { CFG.SCALE = v / 10; },
+    v  => (v / 10).toFixed(1) + '\u00D7'
+  );
+  wireSlider('s-rotate', 'v-rotate',
+    () => CFG.ROTATE,
+    v  => { CFG.ROTATE = v; },
+    v  => v + '\u00B0'
+  );
+  wireSlider('s-weight', 'v-weight',
+    () => CFG.WEIGHT,
+    v  => { CFG.WEIGHT = v; },
+    v  => v
+  );
+
+  /* ── RESIZE / SCROLL ──────────────────────────────── */
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(updateCenters, 120);
+  });
+  window.addEventListener('scroll', updateCenters, { passive: true });
+
+  /* ── INIT ─────────────────────────────────────────── */
+  buildLetters();
+  applyTheme(0);
+  setTimeout(updateCenters, 60);
+
+  document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+  tick();
+
+})();
+</script>
+
+</body>
+</html>

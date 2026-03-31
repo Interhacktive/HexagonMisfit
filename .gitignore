@@ -1,0 +1,11 @@
+# Large video files — hosted externally via YouTube
+*.mov
+*.MOV
+*.mp4
+*.MP4
+*.HEIC
+*.CR2
+
+# IDE / tool
+.vscode/
+.claude/

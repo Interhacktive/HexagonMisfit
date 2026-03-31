@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coachella — Republic Records VIP — Hexagon Misfit</title>
+  <meta name="description" content="Real-time generative visuals for Republic Records and Phantogram at their Coachella VIP party — fully live, fully audio-reactive." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/reset.css" />
+  <link rel="stylesheet" href="../css/tokens.css" />
+  <link rel="stylesheet" href="../css/layout.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/animations.css" />
+  <style>
+
+    /* ── NAV ───────────────────────────────────────── */
+    .cs-nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      padding-block: var(--space-5);
+      background: rgba(10, 10, 15, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--color-border);
+      transition: background 0.3s;
+    }
+    .cs-nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .cs-nav-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      text-decoration: none;
+    }
+    .cs-nav-logo img { height: 28px; width: auto; }
+    .cs-nav-right {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+    }
+    .cs-back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .cs-back-link:hover { color: var(--color-text-primary); }
+    .cs-back-link svg { width: 14px; height: 14px; }
+
+    /* ── HERO ──────────────────────────────────────── */
+    .cs-hero {
+      position: relative;
+      height: 100svh;
+      min-height: 600px;
+      max-height: 900px;
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
+    }
+    .cs-hero-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 30%;
+      transform: scale(1.04);
+      /* Subtle motion on load */
+      animation: heroReveal 1.8s var(--ease-out) forwards;
+    }
+    @keyframes heroReveal {
+      from { transform: scale(1.08); opacity: 0.6; }
+      to   { transform: scale(1.04); opacity: 1; }
+    }
+    .cs-hero-overlay {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to top, rgba(10,10,15,1) 0%, rgba(10,10,15,0.55) 40%, rgba(10,10,15,0.2) 100%),
+        linear-gradient(to right, rgba(10,10,15,0.4) 0%, transparent 60%);
+    }
+    .cs-hero-content {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      padding-bottom: var(--space-16);
+    }
+    .cs-hero-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-accent-secondary);
+      background: rgba(45,212,191,0.08);
+      border: 1px solid rgba(45,212,191,0.25);
+      border-radius: var(--radius-full);
+      padding: var(--space-2) var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+    .cs-hero-chip::before {
+      content: '';
+      display: block;
+      width: 6px;
+      height: 6px;
+      background: var(--color-accent-secondary);
+      border-radius: 50%;
+      animation: pulse 2s ease infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.75); }
+    }
+    .cs-hero-title {
+      font-family: var(--font-heading);
+      font-size: clamp(2.5rem, 7vw, 5.5rem);
+      font-weight: 700;
+      line-height: 1.0;
+      color: var(--color-text-primary);
+      max-width: 14ch;
+      margin-bottom: var(--space-6);
+    }
+    .cs-hero-tagline {
+      font-size: clamp(1rem, 1.8vw, 1.25rem);
+      color: rgba(240,240,245,0.65);
+      line-height: 1.55;
+      max-width: 48ch;
+      margin-bottom: var(--space-8);
+    }
+    .cs-hero-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+    }
+    .cs-hero-scroll {
+      position: absolute;
+      bottom: var(--space-8);
+      right: var(--space-8);
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+    .cs-hero-scroll-line {
+      width: 1px;
+      height: 40px;
+      background: linear-gradient(to bottom, var(--color-border-accent), transparent);
+      animation: scrollLine 2s ease infinite;
+    }
+    @keyframes scrollLine {
+      0%, 100% { opacity: 0.4; transform: scaleY(0.5) translateY(-20%); }
+      50%       { opacity: 1; transform: scaleY(1) translateY(0); }
+    }
+
+    /* ── FACTS BAR ─────────────────────────────────── */
+    .cs-facts-bar {
+      background: var(--color-bg-card);
+      border-bottom: 1px solid var(--color-border);
+      border-top: 1px solid var(--color-border-accent);
+      padding-block: var(--space-6);
+    }
+    .cs-facts-grid {
+      display: flex;
+      align-items: stretch;
+      flex-wrap: wrap;
+      gap: 0;
+    }
+    .cs-fact {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding-inline: var(--space-8);
+      border-right: 1px solid var(--color-border);
+      min-width: 140px;
+    }
+    .cs-fact:first-child { padding-left: 0; }
+    .cs-fact:last-child  { border-right: none; }
+    .cs-fact-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+    .cs-fact-value {
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    /* ── SHARED SECTION STYLES ─────────────────────── */
+    .cs-section { padding-block: var(--space-20); }
+    .cs-section + .cs-section { padding-top: 0; }
+    .cs-section-divider {
+      height: 1px;
+      background: var(--color-border);
+      margin-block: var(--space-20);
+    }
+
+    .cs-label {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-accent-secondary);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-5);
+    }
+    .cs-label::before {
+      content: '';
+      display: block;
+      width: 20px;
+      height: 1px;
+      background: var(--color-accent-secondary);
+      flex-shrink: 0;
+    }
+    .cs-h2 {
+      font-family: var(--font-heading);
+      font-size: clamp(1.75rem, 3.5vw, 2.75rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-6);
+    }
+    .cs-body-text {
+      font-size: var(--text-base);
+      color: var(--color-text-secondary);
+      line-height: 1.75;
+      max-width: 62ch;
+    }
+    .cs-body-text + .cs-body-text { margin-top: var(--space-5); }
+
+    /* ── OVERVIEW ──────────────────────────────────── */
+    .cs-overview {
+      padding-block: var(--space-20);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .cs-overview-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: var(--space-16);
+      align-items: start;
+    }
+    .cs-overview-quote {
+      font-family: var(--font-heading);
+      font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+      font-weight: 500;
+      line-height: 1.4;
+      color: var(--color-text-primary);
+      border-left: 3px solid var(--color-accent-primary);
+      padding-left: var(--space-6);
+      margin-bottom: var(--space-8);
+    }
+    .cs-overview-sidebar {
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border-accent);
+      border-radius: var(--radius-xl);
+      padding: var(--space-8);
+      box-shadow: 0 0 40px rgba(108,99,255,0.08);
+    }
+    .cs-overview-sidebar-title {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-5);
+    }
+    .cs-scope-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      list-style: none;
+    }
+    .cs-scope-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+    }
+    .cs-scope-list li::before {
+      content: '';
+      display: block;
+      width: 5px;
+      height: 5px;
+      background: var(--color-accent-primary);
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 7px;
+    }
+
+    /* ── CHALLENGE ─────────────────────────────────── */
+    .cs-challenge {
+      padding-block: var(--space-20);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .cs-challenge-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-16);
+      align-items: start;
+    }
+
+    /* ── APPROACH ──────────────────────────────────── */
+    .cs-approach {
+      padding-block: var(--space-20);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .cs-steps {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-8);
+      margin-top: var(--space-12);
+    }
+    .cs-step {
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-8);
+      position: relative;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .cs-step:hover {
+      border-color: var(--color-border-accent);
+      box-shadow: 0 0 30px rgba(108,99,255,0.08);
+    }
+    .cs-step-num {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      color: var(--color-accent-primary);
+      margin-bottom: var(--space-4);
+    }
+    .cs-step-title {
+      font-family: var(--font-heading);
+      font-size: var(--text-base);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-3);
+    }
+    .cs-step-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: 1.65;
+    }
+
+    /* ── GALLERY ───────────────────────────────────── */
+    .cs-gallery {
+      padding-block: var(--space-20);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .cs-gallery-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      grid-template-rows: 300px 300px;
+      gap: var(--space-3);
+      margin-top: var(--space-10);
+    }
+    .cs-gallery-item {
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      position: relative;
+    }
+    .cs-gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+      transition: transform 0.6s var(--ease-out);
+    }
+    .cs-gallery-item:hover img { transform: scale(1.04); }
+    .cs-gallery-item--span-col { grid-row: 1 / 3; }
+    /* Placeholder slots */
+    .cs-gallery-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-3);
+      color: var(--color-text-muted);
+    }
+    .cs-gallery-placeholder-icon {
+      width: 40px;
+      height: 40px;
+      border: 1.5px dashed var(--color-border);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-muted);
+    }
+    .cs-gallery-placeholder-icon svg { width: 18px; height: 18px; }
+    .cs-gallery-placeholder span {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* ── OUTCOME ───────────────────────────────────── */
+    .cs-outcome {
+      padding-block: var(--space-20);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .cs-outcome-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-16);
+      align-items: start;
+    }
+    .cs-outcome-pull {
+      font-family: var(--font-heading);
+      font-size: clamp(1.25rem, 2.2vw, 1.6rem);
+      font-weight: 500;
+      line-height: 1.45;
+      color: var(--color-text-primary);
+      padding: var(--space-8);
+      background: linear-gradient(135deg, rgba(108,99,255,0.07), rgba(45,212,191,0.04));
+      border: 1px solid var(--color-border-accent);
+      border-radius: var(--radius-xl);
+      box-shadow: 0 0 40px rgba(108,99,255,0.07);
+    }
+
+    /* ── STATS ─────────────────────────────────────── */
+    .cs-stats {
+      padding-block: var(--space-20);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .cs-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-4);
+      margin-top: var(--space-12);
+    }
+    .cs-stat-card {
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-8);
+      text-align: center;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .cs-stat-card:hover {
+      border-color: var(--color-border-accent);
+      box-shadow: 0 0 40px rgba(108,99,255,0.1);
+    }
+    .cs-stat-value {
+      display: block;
+      font-family: var(--font-heading);
+      font-size: clamp(2.5rem, 5vw, 3.75rem);
+      font-weight: 700;
+      line-height: 1;
+      color: var(--color-accent-primary);
+      margin-bottom: var(--space-3);
+    }
+    .cs-stat-label {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      line-height: 1.5;
+    }
+    .cs-stat-note {
+      margin-top: var(--space-2);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+    }
+
+    /* ── TECH STACK ────────────────────────────────── */
+    .cs-tech {
+      padding-block: var(--space-20);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .cs-tech-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-4);
+      margin-top: var(--space-10);
+    }
+    .cs-tech-item {
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      transition: border-color 0.25s;
+    }
+    .cs-tech-item:hover { border-color: var(--color-border-accent); }
+    .cs-tech-item-role {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-2);
+    }
+    .cs-tech-item-name {
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    /* ── CTA ───────────────────────────────────────── */
+    .cs-cta {
+      padding-block: var(--space-20);
+      text-align: center;
+    }
+    .cs-cta-inner {
+      max-width: 560px;
+      margin-inline: auto;
+    }
+    .cs-cta-eyebrow {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-accent-secondary);
+      margin-bottom: var(--space-4);
+    }
+    .cs-cta h2 {
+      font-family: var(--font-heading);
+      font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+      font-weight: 700;
+      line-height: 1.15;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-5);
+    }
+    .cs-cta p {
+      color: var(--color-text-secondary);
+      line-height: 1.65;
+      margin-bottom: var(--space-8);
+    }
+
+    /* ── FOOTER ────────────────────────────────────── */
+    .cs-footer {
+      border-top: 1px solid var(--color-border);
+      padding-block: var(--space-8);
+      text-align: center;
+      color: var(--color-text-muted);
+      font-size: var(--text-sm);
+    }
+    .cs-footer a { color: var(--color-accent-primary); text-decoration: none; }
+    .cs-footer a:hover { text-decoration: underline; }
+
+    /* ── RESPONSIVE ────────────────────────────────── */
+    @media (max-width: 900px) {
+      .cs-overview-grid,
+      .cs-challenge-grid,
+      .cs-outcome-grid { grid-template-columns: 1fr; }
+      .cs-steps { grid-template-columns: 1fr; }
+      .cs-stats-grid { grid-template-columns: 1fr 1fr; }
+      .cs-tech-grid { grid-template-columns: 1fr 1fr; }
+      .cs-gallery-grid {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 200px 200px 200px;
+      }
+      .cs-gallery-item--span-col { grid-row: auto; }
+      .cs-fact { min-width: auto; }
+    }
+    @media (max-width: 580px) {
+      .cs-hero { max-height: 680px; }
+      .cs-stats-grid { grid-template-columns: 1fr; }
+      .cs-tech-grid { grid-template-columns: 1fr 1fr; }
+      .cs-gallery-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
+      .cs-gallery-item { height: 220px; }
+      .cs-facts-grid { gap: var(--space-4); }
+      .cs-fact { border-right: none; padding-inline: 0; border-bottom: 1px solid var(--color-border); padding-bottom: var(--space-3); }
+      .cs-fact:last-child { border-bottom: none; }
+    }
+
+  </style>
+</head>
+<body style="background: var(--color-bg-primary);">
+
+<!-- ═══════════════════════════════════════════════
+  NAV
+══════════════════════════════════════════════════ -->
+<nav class="cs-nav" role="navigation" aria-label="Case study navigation">
+  <div class="container">
+    <div class="cs-nav-inner">
+      <a href="../" class="cs-nav-logo">
+        <img src="../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <div class="cs-nav-right">
+        <a href="index.html" class="cs-back-link">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 8H1M7 2L1 8l6 6"/></svg>
+          All Case Studies
+        </a>
+        <a href="../#contact" class="btn btn-outline" style="font-size: var(--text-xs); padding: 0.5rem 1rem;">Let's Talk</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ═══════════════════════════════════════════════
+  HERO
+══════════════════════════════════════════════════ -->
+<section class="cs-hero" aria-label="Project hero">
+
+  <img
+    class="cs-hero-img"
+    src="https://cdn.prod.website-files.com/67b6a9ac780b924c936f06b2/67b77fa488b7edd898cd449a_Screenshot%202025-02-20%20at%2011.14.25%E2%80%AFAM.png"
+    alt="Coachella Republic Records VIP — visuals"
+  />
+  <div class="cs-hero-overlay" aria-hidden="true"></div>
+
+  <div class="cs-hero-content">
+    <div class="container">
+      <div class="cs-hero-chip" aria-label="Project type and year">
+        Live Visuals &nbsp;·&nbsp; Indio, CA &nbsp;·&nbsp; 2019
+      </div>
+      <h1 class="cs-hero-title">Coachella —<br>Republic Records<br>VIP</h1>
+      <p class="cs-hero-tagline">
+        Fully live, audio-reactive generative visuals for Republic Records and Phantogram at their Coachella VIP party.
+      </p>
+      <div class="cs-hero-actions">
+        <a href="../#contact" class="btn btn-primary">Start a Similar Project</a>
+        <a href="#overview" class="btn btn-outline">Read the Story</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="cs-hero-scroll" aria-hidden="true">
+    <span>Scroll</span>
+    <div class="cs-hero-scroll-line"></div>
+  </div>
+
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  FACTS BAR
+══════════════════════════════════════════════════ -->
+<div class="cs-facts-bar">
+  <div class="container">
+    <div class="cs-facts-grid">
+      <div class="cs-fact">
+        <span class="cs-fact-label">Client</span>
+        <span class="cs-fact-value">Republic Records / Phantogram</span>
+      </div>
+      <div class="cs-fact">
+        <span class="cs-fact-label">Year</span>
+        <span class="cs-fact-value">2019</span>
+      </div>
+      <div class="cs-fact">
+        <span class="cs-fact-label">Service</span>
+        <span class="cs-fact-value">Live Event Visuals</span>
+      </div>
+      <div class="cs-fact">
+        <span class="cs-fact-label">Location</span>
+        <span class="cs-fact-value">Coachella, Indio, CA</span>
+      </div>
+      <div class="cs-fact">
+        <span class="cs-fact-label">Scale</span>
+        <span class="cs-fact-value">VIP party, full visual environment</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+  OVERVIEW
+══════════════════════════════════════════════════ -->
+<section class="cs-overview" id="overview" aria-label="Project overview">
+  <div class="container">
+    <div class="cs-overview-grid">
+
+      <div>
+        <span class="cs-label">The Brief</span>
+        <blockquote class="cs-overview-quote">
+          "We need visuals that feel as alive as the music — nothing pre-rendered, nothing canned. Everything live."
+        </blockquote>
+        <p class="cs-body-text">
+          Republic Records brought Hexagon Misfit in to create the visual environment for their Coachella VIP party, featuring Phantogram. The brief was clear: fully live, fully reactive — no pre-rendered loops, no canned sequences.
+        </p>
+        <p class="cs-body-text">
+          The result was a real-time generative visual system built in TouchDesigner, driven entirely by audio analysis of the live set. Every beat, every frequency shift, every build in the music drove corresponding changes in the visuals — the room breathing with the music.
+        </p>
+      </div>
+
+      <aside class="cs-overview-sidebar" aria-label="Project scope">
+        <p class="cs-overview-sidebar-title">Scope of Work</p>
+        <ul class="cs-scope-list">
+          <li>Real-time audio analysis pipeline</li>
+          <li>TouchDesigner generative visual system</li>
+          <li>Multi-display output configuration</li>
+          <li>Live operation throughout event</li>
+          <li>Content direction and visual design</li>
+        </ul>
+      </aside>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  THE CHALLENGE
+══════════════════════════════════════════════════ -->
+<section class="cs-challenge" aria-label="The challenge">
+  <div class="container">
+    <div class="cs-challenge-grid">
+
+      <div>
+        <span class="cs-label">The Challenge</span>
+        <h2 class="cs-h2">A live visual environment that has to match the energy of a Coachella set — in real time.</h2>
+      </div>
+
+      <div>
+        <p class="cs-body-text">
+          Live event visuals at Coachella carry a particular pressure: the crowd is experienced, the bar is high, and the music doesn't wait. A pre-rendered video loop is immediately apparent to anyone who's paying attention.
+        </p>
+        <p class="cs-body-text">
+          The system had to respond convincingly to the nuances of a live performance — not just the beat, but the texture, the dynamics, the moments of tension and release — without any human at the controls adjusting it in real time.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  OUR APPROACH
+══════════════════════════════════════════════════ -->
+<section class="cs-approach" aria-label="Our approach">
+  <div class="container">
+    <span class="cs-label">Our Approach</span>
+    <h2 class="cs-h2">Four phases from brief to opening night.</h2>
+    <div class="cs-steps">
+
+      <div class="cs-step">
+        <p class="cs-step-num">01 — Audio Analysis</p>
+        <h3 class="cs-step-title">Frequency-Driven Pipeline</h3>
+        <p class="cs-step-desc">TouchDesigner's audio analysis tools were configured to extract frequency bands, amplitude envelopes, and transient events from the live audio feed. Each parameter drove distinct visual behaviors across the system.</p>
+      </div>
+
+      <div class="cs-step">
+        <p class="cs-step-num">02 — Generative System</p>
+        <h3 class="cs-step-title">Real-Time Visual Engine</h3>
+        <p class="cs-step-desc">A fully generative visual system was built that responded to the audio analysis data — geometry, color, texture, and motion all driven in real time. Nothing was pre-authored or pre-timed.</p>
+      </div>
+
+      <div class="cs-step">
+        <p class="cs-step-num">03 — Output Configuration</p>
+        <h3 class="cs-step-title">Multi-Display Integration</h3>
+        <p class="cs-step-desc">The system was output across multiple displays throughout the venue, creating an immersive visual environment that wrapped the space rather than being confined to a single screen.</p>
+      </div>
+
+      <div class="cs-step">
+        <p class="cs-step-num">04 — Live Operation</p>
+        <h3 class="cs-step-title">Full Event Coverage</h3>
+        <p class="cs-step-desc">Our team operated the system live throughout the event, monitoring system health and making macro adjustments as the set progressed — ensuring the visuals stayed in sync with the energy of the performance.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  GALLERY
+══════════════════════════════════════════════════ -->
+<section class="cs-gallery" aria-label="Project gallery">
+  <div class="container">
+    <span class="cs-label">Project Photography</span>
+    <h2 class="cs-h2">On-site and in operation.</h2>
+
+    <div class="cs-gallery-grid" role="list">
+
+      <div class="cs-gallery-item cs-gallery-item--span-col" role="listitem">
+        <img
+          src="../assets/images/coachella/vlcsnap-2018-09-24-11h25m44s815.png"
+          alt="Coachella Republic Records VIP visuals"
+          loading="lazy"
+        />
+      </div>
+
+      <div class="cs-gallery-item" role="listitem">
+        <img
+          src="../assets/images/coachella/Screenshot 2017-04-04 13.06.40.png"
+          alt="Coachella generative visuals detail"
+          loading="lazy"
+        />
+      </div>
+
+      <div class="cs-gallery-item" role="listitem">
+        <img
+          src="../assets/images/coachella/Screenshot 2017-05-11 18.32.34.png"
+          alt="Coachella live visual system"
+          loading="lazy"
+        />
+      </div>
+
+      <div class="cs-gallery-item cs-gallery-placeholder" role="listitem" aria-label="Photo placeholder">
+        <div class="cs-gallery-placeholder-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        </div>
+        <span>Add photo</span>
+      </div>
+
+      <div class="cs-gallery-item cs-gallery-placeholder" role="listitem" aria-label="Photo placeholder">
+        <div class="cs-gallery-placeholder-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        </div>
+        <span>Add photo</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  OUTCOME
+══════════════════════════════════════════════════ -->
+<section class="cs-outcome" aria-label="Project outcome">
+  <div class="container">
+    <div class="cs-outcome-grid">
+
+      <div>
+        <span class="cs-label">The Result</span>
+        <h2 class="cs-h2">A room that breathed with the music — and a client relationship that continued from there.</h2>
+        <p class="cs-body-text">
+          The visual environment was received enthusiastically by the Republic Records team and Phantogram's crew. The fully live approach created a visual experience that felt unique to that specific set — something that couldn't be replicated or re-used.
+        </p>
+      </div>
+
+      <div>
+        <p class="cs-outcome-pull">
+          "When the visuals are truly live, the crowd feels it — even if they can't say why."
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  KEY STATS
+══════════════════════════════════════════════════ -->
+<section class="cs-stats" aria-label="Key project statistics">
+  <div class="container">
+    <span class="cs-label">By the Numbers</span>
+    <div class="cs-stats-grid">
+
+      <div class="cs-stat-card">
+        <span class="cs-stat-value">100%</span>
+        <span class="cs-stat-label">Live — zero<br>pre-rendered content</span>
+      </div>
+
+      <div class="cs-stat-card">
+        <span class="cs-stat-value">3</span>
+        <span class="cs-stat-label">Hours of<br>fully live visuals</span>
+      </div>
+
+      <div class="cs-stat-card">
+        <span class="cs-stat-value">1</span>
+        <span class="cs-stat-label">System operators<br>on site</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  TECHNOLOGY STACK
+══════════════════════════════════════════════════ -->
+<section class="cs-tech" aria-label="Technology used">
+  <div class="container">
+    <span class="cs-label">Technology Stack</span>
+    <h2 class="cs-h2">The tools that made it happen.</h2>
+
+    <div class="cs-tech-grid">
+
+      <div class="cs-tech-item">
+        <p class="cs-tech-item-role">Visual Engine</p>
+        <p class="cs-tech-item-name">TouchDesigner</p>
+      </div>
+
+      <div class="cs-tech-item">
+        <p class="cs-tech-item-role">Analysis</p>
+        <p class="cs-tech-item-name">Audio-reactive pipeline</p>
+      </div>
+
+      <div class="cs-tech-item">
+        <p class="cs-tech-item-role">Rendering</p>
+        <p class="cs-tech-item-name">Real-time generative</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  CTA
+══════════════════════════════════════════════════ -->
+<section class="cs-cta" aria-label="Contact call to action">
+  <div class="container">
+    <div class="cs-cta-inner">
+      <p class="cs-cta-eyebrow">Work with us</p>
+      <h2>Got a brief that needs something extraordinary?</h2>
+      <p>Tell us about your project — venue, timeline, campaign goal. We'll respond within 24 hours with initial thoughts. No pitch deck required.</p>
+      <div style="display: flex; justify-content: center; gap: var(--space-4); flex-wrap: wrap;">
+        <a href="../#contact" class="btn btn-primary">Start a Conversation</a>
+        <a href="index.html" class="btn btn-outline">More Case Studies</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+  FOOTER
+══════════════════════════════════════════════════ -->
+<footer class="cs-footer">
+  <div class="container">
+    <p>
+      &copy; <span id="footer-year"></span> Hexagon Misfit &nbsp;·&nbsp;
+      <a href="../#contact">Get in Touch</a> &nbsp;·&nbsp;
+      <a href="index.html">All Case Studies</a> &nbsp;·&nbsp;
+      <a href="../#work">All Work</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('footer-year').textContent = new Date().getFullYear();
+</script>
+
+</body>
+</html>

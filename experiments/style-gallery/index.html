@@ -1,0 +1,2137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Style Gallery — Hexagon Misfit Experiments</title>
+  <meta name="description" content="An interactive showcase of 4 UI design philosophies — Brutalist, Glassmorphism, Neomorphism, and Retro/Y2K — with a global style switcher that transforms every element on the page." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400&family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../css/reset.css" />
+  <link rel="stylesheet" href="../../css/tokens.css" />
+  <link rel="stylesheet" href="../../css/layout.css" />
+  <link rel="stylesheet" href="../../css/components.css" />
+  <link rel="stylesheet" href="../../css/animations.css" />
+
+  <style>
+    /* ══════════════════════════════════════════════════════
+       STYLE GALLERY — CSS CUSTOM PROPERTIES (DEFAULT THEME)
+    ══════════════════════════════════════════════════════ */
+    :root {
+      --sg-bg:              var(--color-bg-primary);
+      --sg-bg-secondary:    var(--color-bg-secondary);
+      --sg-bg-card:         var(--color-bg-card);
+      --sg-bg-elevated:     var(--color-bg-elevated);
+      --sg-text:            var(--color-text-primary);
+      --sg-text-secondary:  var(--color-text-secondary);
+      --sg-text-muted:      var(--color-text-muted);
+      --sg-accent:          var(--color-accent-primary);
+      --sg-accent2:         var(--color-accent-secondary);
+      --sg-border:          var(--color-border);
+      --sg-border-accent:   var(--color-border-accent);
+      --sg-radius:          var(--radius-lg);
+      --sg-radius-sm:       var(--radius-sm);
+      --sg-radius-full:     var(--radius-full);
+      --sg-shadow:          var(--shadow-card);
+      --sg-font-heading:    var(--font-heading);
+      --sg-font-body:       var(--font-body);
+      --sg-font-mono:       var(--font-mono);
+      --sg-nav-bg:          rgba(10, 10, 15, 0.92);
+      --sg-input-bg:        var(--color-bg-elevated);
+      --sg-toggle-bg:       var(--color-bg-elevated);
+      --sg-toggle-active:   var(--color-accent-primary);
+      --sg-range-track:     var(--color-bg-elevated);
+      --sg-range-fill:      var(--color-accent-primary);
+      --sg-modal-overlay:   rgba(0, 0, 0, 0.7);
+      --sg-toast-bg:        var(--color-bg-elevated);
+      --sg-dropdown-bg:     var(--color-bg-elevated);
+    }
+
+    /* ══════════════════════════════════════════════════════
+       THEME: BRUTALIST
+    ══════════════════════════════════════════════════════ */
+    body[data-style="brutalist"] {
+      --sg-bg:              #FFFFFF;
+      --sg-bg-secondary:    #F0F0F0;
+      --sg-bg-card:         #FFFFFF;
+      --sg-bg-elevated:     #FFFFFF;
+      --sg-text:            #000000;
+      --sg-text-secondary:  #333333;
+      --sg-text-muted:      #666666;
+      --sg-accent:          #FF0000;
+      --sg-accent2:         #0000FF;
+      --sg-border:          #000000;
+      --sg-border-accent:   #FF0000;
+      --sg-radius:          0px;
+      --sg-radius-sm:       0px;
+      --sg-radius-full:     0px;
+      --sg-shadow:          4px 4px 0 #000000;
+      --sg-font-heading:    'Courier New', Courier, monospace;
+      --sg-font-body:       'Courier New', Courier, monospace;
+      --sg-font-mono:       'Courier New', Courier, monospace;
+      --sg-nav-bg:          #FFFFFF;
+      --sg-input-bg:        #FFFFFF;
+      --sg-toggle-bg:       #FFFFFF;
+      --sg-toggle-active:   #FF0000;
+      --sg-range-track:     #000000;
+      --sg-range-fill:      #FF0000;
+      --sg-modal-overlay:   rgba(0, 0, 0, 0.85);
+      --sg-toast-bg:        #FFFFFF;
+      --sg-dropdown-bg:     #FFFFFF;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       THEME: GLASSMORPHISM
+    ══════════════════════════════════════════════════════ */
+    body[data-style="glass"] {
+      --sg-bg:              #1a0533;
+      --sg-bg-secondary:    rgba(255, 255, 255, 0.06);
+      --sg-bg-card:         rgba(255, 255, 255, 0.08);
+      --sg-bg-elevated:     rgba(255, 255, 255, 0.1);
+      --sg-text:            #FFFFFF;
+      --sg-text-secondary:  rgba(255, 255, 255, 0.75);
+      --sg-text-muted:      rgba(255, 255, 255, 0.45);
+      --sg-accent:          #a855f7;
+      --sg-accent2:         #7c3aed;
+      --sg-border:          rgba(255, 255, 255, 0.15);
+      --sg-border-accent:   rgba(168, 85, 247, 0.4);
+      --sg-radius:          16px;
+      --sg-radius-sm:       8px;
+      --sg-radius-full:     9999px;
+      --sg-shadow:          0 8px 32px rgba(0, 0, 0, 0.3);
+      --sg-font-heading:    'Space Grotesk', sans-serif;
+      --sg-font-body:       'Inter', sans-serif;
+      --sg-font-mono:       'Space Mono', monospace;
+      --sg-nav-bg:          rgba(26, 5, 51, 0.7);
+      --sg-input-bg:        rgba(255, 255, 255, 0.08);
+      --sg-toggle-bg:       rgba(255, 255, 255, 0.1);
+      --sg-toggle-active:   #a855f7;
+      --sg-range-track:     rgba(255, 255, 255, 0.1);
+      --sg-range-fill:      #a855f7;
+      --sg-modal-overlay:   rgba(10, 2, 30, 0.75);
+      --sg-toast-bg:        rgba(255, 255, 255, 0.12);
+      --sg-dropdown-bg:     rgba(255, 255, 255, 0.12);
+    }
+
+    /* ══════════════════════════════════════════════════════
+       THEME: NEOMORPHISM
+    ══════════════════════════════════════════════════════ */
+    body[data-style="neo"] {
+      --sg-bg:              #E0E5EC;
+      --sg-bg-secondary:    #E0E5EC;
+      --sg-bg-card:         #E0E5EC;
+      --sg-bg-elevated:     #E0E5EC;
+      --sg-text:            #2D3436;
+      --sg-text-secondary:  #636E72;
+      --sg-text-muted:      #95A5A6;
+      --sg-accent:          #6C63FF;
+      --sg-accent2:         #a855f7;
+      --sg-border:          transparent;
+      --sg-border-accent:   transparent;
+      --sg-radius:          16px;
+      --sg-radius-sm:       10px;
+      --sg-radius-full:     9999px;
+      --sg-shadow:          6px 6px 12px #b8bec7, -6px -6px 12px #ffffff;
+      --sg-font-heading:    'Space Grotesk', sans-serif;
+      --sg-font-body:       'Inter', sans-serif;
+      --sg-font-mono:       'Space Mono', monospace;
+      --sg-nav-bg:          #E0E5EC;
+      --sg-input-bg:        #E0E5EC;
+      --sg-toggle-bg:       #E0E5EC;
+      --sg-toggle-active:   #6C63FF;
+      --sg-range-track:     #E0E5EC;
+      --sg-range-fill:      #6C63FF;
+      --sg-modal-overlay:   rgba(180, 190, 200, 0.7);
+      --sg-toast-bg:        #E0E5EC;
+      --sg-dropdown-bg:     #E0E5EC;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       THEME: RETRO / Y2K
+    ══════════════════════════════════════════════════════ */
+    body[data-style="retro"] {
+      --sg-bg:              #0a001a;
+      --sg-bg-secondary:    #0f0025;
+      --sg-bg-card:         #0f0025;
+      --sg-bg-elevated:     #150030;
+      --sg-text:            #e0e0ff;
+      --sg-text-secondary:  #b0b0e0;
+      --sg-text-muted:      #6060a0;
+      --sg-accent:          #ff00ff;
+      --sg-accent2:         #00ffff;
+      --sg-border:          #ff00ff;
+      --sg-border-accent:   #00ffff;
+      --sg-radius:          4px;
+      --sg-radius-sm:       2px;
+      --sg-radius-full:     4px;
+      --sg-shadow:          0 0 12px rgba(255, 0, 255, 0.4), 0 0 24px rgba(0, 255, 255, 0.15);
+      --sg-font-heading:    'Press Start 2P', 'Space Mono', monospace;
+      --sg-font-body:       'Space Mono', monospace;
+      --sg-font-mono:       'Press Start 2P', 'Space Mono', monospace;
+      --sg-nav-bg:          rgba(10, 0, 26, 0.95);
+      --sg-input-bg:        #0f0025;
+      --sg-toggle-bg:       #0f0025;
+      --sg-toggle-active:   #ff00ff;
+      --sg-range-track:     #1a0040;
+      --sg-range-fill:      #ff00ff;
+      --sg-modal-overlay:   rgba(5, 0, 15, 0.9);
+      --sg-toast-bg:        #0f0025;
+      --sg-dropdown-bg:     #0f0025;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       BASE / LAYOUT
+    ══════════════════════════════════════════════════════ */
+    body {
+      background: var(--sg-bg);
+      color: var(--sg-text);
+      font-family: var(--sg-font-body);
+      transition: background 0.5s, color 0.5s;
+      overflow-x: hidden;
+    }
+
+    .sg-transitioning,
+    .sg-transitioning *,
+    .sg-transitioning *::before,
+    .sg-transitioning *::after {
+      transition-duration: 0.6s !important;
+    }
+
+    .sg-section {
+      padding: clamp(3rem, 8vw, 6rem) 0;
+    }
+    .sg-section-title {
+      font-family: var(--sg-font-heading);
+      font-size: clamp(1.5rem, 4vw, 2.5rem);
+      font-weight: 700;
+      color: var(--sg-text);
+      margin-bottom: var(--space-3);
+      transition: color 0.5s, font-family 0.5s;
+    }
+    .sg-section-subtitle {
+      font-size: var(--text-sm);
+      color: var(--sg-text-muted);
+      font-family: var(--sg-font-mono);
+      letter-spacing: 0.08em;
+      margin-bottom: var(--space-10);
+      transition: color 0.5s;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       NAV
+    ══════════════════════════════════════════════════════ */
+    .sg-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding-block: var(--space-5);
+      background: var(--sg-nav-bg);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--sg-border);
+      transition: background 0.5s, border-color 0.5s;
+    }
+    .sg-nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .sg-nav-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--sg-font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--sg-text);
+      text-decoration: none;
+      transition: color 0.5s;
+    }
+    .sg-nav-logo img { height: 28px; width: auto; }
+    .sg-nav-right {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+    }
+    .sg-back {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-family: var(--sg-font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.08em;
+      color: var(--sg-text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .sg-back:hover { color: var(--sg-text); }
+    .sg-back svg { width: 12px; height: 12px; }
+    .sg-cta-btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.5rem 1.25rem;
+      font-family: var(--sg-font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.06em;
+      color: var(--sg-text);
+      border: 1px solid var(--sg-border);
+      border-radius: var(--sg-radius-sm);
+      text-decoration: none;
+      background: transparent;
+      transition: border-color 0.2s, background 0.2s, color 0.5s;
+    }
+    .sg-cta-btn:hover {
+      border-color: var(--sg-accent);
+      background: var(--sg-bg-elevated);
+    }
+
+    /* ══════════════════════════════════════════════════════
+       HERO
+    ══════════════════════════════════════════════════════ */
+    .sg-hero {
+      padding: clamp(4rem, 12vw, 8rem) 0 clamp(3rem, 8vw, 5rem);
+      text-align: center;
+    }
+    .sg-hero-eyebrow {
+      font-family: var(--sg-font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--sg-accent);
+      margin-bottom: var(--space-4);
+      transition: color 0.5s;
+    }
+    .sg-hero h1 {
+      font-family: var(--sg-font-heading);
+      font-size: clamp(2rem, 6vw, 4rem);
+      font-weight: 700;
+      line-height: 1.15;
+      color: var(--sg-text);
+      margin-bottom: var(--space-4);
+      transition: color 0.5s, font-family 0.5s;
+    }
+    .sg-hero h1 em {
+      font-style: normal;
+      color: var(--sg-accent);
+      transition: color 0.5s;
+    }
+    .sg-hero-sub {
+      max-width: 52ch;
+      margin-inline: auto;
+      color: var(--sg-text-secondary);
+      font-size: var(--text-lg);
+      margin-bottom: var(--space-10);
+      transition: color 0.5s;
+    }
+
+    /* ── STYLE SWITCHER ───────────────────────────────── */
+    .sg-switcher {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+      justify-content: center;
+      padding: var(--space-4);
+      background: var(--sg-bg-elevated);
+      border: 1px solid var(--sg-border);
+      border-radius: var(--sg-radius);
+      transition: background 0.5s, border-color 0.5s;
+    }
+    .sg-switcher-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 0.5rem 1rem;
+      font-family: var(--sg-font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.04em;
+      color: var(--sg-text-secondary);
+      background: transparent;
+      border: 1px solid var(--sg-border);
+      border-radius: var(--sg-radius-sm);
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+    .sg-switcher-btn:hover {
+      color: var(--sg-text);
+      border-color: var(--sg-accent);
+    }
+    .sg-switcher-btn[aria-pressed="true"] {
+      color: var(--sg-text);
+      border-color: var(--sg-accent);
+      background: var(--sg-bg-secondary);
+      box-shadow: 0 0 12px rgba(108, 99, 255, 0.2);
+    }
+    .sg-switcher-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── FIXED MINI SWITCHER ─────────────────────────── */
+    .sg-mini-switcher {
+      position: fixed;
+      bottom: var(--space-6);
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      display: flex;
+      gap: var(--space-2);
+      padding: var(--space-3);
+      background: var(--sg-nav-bg);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--sg-border);
+      border-radius: var(--sg-radius-full);
+      z-index: 99;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s, background 0.5s, border-color 0.5s;
+    }
+    .sg-mini-switcher.is-visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(-50%) translateY(0);
+    }
+    .sg-mini-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid var(--sg-border);
+      cursor: pointer;
+      padding: 0;
+      transition: border-color 0.2s, transform 0.15s;
+      background: transparent;
+    }
+    .sg-mini-btn:hover { transform: scale(1.2); border-color: var(--sg-text-secondary); }
+    .sg-mini-btn[aria-pressed="true"] { border-color: var(--sg-text); transform: scale(1.15); }
+
+    /* ══════════════════════════════════════════════════════
+       MICRO-ANIMATION GALLERY
+    ══════════════════════════════════════════════════════ */
+    .sg-micro-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-6);
+    }
+    @media (max-width: 1024px) { .sg-micro-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px)  { .sg-micro-grid { grid-template-columns: 1fr; } }
+
+    .sg-micro-cell {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 180px;
+      padding: var(--space-6);
+      background: var(--sg-bg-card);
+      border: 1px solid var(--sg-border);
+      border-radius: var(--sg-radius);
+      transition: background 0.5s, border-color 0.5s, box-shadow 0.5s, border-radius 0.5s;
+      overflow: hidden;
+    }
+    body[data-style="neo"] .sg-micro-cell {
+      border: none;
+      box-shadow: var(--sg-shadow);
+    }
+    body[data-style="glass"] .sg-micro-cell {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    body[data-style="brutalist"] .sg-micro-cell {
+      border-width: 3px;
+    }
+    body[data-style="retro"] .sg-micro-cell {
+      box-shadow: var(--sg-shadow);
+    }
+
+    .sg-micro-label {
+      position: absolute;
+      top: var(--space-3);
+      left: var(--space-3);
+      font-family: var(--sg-font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--sg-text-muted);
+      transition: color 0.5s;
+    }
+
+    /* ── 1. Scale Hover ── */
+    .sg-anim-scale {
+      width: 64px;
+      height: 64px;
+      background: var(--sg-accent);
+      border-radius: var(--sg-radius-sm);
+      cursor: pointer;
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), border-radius 0.5s;
+    }
+    .sg-anim-scale:hover { transform: scale(1.18); }
+    @keyframes sg-pop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.55); }
+      100% { transform: scale(1); }
+    }
+    .sg-anim-scale.is-popped { animation: sg-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+    /* ── 2. Glow Hover ── */
+    .sg-anim-glow {
+      width: 64px;
+      height: 64px;
+      background: var(--sg-accent);
+      border-radius: var(--sg-radius-sm);
+      box-shadow: 0 0 0 rgba(108, 99, 255, 0);
+      transition: box-shadow 0.3s, border-radius 0.5s;
+    }
+    .sg-anim-glow:hover {
+      box-shadow: 0 0 30px var(--sg-accent), 0 0 60px var(--sg-accent);
+    }
+
+    /* ── 3. Morph Click Cycle ── */
+    .sg-anim-morph {
+      width: 64px;
+      height: 64px;
+      background: var(--sg-accent2);
+      border-radius: var(--sg-radius-sm);
+      cursor: pointer;
+      transition: border-radius 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), clip-path 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), border-radius 0.5s;
+    }
+    .sg-anim-morph.shape-pill   { border-radius: 32px; }
+    .sg-anim-morph.shape-circle { border-radius: 50%; }
+    .sg-anim-morph.shape-tri    { border-radius: 0; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
+
+    /* ── 4. Reveal Hover ── */
+    .sg-anim-reveal {
+      position: relative;
+      width: 120px;
+      height: 64px;
+      background: var(--sg-accent);
+      border-radius: var(--sg-radius-sm);
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-radius 0.5s;
+    }
+    .sg-anim-reveal-text {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: var(--space-2);
+      font-family: var(--sg-font-mono);
+      font-size: 0.65rem;
+      color: #fff;
+      background: rgba(0,0,0,0.6);
+      text-align: center;
+      transform: translateY(100%);
+      transition: transform 0.3s var(--ease-out);
+    }
+    .sg-anim-reveal:hover .sg-anim-reveal-text { transform: translateY(0); }
+
+    /* ── 5. Spinner ── */
+    .sg-anim-spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--sg-border);
+      border-top-color: var(--sg-accent);
+      border-radius: 50%;
+      animation: sg-spin 0.8s linear infinite;
+    }
+    @keyframes sg-spin { to { transform: rotate(360deg); } }
+
+    /* ── 6. Progress Bar ── */
+    .sg-anim-progress {
+      width: 100%;
+      max-width: 200px;
+      height: 8px;
+      background: var(--sg-bg-elevated);
+      border-radius: var(--sg-radius-full);
+      overflow: hidden;
+      transition: background 0.5s;
+    }
+    .sg-anim-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--sg-accent);
+      border-radius: var(--sg-radius-full);
+      animation: sg-progress 2.5s ease-in-out infinite;
+      transition: background 0.5s;
+    }
+    @keyframes sg-progress {
+      0%   { width: 0%; }
+      50%  { width: 100%; }
+      100% { width: 0%; }
+    }
+
+    /* ── 7. Skeleton Screen ── */
+    .sg-anim-skeleton {
+      width: 100%;
+      max-width: 200px;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+    .sg-anim-skeleton-line {
+      height: 10px;
+      background: var(--sg-bg-elevated);
+      border-radius: var(--sg-radius-sm);
+      position: relative;
+      overflow: hidden;
+      transition: background 0.5s;
+    }
+    .sg-anim-skeleton-line:nth-child(2) { width: 75%; }
+    .sg-anim-skeleton-line:nth-child(3) { width: 50%; }
+    .sg-anim-skeleton-line::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+      animation: sg-shimmer 1.5s infinite;
+    }
+    body[data-style="brutalist"] .sg-anim-skeleton-line::after {
+      background: linear-gradient(90deg, transparent, rgba(0,0,0,0.06), transparent);
+    }
+    body[data-style="neo"] .sg-anim-skeleton-line::after {
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    }
+    @keyframes sg-shimmer {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    /* ── 8. Button Press ── */
+    .sg-anim-btn-press {
+      position: relative;
+      padding: 0.6rem 1.4rem;
+      font-family: var(--sg-font-mono);
+      font-size: var(--text-xs);
+      color: #fff;
+      background: var(--sg-accent);
+      border: none;
+      border-radius: var(--sg-radius-sm);
+      cursor: pointer;
+      overflow: hidden;
+      transition: transform 0.1s, border-radius 0.5s;
+    }
+    .sg-anim-btn-press:active { transform: scale(0.95); }
+    .sg-ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.35);
+      transform: scale(0);
+      animation: sg-ripple 0.5s ease-out forwards;
+      pointer-events: none;
+    }
+    @keyframes sg-ripple {
+      to { transform: scale(4); opacity: 0; }
+    }
+
+    /* ── 9. Toggle Switch ── */
+    .sg-anim-toggle {
+      position: relative;
+      width: 52px;
+      height: 28px;
+      background: var(--sg-toggle-bg);
+      border: 2px solid var(--sg-border);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: background 0.3s, border-color 0.3s;
+      padding: 0;
+    }
+    .sg-anim-toggle[aria-checked="true"] {
+      background: var(--sg-toggle-active);
+      border-color: var(--sg-toggle-active);
+    }
+    .sg-anim-toggle-knob {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: var(--sg-text);
+      border-radius: 50%;
+      transition: transform 0.25s var(--ease-out), background 0.5s;
+    }
+    body[data-style="neo"] .sg-anim-toggle {
+      border: none;
+      box-shadow: inset 3px 3px 6px #b8bec7, inset -3px -3px 6px #ffffff;
+    }
+    body[data-style="neo"] .sg-anim-toggle[aria-checked="true"] {
+      box-shadow: inset 3px 3px 6px rgba(108,99,255,0.3), inset -3px -3px 6px rgba(108,99,255,0.1);
+    }
+    body[data-style="neo"] .sg-anim-toggle-knob { background: #6C63FF; }
+    .sg-anim-toggle[aria-checked="true"] .sg-anim-toggle-knob {
+      transform: translateX(24px);
+      background: #fff;
+    }
+    body[data-style="neo"] .sg-anim-toggle[aria-checked="true"] .sg-anim-toggle-knob {
+      background: #fff;
+    }
+
+    /* ── 10. Checkbox Bounce ── */
+    .sg-anim-checkbox {
+      position: relative;
+      width: 28px;
+      height: 28px;
+      background: var(--sg-input-bg);
+      border: 2px solid var(--sg-border);
+      border-radius: var(--sg-radius-sm);
+      cursor: pointer;
+      transition: background 0.3s, border-color 0.3s, border-radius 0.5s;
+      padding: 0;
+    }
+    .sg-anim-checkbox[aria-checked="true"] {
+      background: var(--sg-accent);
+      border-color: var(--sg-accent);
+    }
+    body[data-style="neo"] .sg-anim-checkbox {
+      border: none;
+      box-shadow: 3px 3px 6px #b8bec7, -3px -3px 6px #ffffff;
+    }
+    body[data-style="neo"] .sg-anim-checkbox[aria-checked="true"] {
+      box-shadow: inset 2px 2px 4px rgba(0,0,0,0.15);
+    }
+    .sg-anim-checkbox-check {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 14px;
+      height: 14px;
+      transform: translate(-50%, -50%) scale(0);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .sg-anim-checkbox[aria-checked="true"] .sg-anim-checkbox-check {
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    /* ── 11. Scroll Trigger ── */
+    .sg-anim-scroll-bar {
+      width: 100%;
+      max-width: 200px;
+      height: 6px;
+      background: var(--sg-bg-elevated);
+      border-radius: var(--sg-radius-full);
+      overflow: hidden;
+      transition: background 0.5s;
+    }
+    .sg-anim-scroll-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--sg-accent2);
+      border-radius: var(--sg-radius-full);
+      transition: width 0.8s var(--ease-out), background 0.5s;
+    }
+    .sg-micro-cell.is-visible .sg-anim-scroll-fill { width: 100%; }
+
+    /* ── 12. Card Flip ── */
+    .sg-anim-flip-wrap {
+      width: 100px;
+      height: 80px;
+      perspective: 600px;
+      cursor: pointer;
+    }
+    .sg-anim-flip-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.6s var(--ease-out);
+    }
+    .sg-anim-flip-wrap:hover .sg-anim-flip-inner { transform: rotateY(180deg); }
+    .sg-anim-flip-front,
+    .sg-anim-flip-back {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--sg-radius-sm);
+      backface-visibility: hidden;
+      font-family: var(--sg-font-mono);
+      font-size: var(--text-xs);
+      color: #fff;
+      transition: border-radius 0.5s;
+    }
+    .sg-anim-flip-front { background: var(--sg-accent); }
+    .sg-anim-flip-back  { background: var(--sg-accent2); transform: rotateY(180deg); }
+
+    /* ══════════════════════════════════════════════════════
+       COMPONENT ZOO
+    ══════════════════════════════════════════════════════ */
+    .sg-zoo-group {
+      margin-bottom: var(--space-12);
+    }
+    .sg-zoo-group-title {
+      font-family: var(--sg-font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--sg-text-muted);
+      margin-bottom: var(--space-6);
+      padding-bottom: var(--space-3);
+      border-bottom: 1px solid var(--sg-border);
+      transition: color 0.5s, border-color 0.5s;
+    }
+    .sg-zoo-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+      align-items: center;
+    }
+
+    /* ── Buttons ── */
+    .sg-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 0.65rem 1.5rem;
+      font-family: var(--sg-font-mono);
+      font-size: var(--text-sm);
+      border-radius: var(--sg-radius-sm);
+      cursor: pointer;
+      transition: all 0.25s;
+      text-decoration: none;
+      border: none;
+    }
+    .sg-btn-primary {
+      background: var(--sg-accent);
+      color: #fff;
+    }
+    .sg-btn-primary:hover { filter: brightness(1.15); }
+    body[data-style="neo"] .sg-btn-primary {
+      box-shadow: 4px 4px 8px #b8bec7, -4px -4px 8px #ffffff;
+    }
+    body[data-style="neo"] .sg-btn-primary:active {
+      box-shadow: inset 2px 2px 4px rgba(0,0,0,0.15);
+    }
+    body[data-style="brutalist"] .sg-btn-primary {
+      box-shadow: 3px 3px 0 #000;
+    }
+    body[data-style="brutalist"] .sg-btn-primary:active {
+      box-shadow: 1px 1px 0 #000;
+      transform: translate(2px, 2px);
+    }
+    body[data-style="retro"] .sg-btn-primary {
+      text-shadow: 0 0 8px var(--sg-accent);
+      box-shadow: 0 0 12px var(--sg-accent), inset 0 0 12px rgba(255,0,255,0.15);
+    }
+
+    .sg-btn-secondary {
+      background: transparent;
+      color: var(--sg-text);
+      border: 1px solid var(--sg-border);
+    }
+    .sg-btn-secondary:hover { border-color: var(--sg-accent); color: var(--sg-accent); }
+    body[data-style="neo"] .sg-btn-secondary {
+      border: none;
+      box-shadow: 3px 3px 6px #b8bec7, -3px -3px 6px #ffffff;
+    }
+    body[data-style="brutalist"] .sg-btn-secondary {
+      border-width: 3px;
+    }
+
+    .sg-btn-ghost {
+      background: transparent;
+      color: var(--sg-text-secondary);
+      border: none;
+    }
+    .sg-btn-ghost:hover { color: var(--sg-accent); }
+
+    .sg-btn-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      background: var(--sg-bg-elevated);
+      color: var(--sg-text-secondary);
+      border: 1px solid var(--sg-border);
+      border-radius: var(--sg-radius-sm);
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+    .sg-btn-icon:hover { color: var(--sg-accent); border-color: var(--sg-accent); }
+    body[data-style="neo"] .sg-btn-icon {
+      border: none;
+      box-shadow: 3px 3px 6px #b8bec7, -3px -3px 6px #ffffff;
+    }
+
+    /* ── Cards ── */
+    .sg-zoo-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: var(--space-6);
+    }
+    .sg-card {
+      padding: var(--space-6);
+      background: var(--sg-bg-card);
+      border: 1px solid var(--sg-border);
+      border-radius: var(--sg-radius);
+      transition: all 0.5s;
+    }
+    body[data-style="neo"] .sg-card {
+      border: none;
+      box-shadow: var(--sg-shadow);
+    }
+    body[data-style="glass"] .sg-card {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    body[data-style="brutalist"] .sg-card {
+      border-width: 3px;
+      box-shadow: var(--sg-shadow);
+    }
+    body[data-style="retro"] .sg-card {
+      box-shadow: var(--sg-shadow);
+    }
+    .sg-card-title {
+      font-family: var(--sg-font-heading);
+      font-size: var(--text-lg);
+      font-weight: 700;
+      color: var(--sg-text);
+      margin-bottom: var(--space-2);
+      transition: color 0.5s;
+    }
+    .sg-card-text {
+      font-size: var(--text-sm);
+      color: var(--sg-text-secondary);
+      line-height: 1.6;
+      transition: color 0.5s;
+    }
+    .sg-card-stat {
+      text-align: center;
+    }
+    .sg-card-stat-value {
+      font-family: var(--sg-font-heading);
+      font-size: var(--text-3xl);
+      font-weight: 700;
+      color: var(--sg-accent);
+      transition: color 0.5s;
+    }
+    .sg-card-stat-label {
+      font-family: var(--sg-font-mono);
+      font-size: var(--text-xs);
+      color: var(--sg-text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: color 0.5s;
+    }
+    .sg-card-profile {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+    .sg-card-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--sg-accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--sg-font-heading);
+      font-size: var(--text-lg);
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    /* ── Form Inputs ── */
+    .sg-input {
+      padding: 0.6rem 1rem;
+      font-family: var(--sg-font-body);
+      font-size: var(--text-sm);
+      color: var(--sg-text);
+      background: var(--sg-input-bg);
+      border: 1px solid var(--sg-border);
+      border-radius: var(--sg-radius-sm);
+      outline: none;
+      width: 220px;
+      max-width: 100%;
+      transition: border-color 0.2s, background 0.5s, color 0.5s, box-shadow 0.2s;
+    }
+    .sg-input:focus { border-color: var(--sg-accent); box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15); }
+    body[data-style="neo"] .sg-input {
+      border: none;
+      box-shadow: inset 3px 3px 6px #b8bec7, inset -3px -3px 6px #ffffff;
+    }
+    body[data-style="neo"] .sg-input:focus {
+      box-shadow: inset 3px 3px 6px #b8bec7, inset -3px -3px 6px #ffffff, 0 0 0 2px var(--sg-accent);
+    }
+    body[data-style="brutalist"] .sg-input { border-width: 3px; }
+    body[data-style="retro"] .sg-input:focus {
+      box-shadow: 0 0 8px var(--sg-accent), 0 0 16px rgba(255,0,255,0.2);
+    }
+
+    /* ── Range Slider ── */
+    .sg-range {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 200px;
+      max-width: 100%;
+      height: 6px;
+      background: var(--sg-range-track);
+      border-radius: var(--sg-radius-full);
+      outline: none;
+      transition: background 0.5s;
+    }
+    .sg-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: var(--sg-accent);
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .sg-range::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      background: var(--sg-accent);
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+    }
+    body[data-style="neo"] .sg-range {
+      box-shadow: inset 2px 2px 4px #b8bec7, inset -2px -2px 4px #ffffff;
+    }
+    body[data-style="neo"] .sg-range::-webkit-slider-thumb {
+      box-shadow: 3px 3px 6px #b8bec7, -3px -3px 6px #ffffff;
+    }
+
+    /* ── Toast ── */
+    .sg-toast-container {
+      position: fixed;
+      bottom: var(--space-8);
+      right: var(--space-8);
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      pointer-events: none;
+    }
+    .sg-toast {
+      padding: var(--space-4) var(--space-6);
+      background: var(--sg-toast-bg);
+      border: 1px solid var(--sg-border);
+      border-radius: var(--sg-radius-sm);
+      color: var(--sg-text);
+      font-family: var(--sg-font-body);
+      font-size: var(--text-sm);
+      box-shadow: var(--sg-shadow);
+      pointer-events: auto;
+      transform: translateX(120%);
+      opacity: 0;
+      transition: transform 0.35s var(--ease-out), opacity 0.35s;
+    }
+    body[data-style="glass"] .sg-toast {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .sg-toast.is-visible {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    .sg-toast.is-hiding {
+      transform: translateX(120%);
+      opacity: 0;
+    }
+
+    /* ── Modal ── */
+    .sg-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--sg-modal-overlay);
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .sg-modal-overlay.is-visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    body[data-style="glass"] .sg-modal-overlay {
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    .sg-modal {
+      background: var(--sg-bg-card);
+      border: 1px solid var(--sg-border);
+      border-radius: var(--sg-radius);
+      padding: var(--space-8);
+      max-width: 420px;
+      width: 90%;
+      transform: scale(0.92) translateY(20px);
+      transition: transform 0.35s var(--ease-out), background 0.5s, border-color 0.5s;
+    }
+    .sg-modal-overlay.is-visible .sg-modal {
+      transform: scale(1) translateY(0);
+    }
+    body[data-style="neo"] .sg-modal {
+      border: none;
+      box-shadow: var(--sg-shadow);
+    }
+    body[data-style="glass"] .sg-modal {
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    body[data-style="brutalist"] .sg-modal { border-width: 3px; }
+    body[data-style="retro"] .sg-modal { box-shadow: var(--sg-shadow); }
+    .sg-modal-title {
+      font-family: var(--sg-font-heading);
+      font-size: var(--text-xl);
+      font-weight: 700;
+      color: var(--sg-text);
+      margin-bottom: var(--space-3);
+    }
+    .sg-modal-text {
+      font-size: var(--text-sm);
+      color: var(--sg-text-secondary);
+      line-height: 1.6;
+      margin-bottom: var(--space-6);
+    }
+    .sg-modal-actions {
+      display: flex;
+      gap: var(--space-3);
+      justify-content: flex-end;
+    }
+
+    /* ── Dropdown ── */
+    .sg-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    .sg-dropdown-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: 0.6rem 1rem;
+      font-family: var(--sg-font-body);
+      font-size: var(--text-sm);
+      color: var(--sg-text);
+      background: var(--sg-input-bg);
+      border: 1px solid var(--sg-border);
+      border-radius: var(--sg-radius-sm);
+      cursor: pointer;
+      min-width: 180px;
+      justify-content: space-between;
+      transition: border-color 0.2s, background 0.5s;
+    }
+    .sg-dropdown-trigger:hover { border-color: var(--sg-accent); }
+    body[data-style="neo"] .sg-dropdown-trigger {
+      border: none;
+      box-shadow: 3px 3px 6px #b8bec7, -3px -3px 6px #ffffff;
+    }
+    body[data-style="brutalist"] .sg-dropdown-trigger { border-width: 3px; }
+    .sg-dropdown-arrow {
+      transition: transform 0.2s;
+    }
+    .sg-dropdown.is-open .sg-dropdown-arrow { transform: rotate(180deg); }
+    .sg-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: var(--sg-dropdown-bg);
+      border: 1px solid var(--sg-border);
+      border-radius: var(--sg-radius-sm);
+      padding: var(--space-2) 0;
+      opacity: 0;
+      transform: translateY(-8px);
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 50;
+      box-shadow: var(--sg-shadow);
+    }
+    body[data-style="glass"] .sg-dropdown-menu {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    body[data-style="neo"] .sg-dropdown-menu {
+      border: none;
+      box-shadow: 6px 6px 12px #b8bec7, -6px -6px 12px #ffffff;
+    }
+    body[data-style="brutalist"] .sg-dropdown-menu { border-width: 3px; }
+    .sg-dropdown.is-open .sg-dropdown-menu {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .sg-dropdown-item {
+      padding: var(--space-2) var(--space-4);
+      font-size: var(--text-sm);
+      color: var(--sg-text-secondary);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .sg-dropdown-item:hover {
+      background: var(--sg-bg-secondary);
+      color: var(--sg-text);
+    }
+
+    /* ══════════════════════════════════════════════════════
+       RETRO SCANLINES
+    ══════════════════════════════════════════════════════ */
+    .sg-scanlines {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.08) 2px,
+        rgba(0, 0, 0, 0.08) 4px
+      );
+    }
+    body[data-style="retro"] .sg-scanlines { display: block; }
+
+    /* ══════════════════════════════════════════════════════
+       GLASS BACKGROUND BLOBS
+    ══════════════════════════════════════════════════════ */
+    .sg-glass-bg {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    body[data-style="glass"] .sg-glass-bg { display: block; }
+    .sg-glass-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.4;
+    }
+    .sg-glass-blob:nth-child(1) {
+      width: 400px; height: 400px;
+      background: #7c3aed;
+      top: 10%; left: 15%;
+      animation: sg-float1 12s ease-in-out infinite;
+    }
+    .sg-glass-blob:nth-child(2) {
+      width: 300px; height: 300px;
+      background: #a855f7;
+      top: 50%; right: 10%;
+      animation: sg-float2 10s ease-in-out infinite;
+    }
+    .sg-glass-blob:nth-child(3) {
+      width: 250px; height: 250px;
+      background: #6366f1;
+      bottom: 10%; left: 40%;
+      animation: sg-float3 14s ease-in-out infinite;
+    }
+    @keyframes sg-float1 {
+      0%, 100% { transform: translate(0, 0); }
+      50%      { transform: translate(40px, -30px); }
+    }
+    @keyframes sg-float2 {
+      0%, 100% { transform: translate(0, 0); }
+      50%      { transform: translate(-30px, 25px); }
+    }
+    @keyframes sg-float3 {
+      0%, 100% { transform: translate(0, 0); }
+      50%      { transform: translate(20px, -20px); }
+    }
+
+    /* ══════════════════════════════════════════════════════
+       FOOTER
+    ══════════════════════════════════════════════════════ */
+    .sg-footer {
+      border-top: 1px solid var(--sg-border);
+      padding-block: var(--space-8);
+      transition: border-color 0.5s;
+    }
+    .sg-footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+    }
+    .sg-footer-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--sg-font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--sg-text-muted);
+      text-decoration: none;
+      transition: color 0.5s;
+    }
+    .sg-footer-logo img { height: 22px; width: auto; }
+    .sg-footer-copy {
+      font-family: var(--sg-font-mono);
+      font-size: var(--text-xs);
+      color: var(--sg-text-muted);
+      transition: color 0.5s;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .sg-nav-right .sg-cta-btn { display: none; }
+      .sg-switcher { padding: var(--space-3); gap: var(--space-2); }
+      .sg-switcher-btn { padding: 0.4rem 0.7rem; font-size: 0.65rem; }
+      .sg-zoo-cards { grid-template-columns: 1fr; }
+      .sg-modal { padding: var(--space-6); }
+      .sg-toast-container { right: var(--space-4); bottom: var(--space-4); left: var(--space-4); }
+      .sg-toast { max-width: 100%; }
+    }
+
+    /* ══════════════════════════════════════════════════════
+       RETRO HEADING SPECIAL SIZES
+    ══════════════════════════════════════════════════════ */
+    body[data-style="retro"] .sg-hero h1 {
+      font-size: clamp(1.2rem, 4vw, 2.2rem);
+      line-height: 1.5;
+    }
+    body[data-style="retro"] .sg-section-title {
+      font-size: clamp(1rem, 3vw, 1.6rem);
+      line-height: 1.5;
+    }
+    body[data-style="retro"] .sg-card-title {
+      font-size: var(--text-sm);
+      line-height: 1.6;
+    }
+    body[data-style="retro"] .sg-modal-title {
+      font-size: var(--text-base);
+      line-height: 1.6;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       MICROINTERACTION ENHANCEMENTS
+    ══════════════════════════════════════════════════════ */
+
+    /* ── Glow: pulsing click-toggle ── */
+    @keyframes sg-glow-pulse {
+      0%, 100% { box-shadow: 0 0 10px var(--sg-accent), 0 0 20px var(--sg-accent); }
+      50%       { box-shadow: 0 0 40px var(--sg-accent), 0 0 80px var(--sg-accent), 0 0 120px var(--sg-accent); }
+    }
+    .sg-anim-glow {
+      cursor: pointer;
+    }
+    .sg-anim-glow.is-pulsing {
+      animation: sg-glow-pulse 1.1s ease-in-out infinite;
+    }
+    .sg-glow-hint {
+      position: absolute;
+      bottom: var(--space-3);
+      font-family: var(--sg-font-mono);
+      font-size: 0.6rem;
+      color: var(--sg-text-muted);
+      transition: color 0.5s;
+    }
+
+    /* ── Spinner: fast mode ── */
+    .sg-anim-spinner.is-fast { animation-duration: 0.18s; }
+    .sg-spinner-speed {
+      position: absolute;
+      bottom: var(--space-3);
+      right: var(--space-3);
+      font-family: var(--sg-font-mono);
+      font-size: 0.6rem;
+      color: var(--sg-text-muted);
+      transition: color 0.5s;
+      cursor: pointer;
+    }
+
+    /* ── Progress: pause on hover ── */
+    #sg-progress-cell:hover .sg-anim-progress-fill {
+      animation-play-state: paused;
+    }
+    #sg-progress-cell { cursor: pointer; }
+
+    /* ── Skeleton: loaded state ── */
+    .sg-skel-wrapper { position: relative; width: 100%; max-width: 200px; }
+    .sg-anim-skeleton { transition: opacity 0.35s; }
+    .sg-anim-skeleton.is-loaded { opacity: 0; pointer-events: none; }
+    .sg-skel-content {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      opacity: 0;
+      transition: opacity 0.35s 0.2s;
+      pointer-events: none;
+    }
+    .sg-skel-content.is-visible { opacity: 1; }
+    .sg-skel-line {
+      height: 10px;
+      background: var(--sg-accent);
+      border-radius: var(--sg-radius-sm);
+      opacity: 0.75;
+      transition: background 0.5s;
+    }
+    .sg-skel-line:nth-child(2) { width: 75%; opacity: 0.55; }
+    .sg-skel-line:nth-child(3) { width: 50%; opacity: 0.35; }
+    .sg-skel-hint {
+      position: absolute;
+      bottom: var(--space-3);
+      font-family: var(--sg-font-mono);
+      font-size: 0.6rem;
+      color: var(--sg-text-muted);
+      transition: color 0.5s;
+      cursor: pointer;
+    }
+    #sg-skel-cell { cursor: pointer; }
+
+    /* ── Toggle: label ── */
+    .sg-toggle-label {
+      font-family: var(--sg-font-mono);
+      font-size: var(--text-xs);
+      color: var(--sg-text-muted);
+      transition: color 0.3s;
+      min-width: 2ch;
+    }
+    .sg-anim-toggle[aria-checked="true"] ~ .sg-toggle-label {
+      color: var(--sg-accent);
+    }
+
+    /* ── Checkbox: bounce on check ── */
+    @keyframes sg-checkbox-bounce {
+      0%   { transform: scale(1); }
+      35%  { transform: scale(1.28); }
+      65%  { transform: scale(0.9); }
+      100% { transform: scale(1); }
+    }
+    .sg-anim-checkbox.is-bouncing {
+      animation: sg-checkbox-bounce 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* ── Scroll: live page progress bar ── */
+    .sg-anim-scroll-progress-wrap {
+      width: 100%;
+      max-width: 200px;
+    }
+    .sg-anim-scroll-bar-track {
+      height: 6px;
+      background: var(--sg-bg-elevated);
+      border-radius: var(--sg-radius-full);
+      overflow: hidden;
+      transition: background 0.5s;
+    }
+    .sg-anim-scroll-progress {
+      height: 100%;
+      width: 0%;
+      background: var(--sg-accent2);
+      border-radius: var(--sg-radius-full);
+      transition: width 0.12s linear, background 0.5s;
+    }
+    .sg-scroll-pct {
+      font-family: var(--sg-font-mono);
+      font-size: 0.65rem;
+      color: var(--sg-accent2);
+      text-align: right;
+      margin-top: var(--space-1);
+      transition: color 0.5s;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Card flip: locked state ── */
+    .sg-anim-flip-wrap.is-locked .sg-anim-flip-inner         { transform: rotateY(180deg); }
+    .sg-anim-flip-wrap.is-locked:hover .sg-anim-flip-inner   { transform: rotateY(180deg); }
+    .sg-anim-flip-wrap { cursor: pointer; }
+  </style>
+</head>
+<body data-style="default">
+
+<!-- ── DECORATIVE OVERLAYS ─────────────────────────────── -->
+<div class="sg-scanlines" aria-hidden="true"></div>
+<div class="sg-glass-bg" aria-hidden="true">
+  <div class="sg-glass-blob"></div>
+  <div class="sg-glass-blob"></div>
+  <div class="sg-glass-blob"></div>
+</div>
+
+<!-- ── NAV ──────────────────────────────────────────────── -->
+<nav class="sg-nav">
+  <div class="container">
+    <div class="sg-nav-inner">
+      <a href="../../" class="sg-nav-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <div class="sg-nav-right">
+        <a href="../" class="sg-back">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 1L3 6l5 5"/></svg>
+          Experiments
+        </a>
+        <a href="../../#contact" class="sg-cta-btn">Let's Talk</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ── HERO ─────────────────────────────────────────────── -->
+<section class="sg-hero" id="sg-hero">
+  <div class="container">
+    <p class="sg-hero-eyebrow" data-animate>04 / style_gallery</p>
+    <h1 data-animate>One Page,<br>Four <em>Philosophies</em></h1>
+    <p class="sg-hero-sub" data-animate>An interactive explorer of Brutalist, Glassmorphism, Neomorphism, and Retro/Y2K design. Every element on this page transforms when you switch styles.</p>
+
+    <div class="sg-switcher" data-animate id="sg-switcher">
+      <button class="sg-switcher-btn" data-style="default" aria-pressed="true">
+        <span class="sg-switcher-dot" style="background: #6C63FF;"></span> Default
+      </button>
+      <button class="sg-switcher-btn" data-style="brutalist" aria-pressed="false">
+        <span class="sg-switcher-dot" style="background: #FF0000;"></span> Brutalist
+      </button>
+      <button class="sg-switcher-btn" data-style="glass" aria-pressed="false">
+        <span class="sg-switcher-dot" style="background: #a855f7;"></span> Glass
+      </button>
+      <button class="sg-switcher-btn" data-style="neo" aria-pressed="false">
+        <span class="sg-switcher-dot" style="background: #E0E5EC; border: 1px solid #b8bec7;"></span> Neo
+      </button>
+      <button class="sg-switcher-btn" data-style="retro" aria-pressed="false">
+        <span class="sg-switcher-dot" style="background: #ff00ff;"></span> Retro
+      </button>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── FIXED MINI SWITCHER ─────────────────────────────── -->
+<div class="sg-mini-switcher" id="sg-mini-switcher">
+  <button class="sg-mini-btn" data-style="default" aria-pressed="true" aria-label="Default theme"   style="background: #6C63FF;"></button>
+  <button class="sg-mini-btn" data-style="brutalist" aria-pressed="false" aria-label="Brutalist theme" style="background: #FF0000;"></button>
+  <button class="sg-mini-btn" data-style="glass" aria-pressed="false" aria-label="Glass theme"        style="background: #a855f7;"></button>
+  <button class="sg-mini-btn" data-style="neo" aria-pressed="false" aria-label="Neo theme"            style="background: #E0E5EC;"></button>
+  <button class="sg-mini-btn" data-style="retro" aria-pressed="false" aria-label="Retro theme"        style="background: #ff00ff;"></button>
+</div>
+
+
+<!-- ── MICRO-ANIMATION GALLERY ─────────────────────────── -->
+<section class="sg-section sg-micro">
+  <div class="container">
+    <h2 class="sg-section-title" data-animate>Micro-Animations</h2>
+    <p class="sg-section-subtitle" data-animate>// hover, click, and scroll interactions</p>
+
+    <div class="sg-micro-grid" data-stagger>
+
+      <!-- 1. Scale Hover -->
+      <div class="sg-micro-cell" data-animate>
+        <span class="sg-micro-label">Scale</span>
+        <div class="sg-anim-scale"></div>
+      </div>
+
+      <!-- 2. Glow Hover -->
+      <div class="sg-micro-cell" data-animate>
+        <span class="sg-micro-label">Glow</span>
+        <div class="sg-anim-glow" id="sg-glow-box"></div>
+        <span class="sg-glow-hint" id="sg-glow-hint">click to pulse</span>
+      </div>
+
+      <!-- 3. Morph Hover -->
+      <div class="sg-micro-cell" data-animate>
+        <span class="sg-micro-label">Morph</span>
+        <div class="sg-anim-morph"></div>
+      </div>
+
+      <!-- 4. Reveal Hover -->
+      <div class="sg-micro-cell" data-animate>
+        <span class="sg-micro-label">Reveal</span>
+        <div class="sg-anim-reveal">
+          <span class="sg-anim-reveal-text">Hello there!</span>
+        </div>
+      </div>
+
+      <!-- 5. Spinner -->
+      <div class="sg-micro-cell" data-animate>
+        <span class="sg-micro-label">Spinner</span>
+        <div class="sg-anim-spinner" id="sg-spinner"></div>
+        <span class="sg-spinner-speed" id="sg-spinner-speed">click · normal</span>
+      </div>
+
+      <!-- 6. Progress Bar -->
+      <div class="sg-micro-cell" data-animate id="sg-progress-cell" title="hover to pause · click to restart">
+        <span class="sg-micro-label">Progress</span>
+        <div class="sg-anim-progress">
+          <div class="sg-anim-progress-fill" id="sg-progress-fill"></div>
+        </div>
+      </div>
+
+      <!-- 7. Skeleton Screen -->
+      <div class="sg-micro-cell" data-animate id="sg-skel-cell">
+        <span class="sg-micro-label">Skeleton</span>
+        <div class="sg-skel-wrapper">
+          <div class="sg-anim-skeleton" id="sg-skeleton">
+            <div class="sg-anim-skeleton-line"></div>
+            <div class="sg-anim-skeleton-line"></div>
+            <div class="sg-anim-skeleton-line"></div>
+          </div>
+          <div class="sg-skel-content" id="sg-skel-content">
+            <div class="sg-skel-line"></div>
+            <div class="sg-skel-line"></div>
+            <div class="sg-skel-line"></div>
+          </div>
+        </div>
+        <span class="sg-skel-hint" id="sg-skel-hint">click to load</span>
+      </div>
+
+      <!-- 8. Button Press -->
+      <div class="sg-micro-cell" data-animate>
+        <span class="sg-micro-label">Ripple</span>
+        <button class="sg-anim-btn-press" id="sg-ripple-btn">Click Me</button>
+      </div>
+
+      <!-- 9. Toggle Switch -->
+      <div class="sg-micro-cell" data-animate>
+        <span class="sg-micro-label">Toggle</span>
+        <div style="display:flex;align-items:center;gap:var(--space-3);">
+          <button class="sg-anim-toggle" role="switch" aria-checked="false" id="sg-toggle-micro">
+            <span class="sg-anim-toggle-knob"></span>
+          </button>
+          <span class="sg-toggle-label" id="sg-toggle-micro-label">off</span>
+        </div>
+      </div>
+
+      <!-- 10. Checkbox Bounce -->
+      <div class="sg-micro-cell" data-animate>
+        <span class="sg-micro-label">Checkbox</span>
+        <button class="sg-anim-checkbox" role="checkbox" aria-checked="false" id="sg-checkbox-micro">
+          <svg class="sg-anim-checkbox-check" viewBox="0 0 14 14" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7.5L5.5 10.5L11.5 3.5"/></svg>
+        </button>
+      </div>
+
+      <!-- 11. Scroll Progress -->
+      <div class="sg-micro-cell" data-animate id="sg-scroll-trigger-cell">
+        <span class="sg-micro-label">Scroll</span>
+        <div class="sg-anim-scroll-progress-wrap">
+          <div class="sg-anim-scroll-bar-track">
+            <div class="sg-anim-scroll-progress" id="sg-scroll-bar"></div>
+          </div>
+          <div class="sg-scroll-pct" id="sg-scroll-pct">0%</div>
+        </div>
+      </div>
+
+      <!-- 12. Card Flip -->
+      <div class="sg-micro-cell" data-animate>
+        <span class="sg-micro-label">Flip</span>
+        <div class="sg-anim-flip-wrap" id="sg-flip-wrap">
+          <div class="sg-anim-flip-inner">
+            <div class="sg-anim-flip-front">Front</div>
+            <div class="sg-anim-flip-back">Back</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ── COMPONENT ZOO ───────────────────────────────────── -->
+<section class="sg-section sg-zoo">
+  <div class="container">
+    <h2 class="sg-section-title" data-animate>Component Zoo</h2>
+    <p class="sg-section-subtitle" data-animate>// buttons, cards, forms, overlays</p>
+
+    <!-- Buttons -->
+    <div class="sg-zoo-group" data-animate>
+      <p class="sg-zoo-group-title">Buttons</p>
+      <div class="sg-zoo-row">
+        <button class="sg-btn sg-btn-primary">Primary</button>
+        <button class="sg-btn sg-btn-secondary">Secondary</button>
+        <button class="sg-btn sg-btn-ghost">Ghost</button>
+        <button class="sg-btn-icon" aria-label="Icon button">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M9 3v12M3 9h12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Cards -->
+    <div class="sg-zoo-group" data-animate>
+      <p class="sg-zoo-group-title">Cards</p>
+      <div class="sg-zoo-cards">
+        <div class="sg-card">
+          <p class="sg-card-title">Content Card</p>
+          <p class="sg-card-text">A standard content container that adapts its border, radius, shadow, and background to each theme. Hover states shift accordingly.</p>
+        </div>
+        <div class="sg-card sg-card-stat">
+          <p class="sg-card-stat-value">2,847</p>
+          <p class="sg-card-stat-label">Interactions</p>
+        </div>
+        <div class="sg-card">
+          <div class="sg-card-profile">
+            <div class="sg-card-avatar">HM</div>
+            <div>
+              <p class="sg-card-title" style="margin-bottom: 0;">Hex Misfit</p>
+              <p class="sg-card-text">Creative Technologist</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Inputs -->
+    <div class="sg-zoo-group" data-animate>
+      <p class="sg-zoo-group-title">Form Inputs</p>
+      <div class="sg-zoo-row">
+        <input class="sg-input" type="text" placeholder="Text input..." />
+        <button class="sg-anim-toggle" role="switch" aria-checked="false" id="sg-toggle-zoo">
+          <span class="sg-anim-toggle-knob"></span>
+        </button>
+        <input class="sg-range" type="range" min="0" max="100" value="60" id="sg-range-zoo" />
+        <button class="sg-anim-checkbox" role="checkbox" aria-checked="false" id="sg-checkbox-zoo">
+          <svg class="sg-anim-checkbox-check" viewBox="0 0 14 14" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7.5L5.5 10.5L11.5 3.5"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Toast / Modal / Dropdown -->
+    <div class="sg-zoo-group" data-animate>
+      <p class="sg-zoo-group-title">Overlays &amp; Dropdowns</p>
+      <div class="sg-zoo-row">
+        <button class="sg-btn sg-btn-primary" id="sg-toast-trigger">Show Toast</button>
+        <button class="sg-btn sg-btn-secondary" id="sg-modal-trigger">Open Modal</button>
+        <div class="sg-dropdown" id="sg-dropdown">
+          <button class="sg-dropdown-trigger" id="sg-dropdown-trigger">
+            <span id="sg-dropdown-label">Select option</span>
+            <svg class="sg-dropdown-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 4.5L6 7.5L9 4.5"/></svg>
+          </button>
+          <div class="sg-dropdown-menu" id="sg-dropdown-menu">
+            <div class="sg-dropdown-item" data-value="Option A">Option A</div>
+            <div class="sg-dropdown-item" data-value="Option B">Option B</div>
+            <div class="sg-dropdown-item" data-value="Option C">Option C</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ── TOAST CONTAINER ─────────────────────────────────── -->
+<div class="sg-toast-container" id="sg-toast-container"></div>
+
+<!-- ── MODAL ───────────────────────────────────────────── -->
+<div class="sg-modal-overlay" id="sg-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="sg-modal-heading">
+  <div class="sg-modal" id="sg-modal">
+    <h3 class="sg-modal-title" id="sg-modal-heading">Modal Title</h3>
+    <p class="sg-modal-text">This modal adapts to the active theme. Press Escape or click outside to close. Focus is trapped inside while open.</p>
+    <div class="sg-modal-actions">
+      <button class="sg-btn sg-btn-ghost" id="sg-modal-cancel">Cancel</button>
+      <button class="sg-btn sg-btn-primary" id="sg-modal-confirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── FOOTER ──────────────────────────────────────────── -->
+<footer class="sg-footer">
+  <div class="container">
+    <div class="sg-footer-inner">
+      <a href="../../" class="sg-footer-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <a href="../" class="sg-back">&larr; All experiments</a>
+      <span class="sg-footer-copy">&copy; <span id="sg-footer-year"></span> Hexagon Misfit</span>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ══════════════════════════════════════════════════════
+  STYLE GALLERY — JAVASCRIPT
+══════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ─── STYLE SWITCHER ────────────────────────────────── */
+  var currentStyle = 'default';
+
+  function setStyle(style) {
+    if (style === currentStyle) return;
+    currentStyle = style;
+    document.body.setAttribute('data-style', style);
+    document.body.classList.add('sg-transitioning');
+    setTimeout(function () {
+      document.body.classList.remove('sg-transitioning');
+    }, 600);
+
+    // Update hero switcher
+    document.querySelectorAll('#sg-switcher .sg-switcher-btn').forEach(function (btn) {
+      btn.setAttribute('aria-pressed', btn.getAttribute('data-style') === style ? 'true' : 'false');
+    });
+    // Update mini switcher
+    document.querySelectorAll('#sg-mini-switcher .sg-mini-btn').forEach(function (btn) {
+      btn.setAttribute('aria-pressed', btn.getAttribute('data-style') === style ? 'true' : 'false');
+    });
+  }
+
+  document.getElementById('sg-switcher').addEventListener('click', function (e) {
+    var btn = e.target.closest('.sg-switcher-btn');
+    if (btn) setStyle(btn.getAttribute('data-style'));
+  });
+  document.getElementById('sg-mini-switcher').addEventListener('click', function (e) {
+    var btn = e.target.closest('.sg-mini-btn');
+    if (btn) setStyle(btn.getAttribute('data-style'));
+  });
+
+  /* ─── MINI SWITCHER VISIBILITY ──────────────────────── */
+  var heroEl = document.getElementById('sg-hero');
+  var miniSwitcher = document.getElementById('sg-mini-switcher');
+  if (heroEl && miniSwitcher && window.IntersectionObserver) {
+    var heroObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          miniSwitcher.classList.remove('is-visible');
+        } else {
+          miniSwitcher.classList.add('is-visible');
+        }
+      });
+    }, { threshold: 0 });
+    heroObs.observe(document.getElementById('sg-switcher'));
+  }
+
+  /* ─── SCROLL REVEAL ─────────────────────────────────── */
+  if (window.IntersectionObserver) {
+    var revealObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('[data-animate]').forEach(function (el) {
+      revealObs.observe(el);
+    });
+  }
+
+  /* ─── SCROLL TRIGGER CELL — now shows live page progress ── */
+  /* Handled below in the SCROLL PROGRESS section */
+
+  /* ─── RIPPLE BUTTON ─────────────────────────────────── */
+  document.getElementById('sg-ripple-btn').addEventListener('click', function (e) {
+    var rect = this.getBoundingClientRect();
+    var ripple = document.createElement('span');
+    ripple.className = 'sg-ripple';
+    var size = Math.max(rect.width, rect.height) * 2;
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+    ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+    this.appendChild(ripple);
+    ripple.addEventListener('animationend', function () { ripple.remove(); });
+    playSound('ripple');
+  });
+
+  /* ─── WEB AUDIO (lazy-init) ─────────────────────────── */
+  var audioCtx = null;
+  function getAudio() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  var soundProfiles = {
+    'default':   { type: 'sine',   baseFreq: 440,  freqSpread: 220,  gain: 0.14, decay: 0.14 },
+    'brutalist': { type: 'square', baseFreq: 90,   freqSpread: 80,   gain: 0.20, decay: 0.055 },
+    'glass':     { type: 'sine',   baseFreq: 1100, freqSpread: 900,  gain: 0.10, decay: 0.45 },
+    'neo':       { type: 'sine',   baseFreq: 190,  freqSpread: 60,   gain: 0.13, decay: 0.22 },
+    'retro':     { type: 'square', baseFreq: 0,    freqSpread: 0,    gain: 0.17, decay: 0.08 },
+  };
+  var retroNotes = [262, 330, 392, 523, 440, 294, 349];
+  var retroIdx = 0;
+
+  function playSound(type) {
+    try {
+      var ctx = getAudio();
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      var style = currentStyle;
+      var prof = soundProfiles[style] || soundProfiles['default'];
+
+      osc.type = prof.type;
+
+      var freq;
+      if (style === 'retro') {
+        freq = retroNotes[retroIdx++ % retroNotes.length];
+        if (type === 'toggle') freq *= 1.5;
+        if (type === 'flip')   freq = retroNotes[(retroIdx + 2) % retroNotes.length];
+      } else {
+        var spread = type === 'pop' ? prof.freqSpread : type === 'flip' ? prof.freqSpread * 0.7 : prof.freqSpread * 0.4;
+        freq = prof.baseFreq + spread;
+      }
+
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      gain.gain.setValueAtTime(prof.gain, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + prof.decay);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + prof.decay + 0.01);
+    } catch(e) {}
+  }
+
+  /* ─── TOGGLE SWITCHES ──────────────────────────────── */
+  function initToggle(id, labelId) {
+    var el = document.getElementById(id);
+    var labelEl = labelId ? document.getElementById(labelId) : null;
+    if (!el) return;
+    el.addEventListener('click', function () {
+      var checked = this.getAttribute('aria-checked') === 'true';
+      this.setAttribute('aria-checked', checked ? 'false' : 'true');
+      if (labelEl) labelEl.textContent = checked ? 'off' : 'on';
+      playSound('toggle');
+    });
+  }
+  initToggle('sg-toggle-micro', 'sg-toggle-micro-label');
+  initToggle('sg-toggle-zoo');
+
+  /* ─── CHECKBOXES ────────────────────────────────────── */
+  function initCheckbox(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('click', function () {
+      var checked = this.getAttribute('aria-checked') === 'true';
+      this.setAttribute('aria-checked', checked ? 'false' : 'true');
+      if (!checked) {
+        var self = this;
+        self.classList.add('is-bouncing');
+        self.addEventListener('animationend', function() {
+          self.classList.remove('is-bouncing');
+        }, { once: true });
+      }
+      playSound('pop');
+    });
+  }
+  initCheckbox('sg-checkbox-micro');
+  initCheckbox('sg-checkbox-zoo');
+
+  /* ─── TOAST ─────────────────────────────────────────── */
+  var toastCount = 0;
+  document.getElementById('sg-toast-trigger').addEventListener('click', function () {
+    toastCount++;
+    var container = document.getElementById('sg-toast-container');
+    var toast = document.createElement('div');
+    toast.className = 'sg-toast';
+    toast.textContent = 'Toast notification #' + toastCount;
+    container.appendChild(toast);
+
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        toast.classList.add('is-visible');
+      });
+    });
+
+    setTimeout(function () {
+      toast.classList.remove('is-visible');
+      toast.classList.add('is-hiding');
+      toast.addEventListener('transitionend', function () { toast.remove(); });
+    }, 3000);
+  });
+
+  /* ─── MODAL ─────────────────────────────────────────── */
+  var modalOverlay = document.getElementById('sg-modal-overlay');
+  var modal = document.getElementById('sg-modal');
+  var modalTrigger = document.getElementById('sg-modal-trigger');
+  var modalCancel = document.getElementById('sg-modal-cancel');
+  var modalConfirm = document.getElementById('sg-modal-confirm');
+  var lastFocused = null;
+
+  function openModal() {
+    lastFocused = document.activeElement;
+    modalOverlay.classList.add('is-visible');
+    // Focus first focusable element
+    var first = modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (first) first.focus();
+  }
+  function closeModal() {
+    modalOverlay.classList.remove('is-visible');
+    if (lastFocused) lastFocused.focus();
+  }
+
+  modalTrigger.addEventListener('click', openModal);
+  modalCancel.addEventListener('click', closeModal);
+  modalConfirm.addEventListener('click', closeModal);
+  modalOverlay.addEventListener('click', function (e) {
+    if (e.target === modalOverlay) closeModal();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && modalOverlay.classList.contains('is-visible')) {
+      closeModal();
+    }
+    // Focus trap
+    if (e.key === 'Tab' && modalOverlay.classList.contains('is-visible')) {
+      var focusable = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (focusable.length === 0) return;
+      var first = focusable[0];
+      var last = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    }
+  });
+
+  /* ─── DROPDOWN ──────────────────────────────────────── */
+  var dropdown = document.getElementById('sg-dropdown');
+  var dropdownTrigger = document.getElementById('sg-dropdown-trigger');
+  var dropdownLabel = document.getElementById('sg-dropdown-label');
+
+  dropdownTrigger.addEventListener('click', function (e) {
+    e.stopPropagation();
+    dropdown.classList.toggle('is-open');
+  });
+  document.querySelectorAll('#sg-dropdown-menu .sg-dropdown-item').forEach(function (item) {
+    item.addEventListener('click', function () {
+      dropdownLabel.textContent = this.getAttribute('data-value');
+      dropdown.classList.remove('is-open');
+    });
+  });
+  document.addEventListener('click', function (e) {
+    if (!dropdown.contains(e.target)) {
+      dropdown.classList.remove('is-open');
+    }
+  });
+
+  /* ─── SCALE POP (click) ────────────────────────────── */
+  var scaleEl = document.querySelector('.sg-anim-scale');
+  if (scaleEl) {
+    scaleEl.addEventListener('click', function() {
+      var self = this;
+      self.classList.remove('is-popped');
+      void self.offsetWidth;
+      self.classList.add('is-popped');
+      playSound('pop');
+      self.addEventListener('animationend', function() {
+        self.classList.remove('is-popped');
+      }, { once: true });
+    });
+  }
+
+  /* ─── GLOW PULSE TOGGLE (click) ─────────────────────── */
+  var glowEl = document.getElementById('sg-glow-box');
+  var glowHint = document.getElementById('sg-glow-hint');
+  var glowPulsing = false;
+  if (glowEl) {
+    glowEl.addEventListener('click', function() {
+      glowPulsing = !glowPulsing;
+      glowEl.classList.toggle('is-pulsing', glowPulsing);
+      if (glowHint) glowHint.textContent = glowPulsing ? 'click to stop' : 'click to pulse';
+      playSound('glow');
+    });
+  }
+
+  /* ─── MORPH SHAPE CYCLE (click) ─────────────────────── */
+  var morphEl = document.querySelector('.sg-anim-morph');
+  var morphShapes = ['', 'shape-pill', 'shape-circle', 'shape-tri'];
+  var morphIdx = 0;
+  if (morphEl) {
+    morphEl.addEventListener('click', function() {
+      morphEl.classList.remove('shape-pill', 'shape-circle', 'shape-tri');
+      morphIdx = (morphIdx + 1) % morphShapes.length;
+      if (morphShapes[morphIdx]) morphEl.classList.add(morphShapes[morphIdx]);
+      playSound('pop');
+    });
+  }
+
+  /* ─── REVEAL TEXT CYCLE (hover) ─────────────────────── */
+  var revealEl = document.querySelector('.sg-anim-reveal');
+  var revealTextEl = document.querySelector('.sg-anim-reveal-text');
+  var revealPhrases = ['Hello there!', 'Found it!', 'Surprise!'];
+  var revealPhraseIdx = 0;
+  if (revealEl && revealTextEl) {
+    revealEl.addEventListener('mouseenter', function() {
+      revealPhraseIdx = (revealPhraseIdx + 1) % revealPhrases.length;
+      revealTextEl.textContent = revealPhrases[revealPhraseIdx];
+    });
+  }
+
+  /* ─── SPINNER SPEED TOGGLE (click) ──────────────────── */
+  var spinnerEl = document.getElementById('sg-spinner');
+  var spinnerSpeedEl = document.getElementById('sg-spinner-speed');
+  var spinnerFast = false;
+  if (spinnerEl) {
+    spinnerEl.addEventListener('click', function() {
+      spinnerFast = !spinnerFast;
+      spinnerEl.classList.toggle('is-fast', spinnerFast);
+      if (spinnerSpeedEl) spinnerSpeedEl.textContent = 'click \u00B7 ' + (spinnerFast ? 'fast' : 'normal');
+      playSound('toggle');
+    });
+  }
+
+  /* ─── PROGRESS RESTART (click) + PAUSE (hover via CSS) ─ */
+  var progressFill = document.getElementById('sg-progress-fill');
+  var progressCell = document.getElementById('sg-progress-cell');
+  if (progressCell && progressFill) {
+    progressCell.addEventListener('click', function() {
+      progressFill.style.animation = 'none';
+      void progressFill.offsetWidth;
+      progressFill.style.animation = '';
+      playSound('pop');
+    });
+  }
+
+  /* ─── SKELETON LOAD / RESET (click) ─────────────────── */
+  var skeletonLoaded = false;
+  var skelCell = document.getElementById('sg-skel-cell');
+  var skelEl = document.getElementById('sg-skeleton');
+  var skelContent = document.getElementById('sg-skel-content');
+  var skelHint = document.getElementById('sg-skel-hint');
+  if (skelCell) {
+    skelCell.addEventListener('click', function() {
+      skeletonLoaded = !skeletonLoaded;
+      if (skelEl) skelEl.classList.toggle('is-loaded', skeletonLoaded);
+      if (skelContent) skelContent.classList.toggle('is-visible', skeletonLoaded);
+      if (skelHint) skelHint.textContent = skeletonLoaded ? 'click to reset' : 'click to load';
+      playSound(skeletonLoaded ? 'pop' : 'toggle');
+    });
+  }
+
+  /* ─── SCROLL PROGRESS (live page progress) ───────────── */
+  function updateScrollProgress() {
+    var scrollTop = window.scrollY || document.documentElement.scrollTop;
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var pct = docHeight > 0 ? Math.round((scrollTop / docHeight) * 100) : 0;
+    var bar = document.getElementById('sg-scroll-bar');
+    var label = document.getElementById('sg-scroll-pct');
+    if (bar)   bar.style.width = pct + '%';
+    if (label) label.textContent = pct + '%';
+  }
+  window.addEventListener('scroll', updateScrollProgress, { passive: true });
+  updateScrollProgress();
+
+  /* ─── RIPPLE + SOUND ─────────────────────────────────── */
+  /* (existing ripple handler kept, just add sound) */
+
+  /* ─── CARD FLIP LOCK (click) ─────────────────────────── */
+  var flipWrap = document.getElementById('sg-flip-wrap');
+  var flipLocked = false;
+  if (flipWrap) {
+    flipWrap.addEventListener('click', function() {
+      flipLocked = !flipLocked;
+      flipWrap.classList.toggle('is-locked', flipLocked);
+      playSound('flip');
+    });
+  }
+
+  /* ─── FOOTER YEAR ───────────────────────────────────── */
+  var yearEl = document.getElementById('sg-footer-year');
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+})();
+</script>
+</body>
+</html>
