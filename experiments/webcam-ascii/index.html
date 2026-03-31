@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Webcam ASCII — Hexagon Misfit Experiments</title>
-  <meta name="description" content="Live webcam feed rendered in real-time ASCII art. Color or monochrome, three density presets. No libraries — pure Canvas 2D and getUserMedia." />
+  <meta name="description" content="Live webcam or video feed rendered in real-time ASCII art with gradient themes, contrast curve, front/back/depth camera, recording, and edge detection." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400&display=swap" rel="stylesheet" />
@@ -16,379 +16,123 @@
 
   <style>
     /* ── NAV ─────────────────────────────────────────── */
-    .wa-nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      padding-block: var(--space-5);
-      background: rgba(10, 10, 15, 0.92);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border-bottom: 1px solid var(--color-border);
-    }
-    .wa-nav-inner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .wa-nav-logo {
-      display: flex;
-      align-items: center;
-      gap: var(--space-3);
-      font-family: var(--font-heading);
-      font-size: var(--text-sm);
-      font-weight: 700;
-      color: var(--color-text-primary);
-      text-decoration: none;
-    }
-    .wa-nav-logo img { height: 28px; width: auto; }
-    .wa-nav-right {
-      display: flex;
-      align-items: center;
-      gap: var(--space-6);
-    }
-    .wa-back {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-2);
-      font-family: var(--font-mono);
-      font-size: var(--text-xs);
-      letter-spacing: 0.08em;
-      color: var(--color-text-muted);
-      text-decoration: none;
-      transition: color 0.15s;
-    }
-    .wa-back:hover { color: var(--color-text-primary); }
-    .wa-back svg { width: 12px; height: 12px; }
+    .wa-nav { position:sticky; top:0; z-index:100; padding-block:var(--space-5); background:rgba(10,10,15,0.92); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border-bottom:1px solid var(--color-border); }
+    .wa-nav-inner { display:flex; align-items:center; justify-content:space-between; }
+    .wa-nav-logo { display:flex; align-items:center; gap:var(--space-3); font-family:var(--font-heading); font-size:var(--text-sm); font-weight:700; color:var(--color-text-primary); text-decoration:none; }
+    .wa-nav-logo img { height:28px; width:auto; }
+    .wa-nav-right { display:flex; align-items:center; gap:var(--space-6); }
+    .wa-back { display:inline-flex; align-items:center; gap:var(--space-2); font-family:var(--font-mono); font-size:var(--text-xs); letter-spacing:0.08em; color:var(--color-text-muted); text-decoration:none; transition:color 0.15s; }
+    .wa-back:hover { color:var(--color-text-primary); }
+    .wa-back svg { width:12px; height:12px; }
 
     /* ── DEMO AREA ────────────────────────────────────── */
-    .wa-demo {
-      position: relative;
-      width: 100%;
-      height: clamp(420px, 68vh, 740px);
-      background: #000;
-      overflow: hidden;
-    }
-    #wa-canvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
+    .wa-demo { position:relative; width:100%; height:clamp(420px,68vh,740px); background:#000; overflow:hidden; }
+    #wa-canvas { display:block; width:100%; height:100%; }
+    .wa-demo:fullscreen, .wa-demo:-webkit-full-screen { height:100vh; }
 
     /* ── START OVERLAY ────────────────────────────────── */
-    .wa-start-overlay {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: var(--space-5);
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(8px);
-      z-index: 10;
-      transition: opacity 0.5s;
-    }
-    .wa-start-overlay.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-    .wa-start-icon {
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      border: 1.5px solid rgba(255,255,255,0.15);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: rgba(240,240,245,0.5);
-    }
-    .wa-start-icon svg { width: 26px; height: 26px; }
-    .wa-start-title {
-      font-family: var(--font-heading);
-      font-size: var(--text-xl);
-      font-weight: 700;
-      color: var(--color-text-primary);
-      text-align: center;
-    }
-    .wa-start-sub {
-      font-family: var(--font-mono);
-      font-size: var(--text-xs);
-      letter-spacing: 0.1em;
-      color: var(--color-text-muted);
-      text-align: center;
-      max-width: 30ch;
-    }
-    .wa-start-btn {
-      margin-top: var(--space-2);
-      padding: 0.6rem 1.8rem;
-      font-family: var(--font-mono);
-      font-size: var(--text-xs);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--color-text-primary);
-      background: transparent;
-      border: 1px solid rgba(255,255,255,0.25);
-      border-radius: var(--radius-full);
-      cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
-    }
-    .wa-start-btn:hover {
-      border-color: rgba(108,99,255,0.7);
-      background: rgba(108,99,255,0.12);
-    }
-    .wa-error-msg {
-      display: none;
-      font-family: var(--font-mono);
-      font-size: var(--text-xs);
-      letter-spacing: 0.08em;
-      color: rgba(255, 80, 80, 0.8);
-      text-align: center;
-      max-width: 38ch;
-      line-height: 1.6;
-    }
-    .wa-error-msg.visible { display: block; }
+    .wa-start-overlay { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--space-5); background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); z-index:10; transition:opacity 0.5s; }
+    .wa-start-overlay.hidden { opacity:0; pointer-events:none; }
+    .wa-start-icon { width:56px; height:56px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; color:rgba(240,240,245,0.5); }
+    .wa-start-icon svg { width:26px; height:26px; }
+    .wa-start-title { font-family:var(--font-heading); font-size:var(--text-xl); font-weight:700; color:var(--color-text-primary); text-align:center; }
+    .wa-start-sub { font-family:var(--font-mono); font-size:var(--text-xs); letter-spacing:0.1em; color:var(--color-text-muted); text-align:center; max-width:34ch; }
+    .wa-start-btn { margin-top:var(--space-2); padding:0.6rem 1.8rem; font-family:var(--font-mono); font-size:var(--text-xs); letter-spacing:0.12em; text-transform:uppercase; color:var(--color-text-primary); background:transparent; border:1px solid rgba(255,255,255,0.25); border-radius:var(--radius-full); cursor:pointer; transition:border-color 0.2s, background 0.2s; }
+    .wa-start-btn:hover { border-color:rgba(108,99,255,0.7); background:rgba(108,99,255,0.12); }
+    .wa-start-row { display:flex; gap:var(--space-3); margin-top:var(--space-2); }
+    .wa-error-msg { display:none; font-family:var(--font-mono); font-size:var(--text-xs); letter-spacing:0.08em; color:rgba(255,80,80,0.8); text-align:center; max-width:38ch; line-height:1.6; }
+    .wa-error-msg.visible { display:block; }
+
+    /* ── TOOLBAR ──────────────────────────────────────── */
+    .wa-toolbar { position:absolute; top:var(--space-5); right:var(--space-5); display:flex; gap:6px; z-index:12; }
+    .wa-tool-btn { width:30px; height:30px; border-radius:6px; border:1px solid rgba(255,255,255,0.12); background:rgba(8,8,16,0.7); backdrop-filter:blur(10px); color:rgba(200,200,220,0.6); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:border-color 0.2s, color 0.2s, background 0.2s; padding:0; }
+    .wa-tool-btn:hover { border-color:rgba(255,255,255,0.3); color:rgba(240,240,255,0.9); }
+    .wa-tool-btn.recording { border-color:rgba(255,50,50,0.8); background:rgba(255,30,30,0.25); color:#ff4444; animation:wa-rec-pulse 1s ease-in-out infinite; }
+    @keyframes wa-rec-pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    .wa-tool-btn svg { width:14px; height:14px; }
+    .wa-rec-timer { position:absolute; top:calc(var(--space-5) + 36px); right:var(--space-5); font-family:var(--font-mono); font-size:9px; color:rgba(255,80,80,0.8); letter-spacing:0.08em; z-index:12; display:none; }
+    .wa-rec-timer.visible { display:block; }
+
+    /* ── HIDEABLE UI ──────────────────────────────────── */
+    .wa-demo.ui-hidden .wa-overlay-br,
+    .wa-demo.ui-hidden .wa-overlay-tl,
+    .wa-demo.ui-hidden .wa-overlay-bl,
+    .wa-demo.ui-hidden .wa-toolbar,
+    .wa-demo.ui-hidden .wa-curve-panel,
+    .wa-demo.ui-hidden .wa-rec-timer { opacity:0; pointer-events:none; }
+    .wa-overlay-br, .wa-overlay-tl, .wa-overlay-bl, .wa-toolbar, .wa-curve-panel, .wa-rec-timer { transition:opacity 0.3s; }
 
     /* ── OVERLAYS ─────────────────────────────────────── */
-    .wa-overlay-tl {
-      position: absolute;
-      top: var(--space-5);
-      left: var(--space-5);
-      display: flex;
-      align-items: center;
-      gap: var(--space-3);
-      pointer-events: none;
-      z-index: 5;
-    }
-    .wa-live-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--color-accent-secondary);
-      box-shadow: 0 0 8px rgba(45,212,191,0.7);
-      animation: wa-pulse 2s ease-in-out infinite;
-    }
+    .wa-overlay-tl { position:absolute; top:var(--space-5); left:var(--space-5); display:flex; align-items:center; gap:var(--space-3); pointer-events:none; z-index:5; }
+    .wa-live-dot { width:8px; height:8px; border-radius:50%; background:var(--color-accent-secondary); box-shadow:0 0 8px rgba(45,212,191,0.7); animation:wa-pulse 2s ease-in-out infinite; }
     @keyframes wa-pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
-    .wa-exp-label {
-      font-family: var(--font-mono);
-      font-size: var(--text-xs);
-      letter-spacing: 0.1em;
-      color: rgba(152,152,176,0.6);
-    }
+    .wa-exp-label { font-family:var(--font-mono); font-size:var(--text-xs); letter-spacing:0.1em; color:rgba(152,152,176,0.6); }
+    .wa-overlay-bl { position:absolute; bottom:var(--space-5); left:var(--space-5); font-family:var(--font-mono); font-size:var(--text-xs); letter-spacing:0.08em; color:rgba(152,152,176,0.4); pointer-events:none; z-index:5; transition:opacity 0.6s; }
+    .wa-overlay-bl.hidden { opacity:0; }
+    .wa-overlay-br { position:absolute; bottom:var(--space-5); right:var(--space-5); display:flex; flex-direction:column; align-items:flex-end; gap:var(--space-3); z-index:5; }
 
-    .wa-overlay-bl {
-      position: absolute;
-      bottom: var(--space-5);
-      left: var(--space-5);
-      font-family: var(--font-mono);
-      font-size: var(--text-xs);
-      letter-spacing: 0.08em;
-      color: rgba(152,152,176,0.4);
-      pointer-events: none;
-      z-index: 5;
-      transition: opacity 0.6s;
-    }
-    .wa-overlay-bl.hidden { opacity: 0; }
-
-    .wa-overlay-br {
-      position: absolute;
-      bottom: var(--space-5);
-      right: var(--space-5);
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: var(--space-3);
-      z-index: 5;
-    }
-
-    /* ── MODE TOGGLES ─────────────────────────────────── */
-    .wa-mode-btns {
-      display: flex;
-      gap: 6px;
-    }
-    .wa-mode-btn {
-      font-family: var(--font-mono);
-      font-size: 9px;
-      letter-spacing: 0.08em;
-      padding: 3px 8px;
-      border-radius: var(--radius-full);
-      border: 1px solid rgba(255,255,255,0.18);
-      background: rgba(10,10,15,0.6);
-      color: rgba(152,152,176,0.7);
-      cursor: pointer;
-      backdrop-filter: blur(6px);
-      transition: border-color 0.2s, color 0.2s, background 0.2s;
-    }
-    .wa-mode-btn:hover {
-      border-color: rgba(255,255,255,0.35);
-      color: var(--color-text-primary);
-    }
-    .wa-mode-btn.active {
-      border-color: rgba(108,99,255,0.7);
-      background: rgba(108,99,255,0.18);
-      color: var(--color-text-primary);
-    }
-
-    /* ── DENSITY TOGGLES ──────────────────────────────── */
-    .wa-density-btns {
-      display: flex;
-      gap: 6px;
-    }
-    .wa-density-btn {
-      font-family: var(--font-mono);
-      font-size: 9px;
-      letter-spacing: 0.06em;
-      padding: 3px 8px;
-      border-radius: var(--radius-full);
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(10,10,15,0.6);
-      color: rgba(152,152,176,0.5);
-      cursor: pointer;
-      backdrop-filter: blur(6px);
-      transition: border-color 0.2s, color 0.2s;
-    }
-    .wa-density-btn:hover {
-      border-color: rgba(255,255,255,0.3);
-      color: var(--color-text-primary);
-    }
-    .wa-density-btn.active {
-      border-color: rgba(45,212,191,0.6);
-      color: rgba(45,212,191,0.9);
-    }
+    /* ── PILL BUTTONS ─────────────────────────────────── */
+    .wa-btn-row { display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
+    .wa-pill { font-family:var(--font-mono); font-size:9px; letter-spacing:0.08em; padding:3px 8px; border-radius:var(--radius-full); border:1px solid rgba(255,255,255,0.18); background:rgba(10,10,15,0.6); color:rgba(152,152,176,0.7); cursor:pointer; backdrop-filter:blur(6px); transition:border-color 0.2s, color 0.2s, background 0.2s; }
+    .wa-pill:hover { border-color:rgba(255,255,255,0.35); color:var(--color-text-primary); }
+    .wa-pill.active { border-color:rgba(108,99,255,0.7); background:rgba(108,99,255,0.18); color:var(--color-text-primary); }
+    .wa-pill.teal.active { border-color:rgba(45,212,191,0.6); color:rgba(45,212,191,0.9); background:rgba(45,212,191,0.1); }
+    .wa-pill.warn.active { border-color:rgba(255,160,40,0.6); color:rgba(255,160,40,0.9); background:rgba(255,160,40,0.1); }
+    .wa-pill:disabled { opacity:0.3; pointer-events:none; }
 
     /* ── THEME PICKER ─────────────────────────────────── */
-    .wa-theme-picker { display: flex; gap: 6px; }
-    .wa-theme-btn {
-      width: 14px; height: 14px;
-      border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.15);
-      cursor: pointer;
-      padding: 0;
-      transition: border-color 0.2s, transform 0.15s;
-    }
-    .wa-theme-btn:hover  { transform: scale(1.35); border-color: rgba(255,255,255,0.45); }
-    .wa-theme-btn.active { border-color: rgba(255,255,255,0.85); transform: scale(1.2); }
-    .wa-theme-btn[data-theme="0"] { background: #6C63FF; }
-    .wa-theme-btn[data-theme="1"] { background: #2DD4BF; }
-    .wa-theme-btn[data-theme="2"] { background: #FF6010; }
-    .wa-theme-btn[data-theme="3"] { background: #F0F0F5; }
-    .wa-theme-btn[data-theme="4"] { background: #00E044; }
+    .wa-theme-picker { display:flex; gap:6px; }
+    .wa-theme-btn { width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,0.15); cursor:pointer; padding:0; transition:border-color 0.2s, transform 0.15s; }
+    .wa-theme-btn:hover { transform:scale(1.35); border-color:rgba(255,255,255,0.45); }
+    .wa-theme-btn.active { border-color:rgba(255,255,255,0.85); transform:scale(1.2); }
+    .wa-theme-btn[data-theme="0"] { background:#6C63FF; }
+    .wa-theme-btn[data-theme="1"] { background:#FF6010; }
+    .wa-theme-btn[data-theme="2"] { background:#00E044; }
+    .wa-theme-btn[data-theme="3"] { background:#50B4FF; }
+    .wa-theme-btn[data-theme="4"] { background:#D232FF; }
+    .wa-theme-btn[data-theme="5"] { background:#F0F0F5; }
+
+    /* ── CURVE PANEL ──────────────────────────────────── */
+    .wa-curve-panel { position:absolute; bottom:var(--space-5); left:var(--space-5); z-index:6; background:rgba(8,8,16,0.82); backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.07); border-radius:10px; padding:8px; }
+    .wa-curve-label { font-family:var(--font-mono); font-size:8px; letter-spacing:0.1em; text-transform:uppercase; color:rgba(152,152,176,0.5); margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; }
+    .wa-curve-reset { font-family:var(--font-mono); font-size:8px; color:rgba(152,152,176,0.4); cursor:pointer; border:none; background:none; padding:0; }
+    .wa-curve-reset:hover { color:rgba(240,240,255,0.8); }
+    #wa-curve-canvas { display:block; border-radius:4px; cursor:crosshair; border:1px solid rgba(255,255,255,0.06); }
+
+    /* ── VIDEO URL INPUT ──────────────────────────────── */
+    .wa-video-input { display:none; margin-top:4px; }
+    .wa-video-input.visible { display:flex; gap:4px; align-items:center; }
+    .wa-video-url { font-family:var(--font-mono); font-size:9px; padding:3px 6px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:4px; color:rgba(240,240,255,0.7); outline:none; width:140px; }
+    .wa-video-url::placeholder { color:rgba(152,152,176,0.35); }
+    .wa-video-url:focus { border-color:rgba(108,99,255,0.5); }
+    .wa-video-go { font-family:var(--font-mono); font-size:8px; padding:3px 6px; border-radius:4px; border:1px solid rgba(255,255,255,0.15); background:rgba(108,99,255,0.15); color:rgba(200,200,255,0.8); cursor:pointer; }
+    .wa-video-go:hover { background:rgba(108,99,255,0.3); }
+    .wa-video-file { display:none; }
+    .wa-video-file-label { font-family:var(--font-mono); font-size:8px; padding:3px 6px; border-radius:4px; border:1px solid rgba(255,255,255,0.15); background:rgba(45,212,191,0.12); color:rgba(45,212,191,0.8); cursor:pointer; white-space:nowrap; }
+    .wa-video-file-label:hover { background:rgba(45,212,191,0.25); }
 
     /* ── INFO SECTION ─────────────────────────────────── */
-    .wa-info {
-      padding-block: var(--space-10) var(--space-20);
-      border-top: 1px solid var(--color-border);
-    }
-    .wa-info-inner {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--space-12);
-      align-items: start;
-    }
-    @media (max-width: 720px) {
-      .wa-info-inner { grid-template-columns: 1fr; gap: var(--space-8); }
-    }
-    .wa-info-meta {
-      display: flex;
-      align-items: center;
-      gap: var(--space-3);
-      margin-bottom: var(--space-4);
-    }
-    .wa-info-num {
-      font-family: var(--font-mono);
-      font-size: var(--text-xs);
-      letter-spacing: 0.12em;
-      color: var(--color-accent-primary);
-    }
-    .wa-info-num::before {
-      content: '';
-      display: inline-block;
-      width: 20px; height: 1px;
-      background: currentColor;
-      margin-right: var(--space-2);
-      vertical-align: middle;
-    }
-    .wa-info h1 {
-      font-family: var(--font-heading);
-      font-size: clamp(1.75rem, 4vw, 2.75rem);
-      font-weight: 700;
-      line-height: var(--leading-tight);
-      color: var(--color-text-primary);
-      margin-bottom: var(--space-5);
-    }
-    .wa-info p {
-      color: var(--color-text-secondary);
-      line-height: var(--leading-normal);
-      margin-bottom: var(--space-4);
-    }
-    .wa-info-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-2);
-      margin-top: var(--space-6);
-    }
-    .wa-controls-title {
-      font-family: var(--font-mono);
-      font-size: var(--text-xs);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--color-text-muted);
-      margin-bottom: var(--space-5);
-    }
-    .wa-control-list {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-4);
-    }
-    .wa-control {
-      display: flex;
-      align-items: flex-start;
-      gap: var(--space-4);
-    }
-    .wa-control-key {
-      font-family: var(--font-mono);
-      font-size: var(--text-xs);
-      padding: 0.2rem 0.5rem;
-      border-radius: var(--radius-sm);
-      background: var(--color-bg-elevated);
-      border: 1px solid var(--color-border);
-      color: var(--color-text-secondary);
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .wa-control-desc {
-      font-size: var(--text-sm);
-      color: var(--color-text-secondary);
-      line-height: var(--leading-snug);
-    }
+    .wa-info { padding-block:var(--space-10) var(--space-20); border-top:1px solid var(--color-border); }
+    .wa-info-inner { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-12); align-items:start; }
+    @media (max-width:720px) { .wa-info-inner { grid-template-columns:1fr; gap:var(--space-8); } }
+    .wa-info-meta { display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-4); }
+    .wa-info-num { font-family:var(--font-mono); font-size:var(--text-xs); letter-spacing:0.12em; color:var(--color-accent-primary); }
+    .wa-info-num::before { content:''; display:inline-block; width:20px; height:1px; background:currentColor; margin-right:var(--space-2); vertical-align:middle; }
+    .wa-info h1 { font-family:var(--font-heading); font-size:clamp(1.75rem,4vw,2.75rem); font-weight:700; line-height:var(--leading-tight); color:var(--color-text-primary); margin-bottom:var(--space-5); }
+    .wa-info p { color:var(--color-text-secondary); line-height:var(--leading-normal); margin-bottom:var(--space-4); }
+    .wa-info-tags { display:flex; flex-wrap:wrap; gap:var(--space-2); margin-top:var(--space-6); }
+    .wa-controls-title { font-family:var(--font-mono); font-size:var(--text-xs); letter-spacing:0.1em; text-transform:uppercase; color:var(--color-text-muted); margin-bottom:var(--space-5); }
+    .wa-control-list { display:flex; flex-direction:column; gap:var(--space-4); }
+    .wa-control { display:flex; align-items:flex-start; gap:var(--space-4); }
+    .wa-control-key { font-family:var(--font-mono); font-size:var(--text-xs); padding:0.2rem 0.5rem; border-radius:var(--radius-sm); background:var(--color-bg-elevated); border:1px solid var(--color-border); color:var(--color-text-secondary); white-space:nowrap; flex-shrink:0; }
+    .wa-control-desc { font-size:var(--text-sm); color:var(--color-text-secondary); line-height:var(--leading-snug); }
 
     /* ── FOOTER ───────────────────────────────────────── */
-    .wa-footer {
-      border-top: 1px solid var(--color-border);
-      padding-block: var(--space-8);
-    }
-    .wa-footer-inner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: var(--space-4);
-    }
-    .wa-footer-logo {
-      display: flex;
-      align-items: center;
-      gap: var(--space-3);
-      font-family: var(--font-heading);
-      font-size: var(--text-sm);
-      font-weight: 700;
-      color: var(--color-text-muted);
-      text-decoration: none;
-    }
-    .wa-footer-logo img { height: 22px; width: auto; }
-    .wa-footer-copy {
-      font-family: var(--font-mono);
-      font-size: var(--text-xs);
-      color: var(--color-text-muted);
-    }
+    .wa-footer { border-top:1px solid var(--color-border); padding-block:var(--space-8); }
+    .wa-footer-inner { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:var(--space-4); }
+    .wa-footer-logo { display:flex; align-items:center; gap:var(--space-3); font-family:var(--font-heading); font-size:var(--text-sm); font-weight:700; color:var(--color-text-muted); text-decoration:none; }
+    .wa-footer-logo img { height:22px; width:auto; }
+    .wa-footer-copy { font-family:var(--font-mono); font-size:var(--text-xs); color:var(--color-text-muted); }
   </style>
 </head>
 <body>
@@ -403,9 +147,7 @@
       </a>
       <div class="wa-nav-right">
         <a href="../" class="wa-back">
-          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-            <path d="M8 1L3 6l5 5"/>
-          </svg>
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 1L3 6l5 5"/></svg>
           Experiments
         </a>
         <a href="../../#contact" class="btn btn-outline">Let's Talk</a>
@@ -423,16 +165,33 @@
   <div class="wa-start-overlay" id="wa-overlay">
     <div class="wa-start-icon">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="2" y="7" width="20" height="14" rx="2"/>
-        <path d="M16 3l-4 4-4-4"/>
-        <circle cx="12" cy="14" r="3"/>
+        <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3l-4 4-4-4"/><circle cx="12" cy="14" r="3"/>
       </svg>
     </div>
     <p class="wa-start-title">Webcam ASCII</p>
-    <p class="wa-start-sub">Your camera feed will be rendered as real-time ASCII art — nothing is recorded or sent anywhere.</p>
-    <button class="wa-start-btn" id="wa-start-btn">enable camera</button>
+    <p class="wa-start-sub">Your camera feed or a video file rendered as real-time ASCII art — nothing is recorded or sent anywhere.</p>
+    <div class="wa-start-row">
+      <button class="wa-start-btn" id="wa-start-btn">enable camera</button>
+      <label class="wa-start-btn" id="wa-video-label" style="cursor:pointer;">load video
+        <input type="file" accept="video/*" id="wa-video-file" class="wa-video-file" />
+      </label>
+    </div>
     <p class="wa-error-msg" id="wa-error-msg">Camera access was denied or is unavailable.<br>Check your browser permissions and try again.</p>
   </div>
+
+  <!-- Toolbar -->
+  <div class="wa-toolbar">
+    <button class="wa-tool-btn" id="wa-hide-btn" title="Hide / show all UI (H)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
+    </button>
+    <button class="wa-tool-btn" id="wa-rec-btn" title="Record up to 10s (R)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5"/><circle cx="8" cy="8" r="2.5" fill="currentColor" stroke="none"/></svg>
+    </button>
+    <button class="wa-tool-btn" id="wa-fs-btn" title="Fullscreen (F)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>
+    </button>
+  </div>
+  <span class="wa-rec-timer" id="wa-rec-timer">REC 0:00 / 0:10</span>
 
   <!-- Top-left label -->
   <div class="wa-overlay-tl">
@@ -443,23 +202,55 @@
   <!-- Bottom-left hint -->
   <div class="wa-overlay-bl" id="wa-hint">move to explore controls</div>
 
+  <!-- Curve editor (bottom-left, above hint) -->
+  <div class="wa-curve-panel" id="wa-curve-panel" style="bottom:calc(var(--space-5) + 24px);">
+    <div class="wa-curve-label">
+      <span>// curve</span>
+      <button class="wa-curve-reset" id="wa-curve-reset">reset</button>
+    </div>
+    <canvas id="wa-curve-canvas" width="120" height="120"></canvas>
+  </div>
+
   <!-- Bottom-right controls -->
   <div class="wa-overlay-br">
-    <div class="wa-mode-btns" id="wa-mode-btns">
-      <button class="wa-mode-btn active" data-mode="mono">mono</button>
-      <button class="wa-mode-btn"        data-mode="color">color</button>
+    <!-- Source -->
+    <div class="wa-btn-row" id="wa-camera-btns">
+      <button class="wa-pill active" data-cam="front">front</button>
+      <button class="wa-pill"        data-cam="back">back</button>
+      <button class="wa-pill warn"   data-cam="depth" id="wa-depth-btn" title="IR / depth camera">depth</button>
+      <button class="wa-pill"        data-cam="video" id="wa-video-btn">video</button>
     </div>
-    <div class="wa-density-btns" id="wa-density-btns">
-      <button class="wa-density-btn"        data-density="coarse">coarse</button>
-      <button class="wa-density-btn active" data-density="medium">medium</button>
-      <button class="wa-density-btn"        data-density="fine">fine</button>
+    <!-- Video URL input (shown when video source is active) -->
+    <div class="wa-video-input" id="wa-video-input">
+      <input type="text" class="wa-video-url" id="wa-video-url" placeholder="paste video URL..." />
+      <button class="wa-video-go" id="wa-video-go">go</button>
+      <label class="wa-video-file-label">file<input type="file" accept="video/*" id="wa-video-file2" class="wa-video-file" /></label>
     </div>
+    <!-- Mode -->
+    <div class="wa-btn-row" id="wa-mode-btns">
+      <button class="wa-pill active" data-mode="gradient">gradient</button>
+      <button class="wa-pill"        data-mode="color">color</button>
+      <button class="wa-pill"        data-mode="mono">mono</button>
+    </div>
+    <!-- Density -->
+    <div class="wa-btn-row" id="wa-density-btns">
+      <button class="wa-pill teal"        data-density="coarse">coarse</button>
+      <button class="wa-pill teal active" data-density="medium">medium</button>
+      <button class="wa-pill teal"        data-density="fine">fine</button>
+    </div>
+    <!-- Toggles -->
+    <div class="wa-btn-row">
+      <button class="wa-pill" id="wa-invert-btn">invert</button>
+      <button class="wa-pill" id="wa-edges-btn">edges</button>
+    </div>
+    <!-- Theme dots -->
     <div class="wa-theme-picker" id="wa-theme-picker">
       <button class="wa-theme-btn active" data-theme="0" title="Nebula"></button>
-      <button class="wa-theme-btn"        data-theme="1" title="Teal"></button>
-      <button class="wa-theme-btn"        data-theme="2" title="Ember"></button>
-      <button class="wa-theme-btn"        data-theme="3" title="Ghost"></button>
-      <button class="wa-theme-btn"        data-theme="4" title="Matrix"></button>
+      <button class="wa-theme-btn"        data-theme="1" title="Ember"></button>
+      <button class="wa-theme-btn"        data-theme="2" title="Matrix"></button>
+      <button class="wa-theme-btn"        data-theme="3" title="Cyan"></button>
+      <button class="wa-theme-btn"        data-theme="4" title="Violet"></button>
+      <button class="wa-theme-btn"        data-theme="5" title="Ghost"></button>
     </div>
   </div>
 </div>
@@ -469,46 +260,35 @@
 <section class="wa-info">
   <div class="container">
     <div class="wa-info-inner">
-
       <div>
         <div class="wa-info-meta">
           <span class="wa-info-num">07</span>
           <span class="tag tag-teal">LIVE</span>
         </div>
         <h1>Webcam ASCII</h1>
-        <p>
-          Your camera feed, translated into characters in real time. Every frame the video is sampled down to a grid, each cell's luminance mapped to a position in the ASCII ramp — dense characters for dark areas, sparse for bright.
-        </p>
-        <p>
-          Switch to color mode and each character inherits the actual RGB of its source pixel. Nothing is stored or transmitted — the entire pipeline runs locally in your browser using <code>getUserMedia</code> and Canvas 2D.
-        </p>
+        <p>Your camera feed or a video file, translated into characters in real time. Each cell's luminance maps to an ASCII ramp — dense characters for dark, sparse for bright. Gradient mode maps luminance through multi-stop color ramps matching the Generative Geometry experiment.</p>
+        <p>Drag points on the contrast curve to reshape the tonal response. Load a video file as an alternative source. Hit record to capture up to 10 seconds of the ASCII output as a WebM video.</p>
         <div class="wa-info-tags">
           <span class="tag">Canvas 2D</span>
           <span class="tag">getUserMedia</span>
           <span class="tag">ASCII Art</span>
-          <span class="tag">Real-time Video</span>
-          <span class="tag">Image Processing</span>
+          <span class="tag">Contrast Curve</span>
+          <span class="tag">Video Input</span>
+          <span class="tag">Screen Recording</span>
+          <span class="tag">Edge Detection</span>
+          <span class="tag">Gradient Themes</span>
         </div>
       </div>
-
       <div>
         <p class="wa-controls-title">// controls</p>
         <div class="wa-control-list">
-          <div class="wa-control">
-            <span class="wa-control-key">mono / color</span>
-            <span class="wa-control-desc">Toggle between a single theme color or full per-pixel color sampled from the webcam.</span>
-          </div>
-          <div class="wa-control">
-            <span class="wa-control-key">coarse / medium / fine</span>
-            <span class="wa-control-desc">Change character grid density. Coarse uses large cells for a bold, readable look; fine packs in more detail.</span>
-          </div>
-          <div class="wa-control">
-            <span class="wa-control-key">color dots</span>
-            <span class="wa-control-desc">Pick the monochrome accent color — active in mono mode only.</span>
-          </div>
+          <div class="wa-control"><span class="wa-control-key">front / back / depth / video</span><span class="wa-control-desc">Switch source. Video mode accepts a local file or direct URL.</span></div>
+          <div class="wa-control"><span class="wa-control-key">gradient / color / mono</span><span class="wa-control-desc">Gradient maps luminance through color ramps. Color uses per-pixel RGB. Mono uses a theme color with luminance alpha.</span></div>
+          <div class="wa-control"><span class="wa-control-key">curve</span><span class="wa-control-desc">Drag the two control points to reshape the contrast response. S-curves boost contrast, inverted curves create solarization.</span></div>
+          <div class="wa-control"><span class="wa-control-key">record</span><span class="wa-control-desc">Captures the ASCII canvas as a WebM video, up to 10 seconds. Downloads automatically when stopped or at the limit.</span></div>
+          <div class="wa-control"><span class="wa-control-key">H</span><span class="wa-control-desc">Hide all UI — leaves only the ASCII output visible. Press H again to restore.</span></div>
         </div>
       </div>
-
     </div>
   </div>
 </section>
@@ -523,9 +303,7 @@
         Hexagon Misfit
       </a>
       <a href="../" class="wa-back">
-        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-          <path d="M8 1L3 6l5 5"/>
-        </svg>
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 1L3 6l5 5"/></svg>
         All Experiments
       </a>
       <span class="wa-footer-copy">&copy; <span id="footer-year"></span> Hexagon Misfit</span>
@@ -541,34 +319,46 @@
 (function () {
   'use strict';
 
-  /* ─── ASCII RAMP: index 0 = brightest pixel → lightest char ── */
+  /* ─── ASCII RAMP ─────────────────────────────────── */
   const RAMP = ' .`\':;|!i1tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8B@$'.split('');
   const RAMP_LEN = RAMP.length;
 
-  /* ─── DENSITY PRESETS: [charW, charH] in px ──────────────── */
-  const DENSITY = {
-    coarse: [12, 22],
-    medium: [8,  15],
-    fine:   [5,  9],
-  };
+  /* ─── DENSITY PRESETS ────────────────────────────── */
+  const DENSITY = { coarse: [12, 22], medium: [8, 15], fine: [5, 9] };
 
-  /* ─── MONO THEME COLORS ──────────────────────────────────── */
+  /* ─── GRADIENT THEMES ────────────────────────────── */
   const THEMES = [
-    '#6C63FF',  // Nebula
-    '#2DD4BF',  // Teal
-    '#FF6010',  // Ember
-    '#F0F0F5',  // Ghost
-    '#00E044',  // Matrix
+    { name:'Nebula',  stops:[{t:1,r:230,g:220,b:255},{t:.7,r:108,g:99,b:255},{t:.3,r:45,g:212,b:191},{t:0,r:20,g:20,b:50}] },
+    { name:'Ember',   stops:[{t:1,r:255,g:255,b:200},{t:.7,r:255,g:150,b:10},{t:.3,r:200,g:30,b:0},{t:0,r:35,g:5,b:0}] },
+    { name:'Matrix',  stops:[{t:1,r:210,g:255,b:210},{t:.6,r:0,g:255,b:70},{t:.2,r:0,g:130,b:30},{t:0,r:0,g:25,b:5}] },
+    { name:'Cyan',    stops:[{t:1,r:220,g:240,b:255},{t:.6,r:80,g:180,b:255},{t:.2,r:20,g:80,b:200},{t:0,r:5,g:10,b:45}] },
+    { name:'Violet',  stops:[{t:1,r:255,g:230,b:255},{t:.7,r:210,g:50,b:255},{t:.3,r:80,g:20,b:160},{t:0,r:10,g:5,b:28}] },
+    { name:'Ghost',   stops:[{t:1,r:240,g:240,b:245},{t:.5,r:152,g:152,b:176},{t:0,r:20,g:20,b:30}] },
   ];
 
-  /* ─── STATE ──────────────────────────────────────────────── */
-  let activeMode    = 'mono';
-  let activeDensity = 'medium';
-  let activeTheme   = 0;
-  let running       = false;
-  let raf           = null;
+  const themeLUTs = THEMES.map(theme => {
+    const lut = new Array(256);
+    for (let i = 0; i < 256; i++) lut[i] = lerpColor(theme.stops, i / 255);
+    return lut;
+  });
 
-  /* ─── ELEMENTS ───────────────────────────────────────────── */
+  function lerpColor(stops, t) {
+    let lo = stops[stops.length - 1], hi = stops[0];
+    for (let i = 0; i < stops.length - 1; i++) {
+      if (t >= stops[i + 1].t && t <= stops[i].t) { hi = stops[i]; lo = stops[i + 1]; break; }
+    }
+    const range = hi.t - lo.t || 1;
+    const f = (t - lo.t) / range;
+    return { r: Math.round(lo.r + (hi.r - lo.r) * f), g: Math.round(lo.g + (hi.g - lo.g) * f), b: Math.round(lo.b + (hi.b - lo.b) * f) };
+  }
+
+  /* ─── STATE ──────────────────────────────────────── */
+  let activeMode = 'gradient', activeDensity = 'medium', activeTheme = 0;
+  let activeCam = 'front', invertLum = false, edgeMode = false;
+  let running = false, raf = null, currentStream = null;
+  let inputSource = 'camera'; // 'camera' or 'video'
+
+  /* ─── ELEMENTS ───────────────────────────────────── */
   const canvas   = document.getElementById('wa-canvas');
   const ctx      = canvas.getContext('2d', { alpha: false });
   const wrap     = document.getElementById('wa-wrap');
@@ -577,188 +367,468 @@
   const errorMsg = document.getElementById('wa-error-msg');
   const hint     = document.getElementById('wa-hint');
 
-  /* ─── OFFSCREEN CANVAS FOR VIDEO SAMPLING ────────────────── */
-  const offscreen    = document.createElement('canvas');
-  const offCtx       = offscreen.getContext('2d', { willReadFrequently: true });
+  /* ─── OFFSCREEN ──────────────────────────────────── */
+  const offscreen = document.createElement('canvas');
+  const offCtx    = offscreen.getContext('2d', { willReadFrequently: true });
   offCtx.imageSmoothingEnabled = true;
-  offCtx.imageSmoothingQuality = 'high';
 
-  /* ─── COLOR BOOST ────────────────────────────────────────────
-     In color mode each character only covers a fraction of its
-     cell, making raw RGB look muddy/dark on the black background.
-     We preserve hue + saturation from the pixel but boost lightness
-     into 0.50–0.88 so every character is clearly readable. The
-     character density already carries the brightness information.
-  ─────────────────────────────────────────────────────────── */
+  /* ─── VIDEO ELEMENTS ─────────────────────────────── */
+  const camVideo = document.createElement('video');
+  camVideo.playsInline = true; camVideo.muted = true; camVideo.autoplay = true;
+
+  const fileVideo = document.createElement('video');
+  fileVideo.playsInline = true; fileVideo.muted = true; fileVideo.loop = true;
+  fileVideo.crossOrigin = 'anonymous';
+
+  function activeVideo() { return inputSource === 'video' ? fileVideo : camVideo; }
+
+  /* ─── CONTRAST CURVE ─────────────────────────────── */
+  const curveLUT = new Uint8Array(256);
+  // Control points for cubic bezier: P0=(0,0), P1, P2, P3=(1,1)
+  let cp1 = { x: 0.25, y: 0.25 };
+  let cp2 = { x: 0.75, y: 0.75 };
+
+  function buildCurveLUT() {
+    for (let i = 0; i < 256; i++) {
+      const t = i / 255;
+      // Cubic bezier: B(t) = (1-t)^3*P0 + 3(1-t)^2*t*P1 + 3(1-t)*t^2*P2 + t^3*P3
+      // We need to solve for y given x. Approximate by sampling t parameter.
+      // Since this is an approximation, we'll use t directly as the input parameter
+      // and solve x(t) then lookup y(t).
+      curveLUT[i] = i; // will be overwritten
+    }
+    // Sample 512 points on the bezier and build a proper x→y LUT
+    const samples = 512;
+    const xToY = new Float32Array(samples);
+    const xArr = new Float32Array(samples);
+    for (let s = 0; s < samples; s++) {
+      const t = s / (samples - 1);
+      const mt = 1 - t;
+      xArr[s] = mt*mt*mt*0 + 3*mt*mt*t*cp1.x + 3*mt*t*t*cp2.x + t*t*t*1;
+      xToY[s] = mt*mt*mt*0 + 3*mt*mt*t*cp1.y + 3*mt*t*t*cp2.y + t*t*t*1;
+    }
+    // For each input luminance (0-255), find the closest x and use its y
+    let si = 0;
+    for (let i = 0; i < 256; i++) {
+      const x = i / 255;
+      while (si < samples - 2 && xArr[si + 1] < x) si++;
+      // Interpolate
+      const x0 = xArr[si], x1 = xArr[Math.min(si + 1, samples - 1)];
+      const y0 = xToY[si], y1 = xToY[Math.min(si + 1, samples - 1)];
+      const f = (x1 - x0) > 0.0001 ? (x - x0) / (x1 - x0) : 0;
+      const y = y0 + (y1 - y0) * Math.max(0, Math.min(1, f));
+      curveLUT[i] = Math.max(0, Math.min(255, Math.round(y * 255)));
+    }
+  }
+  buildCurveLUT();
+
+  /* ─── CURVE EDITOR UI ────────────────────────────── */
+  const curveCanvas = document.getElementById('wa-curve-canvas');
+  const curveCtx    = curveCanvas.getContext('2d');
+  const CW = 120, CH = 120;
+  let dragging = null; // 1 or 2
+
+  function drawCurve() {
+    curveCtx.clearRect(0, 0, CW, CH);
+    // Background grid
+    curveCtx.strokeStyle = 'rgba(255,255,255,0.04)';
+    curveCtx.lineWidth = 1;
+    for (let i = 1; i < 4; i++) {
+      const p = (i / 4) * CW;
+      curveCtx.beginPath(); curveCtx.moveTo(p, 0); curveCtx.lineTo(p, CH); curveCtx.stroke();
+      curveCtx.beginPath(); curveCtx.moveTo(0, p); curveCtx.lineTo(CW, p); curveCtx.stroke();
+    }
+    // Diagonal reference
+    curveCtx.strokeStyle = 'rgba(255,255,255,0.08)';
+    curveCtx.beginPath(); curveCtx.moveTo(0, CH); curveCtx.lineTo(CW, 0); curveCtx.stroke();
+
+    // Curve from LUT
+    curveCtx.strokeStyle = 'rgba(108,99,255,0.8)';
+    curveCtx.lineWidth = 1.5;
+    curveCtx.beginPath();
+    for (let i = 0; i < 256; i++) {
+      const x = (i / 255) * CW;
+      const y = CH - (curveLUT[i] / 255) * CH;
+      if (i === 0) curveCtx.moveTo(x, y); else curveCtx.lineTo(x, y);
+    }
+    curveCtx.stroke();
+
+    // Control points
+    drawHandle(cp1, 'rgba(45,212,191,0.9)');
+    drawHandle(cp2, 'rgba(255,150,50,0.9)');
+
+    // Control lines
+    curveCtx.strokeStyle = 'rgba(255,255,255,0.12)';
+    curveCtx.lineWidth = 1;
+    curveCtx.setLineDash([3, 3]);
+    curveCtx.beginPath(); curveCtx.moveTo(0, CH); curveCtx.lineTo(cp1.x * CW, CH - cp1.y * CH); curveCtx.stroke();
+    curveCtx.beginPath(); curveCtx.moveTo(CW, 0); curveCtx.lineTo(cp2.x * CW, CH - cp2.y * CH); curveCtx.stroke();
+    curveCtx.setLineDash([]);
+  }
+
+  function drawHandle(cp, color) {
+    const x = cp.x * CW, y = CH - cp.y * CH;
+    curveCtx.fillStyle = color;
+    curveCtx.beginPath(); curveCtx.arc(x, y, 5, 0, Math.PI * 2); curveCtx.fill();
+    curveCtx.strokeStyle = 'rgba(0,0,0,0.4)';
+    curveCtx.lineWidth = 1;
+    curveCtx.stroke();
+  }
+
+  function cpFromEvent(e) {
+    const rect = curveCanvas.getBoundingClientRect();
+    return { x: Math.max(0, Math.min(1, (e.clientX - rect.left) / CW)),
+             y: Math.max(0, Math.min(1, 1 - (e.clientY - rect.top) / CH)) };
+  }
+
+  function dist(a, b) { return Math.hypot(a.x * CW - b.x * CW, (1-a.y) * CH - (1-b.y) * CH); }
+
+  curveCanvas.addEventListener('pointerdown', (e) => {
+    const p = cpFromEvent(e);
+    const d1 = dist(p, cp1), d2 = dist(p, cp2);
+    if (d1 < 15 || d2 < 15) {
+      dragging = d1 <= d2 ? 1 : 2;
+      curveCanvas.setPointerCapture(e.pointerId);
+    }
+  });
+  curveCanvas.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const p = cpFromEvent(e);
+    if (dragging === 1) { cp1.x = p.x; cp1.y = p.y; }
+    else { cp2.x = p.x; cp2.y = p.y; }
+    buildCurveLUT(); drawCurve();
+  });
+  curveCanvas.addEventListener('pointerup', () => { dragging = null; });
+  curveCanvas.addEventListener('pointercancel', () => { dragging = null; });
+
+  document.getElementById('wa-curve-reset').addEventListener('click', () => {
+    cp1 = { x: 0.25, y: 0.25 }; cp2 = { x: 0.75, y: 0.75 };
+    buildCurveLUT(); drawCurve();
+  });
+
+  drawCurve();
+
+  /* ─── COLOR BOOST ────────────────────────────────── */
   function boostedColor(r, g, b) {
-    const rn = r / 255, gn = g / 255, bn = b / 255;
+    const rn = r/255, gn = g/255, bn = b/255;
     const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
-    const d = max - min;
-    const l = (max + min) * 0.5;
+    const d = max - min, l = (max + min) * 0.5;
     let h = 0, s = 0;
     if (d > 0.001) {
       s = d / (1 - Math.abs(2 * l - 1));
-      if (max === rn)      h = ((gn - bn) / d % 6 + 6) % 6;
+      if (max === rn) h = ((gn - bn) / d % 6 + 6) % 6;
       else if (max === gn) h = (bn - rn) / d + 2;
-      else                 h = (rn - gn) / d + 4;
+      else h = (rn - gn) / d + 4;
     }
-    // Lift lightness: 0→0.50, 0.5→0.69, 1→0.88 — always visible, still contrasty
     const bl = 0.50 + l * 0.38;
-    return `hsl(${(h * 60).toFixed(0)},${Math.round(s * 100)}%,${Math.round(bl * 100)}%)`;
+    return `hsl(${(h*60).toFixed(0)},${Math.round(s*100)}%,${Math.round(bl*100)}%)`;
   }
 
-  /* ─── VIDEO ELEMENT ──────────────────────────────────────── */
-  const video = document.createElement('video');
-  video.playsInline = true;
-  video.muted       = true;
-  video.autoplay    = true;
-
-  /* ─── RESIZE ─────────────────────────────────────────────── */
+  /* ─── RESIZE ─────────────────────────────────────── */
   function resize() {
-    canvas.width  = wrap.clientWidth;
+    canvas.width = wrap.clientWidth;
     canvas.height = wrap.clientHeight;
   }
   window.addEventListener('resize', resize);
   resize();
 
-  /* ─── START CAMERA ───────────────────────────────────────── */
+  /* ─── CAMERA HELPERS ─────────────────────────────── */
+  async function switchCamera(cam) {
+    if (currentStream) { currentStream.getTracks().forEach(t => t.stop()); currentStream = null; }
+    inputSource = 'camera';
+    const constraints = {
+      video: {
+        facingMode: cam === 'back' || cam === 'depth' ? 'environment' : 'user',
+        width: { ideal: 1280 }, height: { ideal: 720 },
+      },
+      audio: false,
+    };
+    if (cam === 'depth') {
+      constraints.video.width = { ideal: 640 }; constraints.video.height = { ideal: 480 };
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const depthDev = devices.find(d => d.kind === 'videoinput' && /depth|ir\b|infrared|tof/i.test(d.label));
+      if (depthDev) constraints.video = { deviceId: { exact: depthDev.deviceId }, width: { ideal: 640 }, height: { ideal: 480 } };
+    }
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    currentStream = stream;
+    camVideo.srcObject = stream;
+    await camVideo.play();
+    activeCam = cam;
+  }
+
+  function loadVideoFile(file) {
+    inputSource = 'video';
+    if (currentStream) { currentStream.getTracks().forEach(t => t.stop()); currentStream = null; }
+    fileVideo.src = URL.createObjectURL(file);
+    fileVideo.play().catch(() => {});
+    activeCam = 'video';
+    if (!running) { overlay.classList.add('hidden'); running = true; hideHint(); raf = requestAnimationFrame(loop); }
+  }
+
+  function loadVideoURL(url) {
+    inputSource = 'video';
+    if (currentStream) { currentStream.getTracks().forEach(t => t.stop()); currentStream = null; }
+    fileVideo.src = url;
+    fileVideo.play().catch(() => {});
+    activeCam = 'video';
+    if (!running) { overlay.classList.add('hidden'); running = true; hideHint(); raf = requestAnimationFrame(loop); }
+  }
+
+  /* ─── START CAMERA ───────────────────────────────── */
   startBtn.addEventListener('click', async () => {
     startBtn.disabled = true;
     startBtn.textContent = 'connecting...';
     errorMsg.classList.remove('visible');
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: false,
-      });
-      video.srcObject = stream;
-      await video.play();
+      await switchCamera(activeCam);
       overlay.classList.add('hidden');
-      running = true;
-      hideHint();
+      running = true; hideHint();
       raf = requestAnimationFrame(loop);
     } catch (err) {
-      startBtn.disabled   = false;
+      startBtn.disabled = false;
       startBtn.textContent = 'try again';
       errorMsg.classList.add('visible');
     }
   });
 
-  /* ─── HINT FADE ──────────────────────────────────────────── */
-  let hintTimer = null;
-  function hideHint() {
-    clearTimeout(hintTimer);
-    hintTimer = setTimeout(() => hint.classList.add('hidden'), 3000);
-  }
-  wrap.addEventListener('pointerenter', () => {
-    if (!running) return;
-    hint.classList.remove('hidden');
-    hideHint();
+  /* Video file from start overlay */
+  document.getElementById('wa-video-file').addEventListener('change', function() {
+    if (this.files[0]) loadVideoFile(this.files[0]);
   });
 
-  /* ─── RENDER LOOP ────────────────────────────────────────── */
+  /* ─── HINT FADE ──────────────────────────────────── */
+  let hintTimer = null;
+  function hideHint() { clearTimeout(hintTimer); hintTimer = setTimeout(() => hint.classList.add('hidden'), 3000); }
+  wrap.addEventListener('pointerenter', () => { if (!running) return; hint.classList.remove('hidden'); hideHint(); });
+
+  /* ─── EDGE DETECTION ─────────────────────────────── */
+  function sobelPass(grayData, w, h) {
+    const out = new Uint8Array(w * h);
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const i = y * w + x;
+        const gx = -grayData[(y-1)*w+(x-1)] + grayData[(y-1)*w+(x+1)] - 2*grayData[y*w+(x-1)] + 2*grayData[y*w+(x+1)] - grayData[(y+1)*w+(x-1)] + grayData[(y+1)*w+(x+1)];
+        const gy = -grayData[(y-1)*w+(x-1)] - 2*grayData[(y-1)*w+x] - grayData[(y-1)*w+(x+1)] + grayData[(y+1)*w+(x-1)] + 2*grayData[(y+1)*w+x] + grayData[(y+1)*w+(x+1)];
+        out[i] = Math.min(255, Math.sqrt(gx * gx + gy * gy));
+      }
+    }
+    return out;
+  }
+
+  /* ─── RENDER LOOP ────────────────────────────────── */
   function loop() {
     if (!running) return;
     raf = requestAnimationFrame(loop);
 
-    if (video.readyState < 2) return;
+    const vid = activeVideo();
+    if (vid.readyState < 2) return;
 
     const [cw, ch] = DENSITY[activeDensity];
-    const W = canvas.width;
-    const H = canvas.height;
-
-    /* Compute grid dimensions */
-    const cols = Math.floor(W / cw);
-    const rows = Math.floor(H / ch);
+    const W = canvas.width, H = canvas.height;
+    const cols = Math.floor(W / cw), rows = Math.floor(H / ch);
     if (cols < 1 || rows < 1) return;
 
-    /* Sample video into tiny offscreen canvas */
-    offscreen.width  = cols;
-    offscreen.height = rows;
-
-    /* Mirror horizontally so it acts like a mirror */
+    offscreen.width = cols; offscreen.height = rows;
+    const mirror = inputSource === 'camera' && activeCam === 'front';
     offCtx.save();
-    offCtx.scale(-1, 1);
-    offCtx.drawImage(video, -cols, 0, cols, rows);
+    if (mirror) { offCtx.scale(-1, 1); offCtx.drawImage(vid, -cols, 0, cols, rows); }
+    else { offCtx.drawImage(vid, 0, 0, cols, rows); }
     offCtx.restore();
 
     const px = offCtx.getImageData(0, 0, cols, rows).data;
 
-    /* Clear main canvas */
+    const gray = new Uint8Array(cols * rows);
+    for (let i = 0; i < gray.length; i++) {
+      const pi = i * 4;
+      const raw = Math.round(0.299 * px[pi] + 0.587 * px[pi+1] + 0.114 * px[pi+2]);
+      gray[i] = curveLUT[raw]; // Apply contrast curve
+    }
+
+    const lumSource = edgeMode ? sobelPass(gray, cols, rows) : gray;
+
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, W, H);
-
-    /* Set font once */
-    ctx.font = `${ch - 1}px "Space Mono", "Courier New", monospace`;
+    ctx.font = `${ch - 1}px "Space Mono","Courier New",monospace`;
     ctx.textBaseline = 'top';
 
-    const monoColor = THEMES[activeTheme];
-    const isColor   = activeMode === 'color';
+    const lut = themeLUTs[activeTheme];
+    const isGrad = activeMode === 'gradient', isColor = activeMode === 'color';
+    const themeStops = THEMES[activeTheme].stops;
 
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
-        const i = (row * cols + col) * 4;
-        const r = px[i];
-        const g = px[i + 1];
-        const b = px[i + 2];
+        const idx = row * cols + col;
+        let lum = lumSource[idx] / 255;
+        if (invertLum) lum = 1 - lum;
 
-        /* Luminance (perceptual) */
-        const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-
-        /* Map luminance to char — bright=sparse, dark=dense */
         const charIdx = Math.floor((1 - lum) * (RAMP_LEN - 1));
         const ch2 = RAMP[charIdx];
-
-        /* Skip space (fully dark) — slight perf win */
         if (ch2 === ' ') continue;
 
-        /* Color */
-        if (isColor) {
-          ctx.fillStyle = boostedColor(r, g, b);
+        if (isGrad) {
+          const c = lut[lumSource[idx]];
+          ctx.fillStyle = `rgba(${c.r},${c.g},${c.b},${(0.25 + lum * 0.75).toFixed(2)})`;
+        } else if (isColor) {
+          const pi = idx * 4;
+          ctx.fillStyle = boostedColor(px[pi], px[pi+1], px[pi+2]);
         } else {
-          /* Mono: tint the theme color by luminance — append alpha as hex byte */
-          ctx.fillStyle = monoColor + Math.round((0.20 + lum * 0.80) * 255).toString(16).padStart(2, '0');
+          const top = themeStops[0];
+          ctx.fillStyle = `rgba(${top.r},${top.g},${top.b},${(0.15 + lum * 0.85).toFixed(2)})`;
         }
-
         ctx.fillText(ch2, col * cw, row * ch);
       }
     }
   }
 
-  /* ─── CONTROLS ───────────────────────────────────────────── */
+  /* ─── CONTROLS ───────────────────────────────────── */
+
+  /* Camera / source buttons */
+  document.getElementById('wa-camera-btns').addEventListener('click', async (e) => {
+    const btn = e.target.closest('.wa-pill');
+    if (!btn) return;
+    const cam = btn.dataset.cam;
+    document.querySelectorAll('#wa-camera-btns .wa-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    // Show/hide video URL input
+    document.getElementById('wa-video-input').classList.toggle('visible', cam === 'video');
+
+    if (cam === 'video') {
+      // Don't switch camera — wait for file/URL
+      return;
+    }
+
+    if (!running) return;
+    try { await switchCamera(cam); }
+    catch (err) {
+      document.querySelectorAll('#wa-camera-btns .wa-pill').forEach(b => b.classList.remove('active'));
+      document.querySelector(`#wa-camera-btns .wa-pill[data-cam="${activeCam}"]`).classList.add('active');
+    }
+  });
+
+  /* Video URL go button */
+  document.getElementById('wa-video-go').addEventListener('click', () => {
+    const url = document.getElementById('wa-video-url').value.trim();
+    if (url) loadVideoURL(url);
+  });
+  document.getElementById('wa-video-url').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('wa-video-go').click();
+  });
+
+  /* Video file input (inline) */
+  document.getElementById('wa-video-file2').addEventListener('change', function() {
+    if (this.files[0]) loadVideoFile(this.files[0]);
+  });
 
   /* Mode buttons */
   document.getElementById('wa-mode-btns').addEventListener('click', (e) => {
-    const btn = e.target.closest('.wa-mode-btn');
-    if (!btn) return;
-    document.querySelectorAll('.wa-mode-btn').forEach(b => b.classList.remove('active'));
+    const btn = e.target.closest('.wa-pill'); if (!btn) return;
+    document.querySelectorAll('#wa-mode-btns .wa-pill').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     activeMode = btn.dataset.mode;
-
-    /* Theme picker only visible in mono mode */
-    document.getElementById('wa-theme-picker').style.opacity = activeMode === 'mono' ? '' : '0.25';
-    document.getElementById('wa-theme-picker').style.pointerEvents = activeMode === 'mono' ? '' : 'none';
+    const tp = document.getElementById('wa-theme-picker');
+    tp.style.opacity = activeMode === 'color' ? '0.25' : '';
+    tp.style.pointerEvents = activeMode === 'color' ? 'none' : '';
   });
 
   /* Density buttons */
   document.getElementById('wa-density-btns').addEventListener('click', (e) => {
-    const btn = e.target.closest('.wa-density-btn');
-    if (!btn) return;
-    document.querySelectorAll('.wa-density-btn').forEach(b => b.classList.remove('active'));
+    const btn = e.target.closest('.wa-pill'); if (!btn) return;
+    document.querySelectorAll('#wa-density-btns .wa-pill').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     activeDensity = btn.dataset.density;
   });
 
+  /* Invert / Edges toggles */
+  document.getElementById('wa-invert-btn').addEventListener('click', function() { invertLum = !invertLum; this.classList.toggle('active', invertLum); });
+  document.getElementById('wa-edges-btn').addEventListener('click', function() { edgeMode = !edgeMode; this.classList.toggle('active', edgeMode); });
+
   /* Theme buttons */
   document.getElementById('wa-theme-picker').addEventListener('click', (e) => {
-    const btn = e.target.closest('.wa-theme-btn');
-    if (!btn) return;
+    const btn = e.target.closest('.wa-theme-btn'); if (!btn) return;
     document.querySelectorAll('.wa-theme-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     activeTheme = parseInt(btn.dataset.theme, 10);
   });
 
-  /* ─── FOOTER YEAR ────────────────────────────────────────── */
+  /* ─── FULLSCREEN ─────────────────────────────────── */
+  document.getElementById('wa-fs-btn').addEventListener('click', () => {
+    if (!document.fullscreenElement) wrap.requestFullscreen().catch(() => {});
+    else document.exitFullscreen();
+  });
+  document.addEventListener('fullscreenchange', resize);
+
+  /* ─── HIDE ALL UI ────────────────────────────────── */
+  document.getElementById('wa-hide-btn').addEventListener('click', () => { wrap.classList.toggle('ui-hidden'); });
+
+  /* ─── RECORDING (MediaRecorder, max 10s) ─────────── */
+  let mediaRecorder = null;
+  let recChunks = [];
+  let recStart = 0;
+  let recTimerInterval = null;
+  const recBtn   = document.getElementById('wa-rec-btn');
+  const recTimer = document.getElementById('wa-rec-timer');
+  const MAX_REC = 10000; // 10 seconds
+
+  function startRecording() {
+    recChunks = [];
+    const stream = canvas.captureStream(30);
+    const types = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+    let mimeType = '';
+    for (const t of types) { if (MediaRecorder.isTypeSupported(t)) { mimeType = t; break; } }
+    mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+    mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      clearInterval(recTimerInterval);
+      recBtn.classList.remove('recording');
+      recTimer.classList.remove('visible');
+      if (recChunks.length) {
+        const blob = new Blob(recChunks, { type: mimeType || 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'ascii-capture.webm';
+        document.body.appendChild(a); a.click();
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+      }
+      mediaRecorder = null;
+    };
+    mediaRecorder.start(100);
+    recStart = Date.now();
+    recBtn.classList.add('recording');
+    recTimer.classList.add('visible');
+    updateRecTimer();
+    recTimerInterval = setInterval(() => {
+      const elapsed = Date.now() - recStart;
+      if (elapsed >= MAX_REC) { stopRecording(); return; }
+      updateRecTimer();
+    }, 100);
+  }
+
+  function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+  }
+
+  function updateRecTimer() {
+    const elapsed = Math.min(MAX_REC, Date.now() - recStart);
+    const s = Math.floor(elapsed / 1000);
+    const ms = Math.floor((elapsed % 1000) / 100);
+    recTimer.textContent = `REC ${s}:${String(ms).padStart(2,'0')}0 / 0:10`;
+  }
+
+  recBtn.addEventListener('click', () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') stopRecording();
+    else if (running) startRecording();
+  });
+
+  /* ─── KEYBOARD SHORTCUTS ─────────────────────────── */
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    if (e.key === 'f' || e.key === 'F') document.getElementById('wa-fs-btn').click();
+    if (e.key === 'h' || e.key === 'H') document.getElementById('wa-hide-btn').click();
+    if (e.key === 'r' || e.key === 'R') recBtn.click();
+  });
+
+  /* ─── FOOTER ─────────────────────────────────────── */
   document.getElementById('footer-year').textContent = new Date().getFullYear();
 
 })();

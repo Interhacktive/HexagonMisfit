@@ -127,6 +127,46 @@
       z-index: 10;
     }
 
+    /* ── TOOLBAR (top-right: fullscreen + hide UI) ───── */
+    .rt-toolbar {
+      position: absolute;
+      top: var(--space-4);
+      right: var(--space-4);
+      display: flex;
+      gap: 6px;
+      z-index: 12;
+    }
+    .rt-tool-btn {
+      width: 30px; height: 30px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(8,8,16,0.7);
+      backdrop-filter: blur(10px);
+      color: rgba(200,200,220,0.6);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s, color 0.2s;
+      padding: 0;
+    }
+    .rt-tool-btn:hover { border-color: rgba(255,255,255,0.3); color: rgba(240,240,255,0.9); }
+    .rt-tool-btn svg { width: 14px; height: 14px; }
+
+    /* Hideable UI */
+    .rt-frame.ui-hidden .rt-controls,
+    .rt-frame.ui-hidden .rt-overlay-tl,
+    .rt-frame.ui-hidden .rt-hint { opacity: 0; pointer-events: none; }
+    .rt-controls, .rt-overlay-tl, .rt-hint { transition: opacity 0.3s; }
+
+    /* Fullscreen tweaks */
+    .rt-frame:fullscreen, .rt-frame:-webkit-full-screen {
+      max-width: none;
+      aspect-ratio: auto;
+      border: none;
+      border-radius: 0;
+    }
+
     /* ── CONTROLS PANEL ──────────────────────────────── */
     .rt-controls {
       position: absolute;
@@ -367,6 +407,16 @@
       <span class="rt-exp-label">10 / rain_text</span>
     </div>
     <span class="rt-hint">click for lightning</span>
+
+    <!-- Toolbar: fullscreen + hide UI -->
+    <div class="rt-toolbar">
+      <button class="rt-tool-btn" id="rt-hide-btn" title="Hide / show UI (H)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
+      </button>
+      <button class="rt-tool-btn" id="rt-fs-btn" title="Fullscreen (F)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>
+      </button>
+    </div>
 
     <!-- Controls panel -->
     <div class="rt-controls">
@@ -865,6 +915,7 @@
         spawnRipple(d.col, d.row);
       }
       if (d.row > CFG.ROWS + 4 || d.col < -3 || d.col > CFG.COLS + 3) {
+        playDropSound(d.speedMult);
         Object.assign(d, spawnDrop());
       }
     }
@@ -1048,6 +1099,84 @@
     CFG.FONT_FAMILY = this.value;
     resize();
   });
+
+  /* ── FULLSCREEN ────────────────────────────────────── */
+  const fsBtn = document.getElementById('rt-fs-btn');
+  fsBtn.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      frame.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen();
+    }
+  });
+  document.addEventListener('fullscreenchange', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(resize, 100);
+  });
+
+  /* ── HIDE / SHOW UI ──────────────────────────────── */
+  const hideBtn = document.getElementById('rt-hide-btn');
+  hideBtn.addEventListener('click', () => {
+    frame.classList.toggle('ui-hidden');
+  });
+
+  /* Keyboard shortcuts */
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    if (e.key === 'f' || e.key === 'F') fsBtn.click();
+    if (e.key === 'h' || e.key === 'H') hideBtn.click();
+  });
+
+  /* ── RAIN SOUND (Web Audio) ──────────────────────── */
+  let audioCtx = null;
+  let soundGain = null;
+  const SOUND_POOL_SIZE = 6;
+  let soundActive = 0;
+
+  function initAudio() {
+    if (audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    soundGain = audioCtx.createGain();
+    soundGain.gain.value = 0.08;
+    soundGain.connect(audioCtx.destination);
+  }
+
+  function playDropSound(pitch) {
+    if (!audioCtx || soundActive >= SOUND_POOL_SIZE) return;
+    soundActive++;
+    const now = audioCtx.currentTime;
+    // Short noise burst filtered to sound like a water drip
+    const dur = 0.04 + Math.random() * 0.04;
+    const bufLen = Math.floor(audioCtx.sampleRate * dur);
+    const buf = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufLen; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufLen * 0.25));
+    }
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+
+    // Bandpass filter for tonal drip character
+    const filt = audioCtx.createBiquadFilter();
+    filt.type = 'bandpass';
+    filt.frequency.value = 800 + pitch * 1200; // 800-2000 Hz range
+    filt.Q.value = 8 + Math.random() * 6;
+
+    const env = audioCtx.createGain();
+    env.gain.setValueAtTime(0.3 + Math.random() * 0.4, now);
+    env.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+    src.connect(filt);
+    filt.connect(env);
+    env.connect(soundGain);
+    src.start(now);
+    src.stop(now + dur);
+    src.onended = () => { soundActive--; };
+  }
+
+  // Trigger audio init on first user interaction
+  frame.addEventListener('click', initAudio, { once: true });
+  frame.addEventListener('pointerdown', initAudio, { once: true });
 
   /* ── RESIZE ───────────────────────────────────────── */
   let resizeTimer;

@@ -132,6 +132,39 @@
     .mp-theme-btn[data-theme="3"] { background: #50B4FF; }
     .mp-theme-btn[data-theme="4"] { background: #D232FF; }
 
+    /* ── TOOLBAR ─────────────────────────────────────── */
+    .mp-toolbar {
+      position: absolute;
+      top: var(--space-5);
+      right: var(--space-5);
+      display: flex;
+      gap: 6px;
+      z-index: 12;
+    }
+    .mp-tool-btn {
+      width: 30px; height: 30px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(8,8,16,0.7);
+      backdrop-filter: blur(10px);
+      color: rgba(200,200,220,0.6);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s, color 0.2s;
+      padding: 0;
+    }
+    .mp-tool-btn:hover { border-color: rgba(255,255,255,0.3); color: rgba(240,240,255,0.9); }
+    .mp-tool-btn svg { width: 14px; height: 14px; }
+
+    .mp-stage.ui-hidden .mp-controls,
+    .mp-stage.ui-hidden .mp-overlay-tl,
+    .mp-stage.ui-hidden .mp-hint { opacity: 0; pointer-events: none; }
+    .mp-controls, .mp-overlay-tl, .mp-hint { transition: opacity 0.3s; }
+
+    .mp-stage:fullscreen, .mp-stage:-webkit-full-screen { border: none; border-radius: 0; }
+
     /* Hint */
     .mp-hint {
       position: absolute;
@@ -410,6 +443,16 @@
       <button class="mp-theme-btn"        data-theme="3" title="Ice"></button>
       <button class="mp-theme-btn"        data-theme="4" title="Void"></button>
     </div>
+  </div>
+
+  <!-- Toolbar: fullscreen + hide UI -->
+  <div class="mp-toolbar">
+    <button class="mp-tool-btn" id="mp-hide-btn" title="Hide / show UI (H)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
+    </button>
+    <button class="mp-tool-btn" id="mp-fs-btn" title="Fullscreen (F)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>
+    </button>
   </div>
 
   <!-- Hint -->
@@ -796,6 +839,26 @@
     resizeTimer = setTimeout(updateCenters, 120);
   });
   window.addEventListener('scroll', updateCenters, { passive: true });
+
+  /* ── FULLSCREEN ────────────────────────────────────── */
+  document.getElementById('mp-fs-btn').addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      stage.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen();
+    }
+  });
+
+  /* ── HIDE / SHOW UI ──────────────────────────────── */
+  document.getElementById('mp-hide-btn').addEventListener('click', () => {
+    stage.classList.toggle('ui-hidden');
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT') return;
+    if (e.key === 'f' || e.key === 'F') document.getElementById('mp-fs-btn').click();
+    if (e.key === 'h' || e.key === 'H') document.getElementById('mp-hide-btn').click();
+  });
 
   /* ── INIT ─────────────────────────────────────────── */
   buildLetters();
