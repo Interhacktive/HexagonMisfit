@@ -524,6 +524,7 @@
       <button class="fp-scene-btn active" data-scene="0">Cosmos</button>
       <button class="fp-scene-btn" data-scene="1">City</button>
       <button class="fp-scene-btn" data-scene="2">Forest</button>
+      <button class="fp-scene-btn" data-scene="3">Cube</button>
     </div>
   </div>
 
@@ -559,6 +560,22 @@
       <span class="fp-slider-label">speed</span>
       <input type="range" class="fp-slider" id="s-speed" min="0" max="100" value="30" step="5">
       <span class="fp-slider-val" id="v-speed">0.30</span>
+    </div>
+    <p class="fp-controls-hdr" style="margin-top:var(--space-4)">// cube scale</p>
+    <div class="fp-slider-row">
+      <span class="fp-slider-label">x scale</span>
+      <input type="range" class="fp-slider" id="s-scaleX" min="10" max="300" value="100" step="5">
+      <span class="fp-slider-val" id="v-scaleX">1.00</span>
+    </div>
+    <div class="fp-slider-row">
+      <span class="fp-slider-label">y scale</span>
+      <input type="range" class="fp-slider" id="s-scaleY" min="10" max="300" value="100" step="5">
+      <span class="fp-slider-val" id="v-scaleY">1.00</span>
+    </div>
+    <div class="fp-slider-row">
+      <span class="fp-slider-label">z scale</span>
+      <input type="range" class="fp-slider" id="s-scaleZ" min="10" max="300" value="100" step="5">
+      <span class="fp-slider-val" id="v-scaleZ">1.00</span>
     </div>
   </div>
 
@@ -650,12 +667,15 @@
     SMOOTH: 8,
     LAYERS: 6,
     SPEED: 0.30,
+    SCALE_X: 1.0,
+    SCALE_Y: 1.0,
+    SCALE_Z: 1.0,
   };
 
   /* ── FACE STATE ──────────────────────────────────── */
   // Normalized face center: 0=left/top, 1=right/bottom. 0.5=centered.
-  let faceX = 0.5, faceY = 0.5;
-  let smoothX = 0.5, smoothY = 0.5;
+  let faceX = 0.5, faceY = 0.5, faceSize = 0.15;
+  let smoothX = 0.5, smoothY = 0.5, smoothZ = 0.5;
   let faceDetected = false;
 
   /* ── CANVAS ──────────────────────────────────────── */
@@ -695,6 +715,7 @@
       buildCosmos(),
       buildCity(),
       buildForest(),
+      buildCube(),
     ];
   }
 
@@ -1101,6 +1122,220 @@
     return layers;
   }
 
+  /* ── SCENE 3: CUBE (Johnny Lee style) ─────────────── */
+  function buildCube() {
+    const rand = seededRand(2007);
+
+    // Targets at fixed world positions inside the tunnel
+    const targets = [];
+    for (let i = 0; i < 8; i++) {
+      targets.push({
+        wx: (rand() - 0.5) * 1.4,   // world x: -0.7 to 0.7
+        wy: (rand() - 0.5) * 1.0,   // world y: -0.5 to 0.5
+        wz: rand() * 5 + 1.5,       // world z: depth 1.5–6.5
+        red: rand() > 0.5,
+      });
+    }
+
+    const GRID = 10;
+    const TARGET_R = 14; // constant screen-space radius
+
+    return [{
+      depth: 0,
+      draw(ctx, W, H, offX, offY, t) {
+        // ─── Head-coupled perspective ───
+        // Eye position in world units derived from face tracking.
+        // The screen plane is z=0. The eye is at (ex, ey, -ez).
+        // Projection formula: for world point (wx, wy, wz),
+        //   px = (ex * wz + ez * wx) / (ez + wz)
+        //   py = (ey * wz + ez * wy) / (ez + wz)
+        // At wz=0: px=wx, py=wy → front frame NEVER moves.
+        // At wz>0: eye offset pulls the vanishing point → parallax.
+
+        const nx = (smoothX - 0.5) * 2 * CFG.SCALE_X;
+        const ny = (smoothY - 0.5) * 2 * CFG.SCALE_Y;
+        const nz = smoothZ * CFG.SCALE_Z;
+
+        const ex = nx * 1.2;   // eye world X
+        const ey = ny * 0.9;   // eye world Y
+        const ez = 1.5 + nz * 2.5; // eye distance from screen (1.5–4)
+
+        const cx = W / 2;
+        const cy = H / 2;
+
+        // World bounds at z=0: x in [-1,1], y in [-ar, ar] where ar = H/W * aspect
+        const ar = 0.75; // world y half-extent
+        const halfW = W / 2;
+        const halfH = H / (2 * ar); // scale so world ±1 maps to full width
+
+        // Project world point to screen pixels
+        function proj(wx, wy, wz) {
+          const d = ez + wz;
+          if (d < 0.001) return null;
+          const px = (ex * wz + ez * wx) / d;
+          const py = (ey * wz + ez * wy) / d;
+          return { x: cx + px * halfW, y: cy + py * halfH };
+        }
+
+        // ─── Background ───
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, W, H);
+
+        // ─── Depth steps (exponential for perspective) ───
+        const maxZ = 25;
+        const steps = [];
+        for (let i = 0; i <= 40; i++) {
+          steps.push((i / 40) * (i / 40) * maxZ);
+        }
+
+        // World tunnel bounds
+        const wL = -1, wR = 1, wT = -ar, wB = ar;
+
+        // Helper: draw a wall surface with grid
+        function drawWall(fixCoord, fixAxis, varMin, varMax, alphaBase) {
+          // fixAxis: 'x' means wall at x=fixCoord, varying y & z
+          //          'y' means wall at y=fixCoord, varying x & z
+
+          // Longitudinal lines (along z)
+          ctx.lineWidth = 0.6;
+          for (let i = 0; i <= GRID; i++) {
+            const v = varMin + (varMax - varMin) * i / GRID;
+            ctx.beginPath();
+            let started = false;
+            for (const z of steps) {
+              const alpha = Math.max(0, alphaBase * (1 - z / maxZ));
+              if (alpha < 0.005) break;
+              const p = fixAxis === 'x'
+                ? proj(fixCoord, v, z)
+                : proj(v, fixCoord, z);
+              if (!p) continue;
+              if (!started) { ctx.moveTo(p.x, p.y); started = true; }
+              else ctx.lineTo(p.x, p.y);
+            }
+            ctx.strokeStyle = `rgba(255,255,255,${alphaBase})`;
+            ctx.stroke();
+          }
+
+          // Cross lines (perpendicular rings at each z depth)
+          for (const z of steps) {
+            const alpha = Math.max(0, alphaBase * (1 - z / maxZ));
+            if (alpha < 0.005) continue;
+            const p0 = fixAxis === 'x'
+              ? proj(fixCoord, varMin, z)
+              : proj(varMin, fixCoord, z);
+            const p1 = fixAxis === 'x'
+              ? proj(fixCoord, varMax, z)
+              : proj(varMax, fixCoord, z);
+            if (!p0 || !p1) continue;
+            ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(3)})`;
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(p0.x, p0.y);
+            ctx.lineTo(p1.x, p1.y);
+            ctx.stroke();
+          }
+        }
+
+        // Draw 4 walls
+        drawWall(wB, 'y', wL, wR, 0.13); // floor
+        drawWall(wT, 'y', wL, wR, 0.10); // ceiling
+        drawWall(wL, 'x', wT, wB, 0.10); // left
+        drawWall(wR, 'x', wT, wB, 0.10); // right
+
+        // ─── Corner edges into darkness ───
+        ctx.lineWidth = 1;
+        const corners = [[wL, wT], [wR, wT], [wR, wB], [wL, wB]];
+        for (const [cwx, cwy] of corners) {
+          ctx.beginPath();
+          let started = false;
+          for (const z of steps) {
+            const alpha = Math.max(0, 0.25 * (1 - z / maxZ));
+            if (alpha < 0.005) break;
+            const p = proj(cwx, cwy, z);
+            if (!p) continue;
+            if (!started) {
+              ctx.moveTo(p.x, p.y); started = true;
+              ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+            } else {
+              ctx.lineTo(p.x, p.y);
+            }
+          }
+          ctx.stroke();
+        }
+
+        // ─── Targets (sorted back-to-front) ───
+        const sorted = [...targets].sort((a, b) => b.wz - a.wz);
+
+        for (const tgt of sorted) {
+          const p = proj(tgt.wx, tgt.wy, tgt.wz);
+          if (!p || p.x < -80 || p.x > W + 80 || p.y < -80 || p.y > H + 80) continue;
+
+          const isRed = tgt.red;
+          const color = isRed ? '255,60,60' : '255,255,255';
+
+          // ─── Trail line from target backward into darkness ───
+          const trailSegs = 24;
+          const trailEnd = tgt.wz + 15;
+          for (let i = 0; i < trailSegs; i++) {
+            const f0 = i / trailSegs;
+            const f1 = (i + 1) / trailSegs;
+            const z0 = tgt.wz + (trailEnd - tgt.wz) * f0;
+            const z1 = tgt.wz + (trailEnd - tgt.wz) * f1;
+            const tp0 = proj(tgt.wx, tgt.wy, z0);
+            const tp1 = proj(tgt.wx, tgt.wy, z1);
+            if (!tp0 || !tp1) continue;
+            const a = Math.max(0, 0.35 * (1 - f0));
+            ctx.strokeStyle = `rgba(${color},${a.toFixed(3)})`;
+            ctx.lineWidth = Math.max(0.3, 1.2 * (1 - f0));
+            ctx.beginPath();
+            ctx.moveTo(tp0.x, tp0.y);
+            ctx.lineTo(tp1.x, tp1.y);
+            ctx.stroke();
+          }
+
+          // ─── Target (constant screen size) ───
+          const r = TARGET_R;
+
+          // Outer ring
+          ctx.strokeStyle = `rgba(${color},0.9)`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Inner ring
+          ctx.strokeStyle = `rgba(${color},0.6)`;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, r * 0.5, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Center dot
+          ctx.fillStyle = `rgba(${color},0.95)`;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Crosshair ticks
+          ctx.strokeStyle = `rgba(${color},0.35)`;
+          ctx.lineWidth = 0.8;
+          const g = r * 0.7, g2 = r * 1.4;
+          ctx.beginPath();
+          ctx.moveTo(p.x - g2, p.y); ctx.lineTo(p.x - g, p.y);
+          ctx.moveTo(p.x + g, p.y); ctx.lineTo(p.x + g2, p.y);
+          ctx.moveTo(p.x, p.y - g2); ctx.lineTo(p.x, p.y - g);
+          ctx.moveTo(p.x, p.y + g); ctx.lineTo(p.x, p.y + g2);
+          ctx.stroke();
+        }
+
+        // ─── Front frame: fixed to the screen edge ───
+        ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(1, 1, W - 2, H - 2);
+      }
+    }];
+  }
+
   /* ── RENDER ──────────────────────────────────────── */
   let time = 0;
 
@@ -1111,6 +1346,9 @@
     const lerpFactor = 1 / CFG.SMOOTH;
     smoothX += (faceX - smoothX) * lerpFactor;
     smoothY += (faceY - smoothY) * lerpFactor;
+    // Map face size to Z: ~0.08=far(0), ~0.35=close(1)
+    const rawZ = Math.max(0, Math.min(1, (faceSize - 0.08) / 0.27));
+    smoothZ += (rawZ - smoothZ) * lerpFactor;
 
     // Map face position to offset: center=0, edges=±DEPTH
     // Face coords are mirrored (webcam), so invert X for natural movement
@@ -1131,17 +1369,18 @@
       layer.draw(ctx, W, H, offX, offY, time);
     }
 
-    // Vignette
-    const vigGrad = ctx.createRadialGradient(W / 2, H / 2, W * 0.25, W / 2, H / 2, W * 0.75);
-    vigGrad.addColorStop(0, 'rgba(0,0,0,0)');
-    vigGrad.addColorStop(1, 'rgba(0,0,0,0.5)');
-    ctx.fillStyle = vigGrad;
-    ctx.fillRect(0, 0, W, H);
+    // Vignette + frame (skip for Cube scene — it draws its own)
+    if (activeScene !== 3) {
+      const vigGrad = ctx.createRadialGradient(W / 2, H / 2, W * 0.25, W / 2, H / 2, W * 0.75);
+      vigGrad.addColorStop(0, 'rgba(0,0,0,0)');
+      vigGrad.addColorStop(1, 'rgba(0,0,0,0.5)');
+      ctx.fillStyle = vigGrad;
+      ctx.fillRect(0, 0, W, H);
 
-    // Window frame border
-    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(8, 8, W - 16, H - 16);
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(8, 8, W - 16, H - 16);
+    }
   }
 
   /* ── FACE DETECTION ──────────────────────────────── */
@@ -1172,6 +1411,10 @@
         // Center of face bounding box, normalized 0-1
         faceX = bb.xCenter;
         faceY = bb.yCenter;
+        // Face width as proxy for distance: larger bbox = closer
+        // Typical range: ~0.08 (far) to ~0.4 (close)
+        // Map to 0-1 where 0=far, 1=close
+        faceSize = Math.min(bb.width, bb.height);
         faceDetected = true;
 
         // Update preview dot (mirrored)
@@ -1231,6 +1474,9 @@
   wire('s-smooth', 'v-smooth', v => { CFG.SMOOTH = v; }, v => v);
   wire('s-layers', 'v-layers', v => { CFG.LAYERS = v; }, v => v);
   wire('s-speed', 'v-speed', v => { CFG.SPEED = v / 100; }, v => (v / 100).toFixed(2));
+  wire('s-scaleX', 'v-scaleX', v => { CFG.SCALE_X = v / 100; }, v => (v / 100).toFixed(2));
+  wire('s-scaleY', 'v-scaleY', v => { CFG.SCALE_Y = v / 100; }, v => (v / 100).toFixed(2));
+  wire('s-scaleZ', 'v-scaleZ', v => { CFG.SCALE_Z = v / 100; }, v => (v / 100).toFixed(2));
 
   /* ── FULLSCREEN / HIDE ───────────────────────────── */
   document.getElementById('fp-fs-btn').addEventListener('click', () => {
@@ -1248,10 +1494,16 @@
 
   /* ── MOUSE FALLBACK ──────────────────────────────── */
   // If no face detected, use mouse position as fallback
+  // Scroll wheel controls Z (distance) in mouse mode
   document.addEventListener('mousemove', (e) => {
     if (!faceDetected) {
       faceX = e.clientX / window.innerWidth;
       faceY = e.clientY / window.innerHeight;
+    }
+  });
+  document.addEventListener('wheel', (e) => {
+    if (!faceDetected) {
+      faceSize = Math.max(0.08, Math.min(0.35, faceSize + e.deltaY * -0.0005));
     }
   });
 
