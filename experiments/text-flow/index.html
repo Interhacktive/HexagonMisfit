@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Text Flow — Hexagon Misfit Experiments</title>
+  <meta name="description" content="Text flows around draggable shapes in real time, powered by pretext's variable-width line layout engine." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400&family=Playfair+Display:wght@400;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../css/reset.css" />
+  <link rel="stylesheet" href="../../css/tokens.css" />
+  <link rel="stylesheet" href="../../css/layout.css" />
+  <link rel="stylesheet" href="../../css/components.css" />
+  <link rel="stylesheet" href="../../css/animations.css" />
+
+  <style>
+    /* ── NAV ─────────────────────────────────────────── */
+    .tf-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding-block: var(--space-5);
+      background: rgba(10, 10, 15, 0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .tf-nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .tf-nav-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      text-decoration: none;
+    }
+    .tf-nav-logo img { height: 28px; width: auto; }
+    .tf-nav-right {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+    }
+    .tf-back {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.08em;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .tf-back:hover { color: var(--color-text-primary); }
+    .tf-back svg { width: 12px; height: 12px; }
+
+    /* ── STAGE ───────────────────────────────────────── */
+    .tf-stage {
+      position: relative;
+      width: 100%;
+      min-height: 100vh;
+      background: #080810;
+      overflow: hidden;
+      user-select: none;
+    }
+    .tf-stage:fullscreen, .tf-stage:-webkit-full-screen { border: none; border-radius: 0; }
+
+    canvas#tf-canvas {
+      display: block;
+      width: 100%;
+      height: 100vh;
+    }
+
+    /* ── OVERLAY ─────────────────────────────────────── */
+    .tf-overlay-tl {
+      position: absolute;
+      top: var(--space-5);
+      left: var(--space-5);
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      pointer-events: none;
+      z-index: 10;
+    }
+    .tf-live-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--color-accent-secondary);
+      box-shadow: 0 0 8px rgba(45,212,191,0.7);
+      animation: tf-pulse 2s ease-in-out infinite;
+    }
+    @keyframes tf-pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+    .tf-exp-label {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      color: rgba(152,152,176,0.6);
+    }
+    .tf-theme-picker {
+      display: flex;
+      gap: 6px;
+      pointer-events: auto;
+    }
+    .tf-theme-btn {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.15);
+      cursor: pointer;
+      padding: 0;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .tf-theme-btn:hover { transform: scale(1.4); border-color: rgba(255,255,255,0.5); }
+    .tf-theme-btn.active { border-color: rgba(255,255,255,0.9); transform: scale(1.25); }
+    .tf-theme-btn[data-theme="0"] { background: #6C63FF; }
+    .tf-theme-btn[data-theme="1"] { background: #FF6010; }
+    .tf-theme-btn[data-theme="2"] { background: #00E044; }
+    .tf-theme-btn[data-theme="3"] { background: #50B4FF; }
+    .tf-theme-btn[data-theme="4"] { background: #D232FF; }
+
+    /* ── TOOLBAR ─────────────────────────────────────── */
+    .tf-toolbar {
+      position: absolute;
+      top: var(--space-5);
+      right: var(--space-5);
+      display: flex;
+      gap: 6px;
+      z-index: 12;
+    }
+    .tf-tool-btn {
+      width: 30px; height: 30px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(8,8,16,0.7);
+      backdrop-filter: blur(10px);
+      color: rgba(200,200,220,0.6);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s, color 0.2s;
+      padding: 0;
+    }
+    .tf-tool-btn:hover { border-color: rgba(255,255,255,0.3); color: rgba(240,240,255,0.9); }
+    .tf-tool-btn svg { width: 14px; height: 14px; }
+
+    .tf-stage.ui-hidden .tf-controls,
+    .tf-stage.ui-hidden .tf-overlay-tl,
+    .tf-stage.ui-hidden .tf-toolbar,
+    .tf-stage.ui-hidden .tf-hint,
+    .tf-stage.ui-hidden .tf-shape-bar { opacity: 0; pointer-events: none; }
+    .tf-controls, .tf-overlay-tl, .tf-toolbar, .tf-hint, .tf-shape-bar { transition: opacity 0.3s; }
+
+    /* ── HINT ────────────────────────────────────────── */
+    .tf-hint {
+      position: absolute;
+      bottom: var(--space-5);
+      left: var(--space-5);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.08em;
+      color: rgba(152,152,176,0.4);
+      pointer-events: none;
+      z-index: 10;
+      transition: opacity 0.8s;
+    }
+    .tf-hint.hidden { opacity: 0; }
+
+    /* ── SHAPE BAR ───────────────────────────────────── */
+    .tf-shape-bar {
+      position: absolute;
+      top: 50%;
+      left: var(--space-5);
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 11;
+    }
+    .tf-shape-btn {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(8,8,16,0.7);
+      backdrop-filter: blur(10px);
+      color: rgba(200,200,220,0.6);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+      padding: 0;
+    }
+    .tf-shape-btn:hover { border-color: rgba(255,255,255,0.3); color: rgba(240,240,255,0.9); }
+    .tf-shape-btn.active { border-color: var(--tf-accent, #6C63FF); color: #fff; background: rgba(108,99,255,0.25); }
+    .tf-shape-btn svg { width: 18px; height: 18px; }
+
+    /* ── CONTROLS PANEL ──────────────────────────────── */
+    .tf-controls {
+      position: absolute;
+      bottom: var(--space-5);
+      right: var(--space-5);
+      z-index: 10;
+      background: rgba(8, 8, 16, 0.82);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px;
+      padding: var(--space-4) var(--space-5);
+      min-width: 220px;
+    }
+    .tf-controls-hdr {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(152,152,176,0.5);
+      margin-bottom: var(--space-4);
+    }
+    .tf-slider-row {
+      display: grid;
+      grid-template-columns: 56px 1fr 34px;
+      align-items: center;
+      gap: var(--space-2);
+      margin-bottom: var(--space-3);
+    }
+    .tf-slider-row:last-child { margin-bottom: 0; }
+    .tf-slider-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: rgba(152,152,176,0.65);
+      text-align: right;
+    }
+    .tf-slider-val {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: rgba(240,240,255,0.55);
+      text-align: right;
+      white-space: nowrap;
+    }
+    .tf-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+    .tf-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--tf-accent, #6C63FF);
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 0 6px rgba(108,99,255,0.4);
+    }
+    .tf-slider::-moz-range-thumb {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--tf-accent, #6C63FF);
+      border: none;
+      cursor: pointer;
+    }
+    .tf-select-row {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      align-items: center;
+      gap: var(--space-2);
+      margin-bottom: var(--space-3);
+    }
+    .tf-select {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: rgba(240,240,255,0.8);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 4px;
+      padding: 4px 6px;
+      outline: none;
+      cursor: pointer;
+    }
+    .tf-select option { background: #0a0a14; }
+
+    /* ── INFO SECTION ────────────────────────────────── */
+    .tf-info {
+      padding-block: var(--space-10) var(--space-20);
+      border-top: 1px solid var(--color-border);
+    }
+    .tf-info-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-12);
+      align-items: start;
+    }
+    @media (max-width: 720px) {
+      .tf-info-inner { grid-template-columns: 1fr; gap: var(--space-8); }
+    }
+    .tf-info-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+    .tf-info-num {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.12em;
+      color: var(--color-accent-primary);
+    }
+    .tf-info-num::before {
+      content: '';
+      display: inline-block;
+      width: 20px; height: 1px;
+      background: currentColor;
+      margin-right: var(--space-2);
+      vertical-align: middle;
+    }
+    .tf-info h1 {
+      font-family: var(--font-heading);
+      font-size: clamp(1.75rem, 4vw, 2.75rem);
+      font-weight: 700;
+      line-height: var(--leading-tight);
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-5);
+    }
+    .tf-info p {
+      color: var(--color-text-secondary);
+      line-height: var(--leading-normal);
+      margin-bottom: var(--space-4);
+    }
+    .tf-info-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-top: var(--space-6);
+    }
+    .tf-controls-title {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-5);
+    }
+    .tf-control-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+    .tf-control {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-4);
+    }
+    .tf-control-key {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--radius-sm);
+      background: var(--color-bg-elevated);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-secondary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .tf-control-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: var(--leading-snug);
+    }
+
+    /* ── FOOTER ───────────────────────────────────────── */
+    .tf-footer {
+      border-top: 1px solid var(--color-border);
+      padding-block: var(--space-8);
+    }
+    .tf-footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+    }
+    .tf-footer-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-heading);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-muted);
+      text-decoration: none;
+    }
+    .tf-footer-logo img { height: 22px; width: auto; }
+    .tf-footer-copy {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+    }
+
+    /* ── LOADING ──────────────────────────────────────── */
+    .tf-loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #080810;
+      z-index: 50;
+      transition: opacity 0.4s;
+    }
+    .tf-loading.hidden { opacity: 0; pointer-events: none; }
+    .tf-loading-text {
+      font-family: var(--font-mono);
+      font-size: var(--text-sm);
+      color: rgba(152,152,176,0.6);
+      letter-spacing: 0.1em;
+    }
+    .tf-loading-spinner {
+      width: 24px; height: 24px;
+      border: 2px solid rgba(108,99,255,0.2);
+      border-top-color: #6C63FF;
+      border-radius: 50%;
+      animation: tf-spin 0.8s linear infinite;
+      margin-bottom: var(--space-4);
+    }
+    @keyframes tf-spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ──────────────────────────────────────────── -->
+<nav class="tf-nav">
+  <div class="container">
+    <div class="tf-nav-inner">
+      <a href="../../" class="tf-nav-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <div class="tf-nav-right">
+        <a href="../" class="tf-back">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <path d="M8 1L3 6l5 5"/>
+          </svg>
+          Experiments
+        </a>
+        <a href="../../#contact" class="btn btn-outline">Let's Talk</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ── STAGE ─────────────────────────────────────────── -->
+<div class="tf-stage" id="tf-stage">
+
+  <!-- Loading overlay -->
+  <div class="tf-loading" id="tf-loading">
+    <div class="tf-loading-spinner"></div>
+    <span class="tf-loading-text">loading pretext engine...</span>
+  </div>
+
+  <!-- Canvas -->
+  <canvas id="tf-canvas"></canvas>
+
+  <!-- Top-left overlay -->
+  <div class="tf-overlay-tl">
+    <div class="tf-live-dot"></div>
+    <span class="tf-exp-label">08 / text_flow</span>
+    <div class="tf-theme-picker">
+      <button class="tf-theme-btn active" data-theme="0" title="Nebula"></button>
+      <button class="tf-theme-btn"        data-theme="1" title="Ember"></button>
+      <button class="tf-theme-btn"        data-theme="2" title="Matrix"></button>
+      <button class="tf-theme-btn"        data-theme="3" title="Cyan"></button>
+      <button class="tf-theme-btn"        data-theme="4" title="Violet"></button>
+    </div>
+  </div>
+
+  <!-- Shape tools -->
+  <div class="tf-shape-bar" id="tf-shape-bar">
+    <button class="tf-shape-btn active" data-shape="circle" title="Circle">
+      <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="7"/></svg>
+    </button>
+    <button class="tf-shape-btn" data-shape="hexagon" title="Hexagon">
+      <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="9,1 16,5 16,13 9,17 2,13 2,5"/></svg>
+    </button>
+    <button class="tf-shape-btn" data-shape="rect" title="Rectangle">
+      <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="14" height="12" rx="1"/></svg>
+    </button>
+    <button class="tf-shape-btn" data-shape="diamond" title="Diamond">
+      <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="9,1 17,9 9,17 1,9"/></svg>
+    </button>
+    <button class="tf-shape-btn" data-shape="clear" title="Clear all shapes">
+      <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 4l10 10M14 4L4 14"/></svg>
+    </button>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="tf-toolbar">
+    <button class="tf-tool-btn" id="tf-hide-btn" title="Hide / show UI (H)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
+    </button>
+    <button class="tf-tool-btn" id="tf-fs-btn" title="Fullscreen (F)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>
+    </button>
+  </div>
+
+  <!-- Hint -->
+  <div class="tf-hint" id="tf-hint">click to place shapes &mdash; drag to move them</div>
+
+  <!-- Controls panel -->
+  <div class="tf-controls" id="tf-controls">
+    <p class="tf-controls-hdr">// typography</p>
+
+    <div class="tf-select-row">
+      <span class="tf-slider-label">font</span>
+      <select class="tf-select" id="s-font">
+        <option value="Inter" selected>Inter</option>
+        <option value="Space Grotesk">Space Grotesk</option>
+        <option value="Playfair Display">Playfair Display</option>
+        <option value="Merriweather">Merriweather</option>
+        <option value="Space Mono">Space Mono</option>
+      </select>
+    </div>
+    <div class="tf-slider-row">
+      <span class="tf-slider-label">size</span>
+      <input type="range" class="tf-slider" id="s-size" min="12" max="48" value="18" step="1">
+      <span class="tf-slider-val" id="v-size">18</span>
+    </div>
+    <div class="tf-slider-row">
+      <span class="tf-slider-label">leading</span>
+      <input type="range" class="tf-slider" id="s-leading" min="12" max="36" value="16" step="1">
+      <span class="tf-slider-val" id="v-leading">16</span>
+    </div>
+    <div class="tf-slider-row">
+      <span class="tf-slider-label">margin</span>
+      <input type="range" class="tf-slider" id="s-margin" min="40" max="200" value="80" step="5">
+      <span class="tf-slider-val" id="v-margin">80</span>
+    </div>
+    <div class="tf-slider-row">
+      <span class="tf-slider-label">gap</span>
+      <input type="range" class="tf-slider" id="s-gap" min="0" max="60" value="20" step="2">
+      <span class="tf-slider-val" id="v-gap">20</span>
+    </div>
+    <div class="tf-slider-row">
+      <span class="tf-slider-label">shape r</span>
+      <input type="range" class="tf-slider" id="s-shapeR" min="40" max="250" value="100" step="5">
+      <span class="tf-slider-val" id="v-shapeR">100</span>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ── INFO ─────────────────────────────────────────── -->
+<section class="tf-info">
+  <div class="container">
+    <div class="tf-info-inner">
+
+      <div>
+        <div class="tf-info-meta">
+          <span class="tf-info-num">08</span>
+          <span class="tag tag-teal">LIVE</span>
+        </div>
+        <h1>Text Flow</h1>
+        <p>Real-time text reflow around arbitrary shapes, powered by <a href="https://github.com/chenglou/pretext" style="color:var(--color-accent-primary)">pretext</a> &mdash; a pure-arithmetic text measurement engine that calculates line breaks without touching the DOM.</p>
+        <p>Click the canvas to place shapes, then drag them around. The text reflows instantly on every frame using pretext's variable-width line layout. Each line is measured and broken independently, allowing text to wrap tightly around circles, hexagons, rectangles, and diamonds.</p>
+        <div class="tf-info-tags">
+          <span class="tag">Pretext Engine</span>
+          <span class="tag">Variable-Width Layout</span>
+          <span class="tag">Canvas Rendering</span>
+          <span class="tag">Draggable Shapes</span>
+          <span class="tag">Real-time Reflow</span>
+          <span class="tag">60fps Typography</span>
+        </div>
+      </div>
+
+      <div>
+        <p class="tf-controls-title">// controls</p>
+        <div class="tf-control-list">
+          <div class="tf-control">
+            <span class="tf-control-key">Click</span>
+            <span class="tf-control-desc">Place a shape at cursor position. Select shape type from the left toolbar.</span>
+          </div>
+          <div class="tf-control">
+            <span class="tf-control-key">Drag</span>
+            <span class="tf-control-desc">Move existing shapes. Text reflows in real time as you drag.</span>
+          </div>
+          <div class="tf-control">
+            <span class="tf-control-key">Scroll</span>
+            <span class="tf-control-desc">Resize a shape under the cursor with the mouse wheel.</span>
+          </div>
+          <div class="tf-control">
+            <span class="tf-control-key">Delete</span>
+            <span class="tf-control-desc">Remove the shape under the cursor.</span>
+          </div>
+          <div class="tf-control">
+            <span class="tf-control-key">F</span>
+            <span class="tf-control-desc">Toggle fullscreen mode.</span>
+          </div>
+          <div class="tf-control">
+            <span class="tf-control-key">H</span>
+            <span class="tf-control-desc">Hide / show all UI controls.</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ── FOOTER ────────────────────────────────────────── -->
+<footer class="tf-footer">
+  <div class="container">
+    <div class="tf-footer-inner">
+      <a href="../../" class="tf-footer-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <a href="../" class="tf-back">&larr; All experiments</a>
+      <span class="tf-footer-copy">&copy; <span id="footer-year"></span> Hexagon Misfit</span>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ══════════════════════════════════════════════════
+  TEXT FLOW ENGINE — pretext + canvas
+══════════════════════════════════════════════════ -->
+<script type="module">
+import { prepare, prepareWithSegments, layoutNextLine } from 'https://esm.sh/@chenglou/pretext@0.0.3';
+
+(function () {
+  'use strict';
+
+  /* ── CONFIG ──────────────────────────────────────── */
+  const CFG = {
+    FONT_FAMILY: 'Inter',
+    FONT_SIZE: 18,
+    LINE_HEIGHT: 16,
+    MARGIN: 80,
+    SHAPE_GAP: 20,
+    SHAPE_RADIUS: 100,
+  };
+
+  /* ── THEMES ──────────────────────────────────────── */
+  const THEMES = [
+    { bg: '#080810', text: 'rgba(210,206,255,0.85)', accent: '#6C63FF', shapeFill: 'rgba(108,99,255,0.08)', shapeStroke: 'rgba(108,99,255,0.35)', glowColor: '108,99,255' },
+    { bg: '#0c0806', text: 'rgba(255,220,190,0.85)', accent: '#FF6010', shapeFill: 'rgba(255,96,16,0.08)',  shapeStroke: 'rgba(255,96,16,0.35)',  glowColor: '255,96,16' },
+    { bg: '#040c06', text: 'rgba(160,255,180,0.85)', accent: '#00E044', shapeFill: 'rgba(0,224,68,0.08)',   shapeStroke: 'rgba(0,224,68,0.35)',   glowColor: '0,224,68' },
+    { bg: '#060a10', text: 'rgba(190,230,255,0.85)', accent: '#50B4FF', shapeFill: 'rgba(80,180,255,0.08)', shapeStroke: 'rgba(80,180,255,0.35)', glowColor: '80,180,255' },
+    { bg: '#0a0610', text: 'rgba(240,190,255,0.85)', accent: '#D232FF', shapeFill: 'rgba(210,50,255,0.08)', shapeStroke: 'rgba(210,50,255,0.35)', glowColor: '210,50,255' },
+  ];
+  let activeTheme = 0;
+
+  /* ── SAMPLE TEXT ──────────────────────────────────── */
+  const SAMPLE_TEXT = `Typography is the art and technique of arranging type to make written language legible, readable, and appealing when displayed. The arrangement of type involves selecting typefaces, point sizes, line lengths, line spacing, and letter spacing, and adjusting the space between pairs of letters. The term typography is also applied to the style, arrangement, and appearance of the letters, numbers, and symbols created by the process. Type design is a closely related craft, sometimes considered part of typography; most typographers do not design typefaces, and some type designers do not consider themselves typographers. Typography also may be used as an ornamental and decorative device, unrelated to the communication of information. Typography is the work of typesetters, compositors, typographers, graphic designers, art directors, manga artists, comic book artists, and, now, anyone who arranges words, letters, numbers, and symbols for publication, display, or distribution, from clerical workers and newsletter writers to anyone self-publishing materials. Until the Digital Age, typography was a specialized occupation. Digitization opened up typography to new generations of previously unrelated designers and lay users. As the capability to create typography has become ubiquitous, the application of principles and best practices developed over generations of skilled workers and professionals has diminished. So at a time when scientific techniques can support the proven traditions, an understanding of the googol of options available today, the science behind them, and a్097 sensitivity to their googol googol googol googol proper googol application is more googol relevant than ever. Text reflow is the process of recalculating line breaks when the available width changes — a fundamental operation in every text layout engine. Traditional approaches require DOM measurement, triggering expensive layout reflows in the browser. Pretext solves this by performing all measurement upfront and then using pure arithmetic to calculate line breaks at any width, enabling real-time reflow at 60fps without any DOM interaction. This experiment demonstrates variable-width line layout: each line can have a different available width, allowing text to flow around arbitrary shapes. As you drag shapes across the canvas, every line is recalculated instantly. The shapes carve exclusion zones from the text column, and pretext breaks each line independently using the remaining width. No DOM nodes are created or measured during the animation loop — everything happens in pure JavaScript math and is rendered directly to the canvas.`;
+
+  /* ── SHAPES ──────────────────────────────────────── */
+  let shapes = [];
+  let selectedShapeType = 'circle';
+
+  function shapeHitTest(shape, px, py) {
+    const dx = px - shape.x;
+    const dy = py - shape.y;
+    const r = shape.r;
+    switch (shape.type) {
+      case 'circle': return dx * dx + dy * dy <= r * r;
+      case 'hexagon': {
+        // approximate with circle
+        return dx * dx + dy * dy <= r * r;
+      }
+      case 'rect': return Math.abs(dx) <= r && Math.abs(dy) <= r * 0.75;
+      case 'diamond': return Math.abs(dx) / r + Math.abs(dy) / r <= 1;
+      default: return false;
+    }
+  }
+
+  // Get horizontal exclusion range at a given y for a shape
+  function shapeExclusion(shape, y, gap) {
+    const dy = y - shape.y;
+    const r = shape.r + gap;
+    switch (shape.type) {
+      case 'circle': {
+        if (Math.abs(dy) >= r) return null;
+        const hw = Math.sqrt(r * r - dy * dy);
+        return { left: shape.x - hw, right: shape.x + hw };
+      }
+      case 'hexagon': {
+        // hexagon inscribed in circle
+        const hr = r;
+        if (Math.abs(dy) >= hr * Math.sin(Math.PI / 3)) return null;
+        // approximate as circle for smooth flow
+        if (Math.abs(dy) >= hr) return null;
+        const hw = Math.sqrt(hr * hr - dy * dy);
+        return { left: shape.x - hw, right: shape.x + hw };
+      }
+      case 'rect': {
+        const rh = r * 0.75 + gap;
+        const rw = r + gap;
+        if (Math.abs(dy) >= rh) return null;
+        return { left: shape.x - rw, right: shape.x + rw };
+      }
+      case 'diamond': {
+        const rr = r;
+        if (Math.abs(dy) >= rr) return null;
+        const frac = 1 - Math.abs(dy) / rr;
+        const hw = rr * frac;
+        return { left: shape.x - hw, right: shape.x + hw };
+      }
+      default: return null;
+    }
+  }
+
+  function drawShape(ctx, shape, theme) {
+    ctx.fillStyle = theme.shapeFill;
+    ctx.strokeStyle = theme.shapeStroke;
+    ctx.lineWidth = 1.5;
+    const { x, y, r, type } = shape;
+    ctx.beginPath();
+    switch (type) {
+      case 'circle':
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        break;
+      case 'hexagon':
+        for (let i = 0; i < 6; i++) {
+          const angle = Math.PI / 6 + (Math.PI / 3) * i;
+          const px = x + r * Math.cos(angle);
+          const py = y + r * Math.sin(angle);
+          i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        break;
+      case 'rect':
+        ctx.rect(x - r, y - r * 0.75, r * 2, r * 1.5);
+        break;
+      case 'diamond':
+        ctx.moveTo(x, y - r);
+        ctx.lineTo(x + r, y);
+        ctx.lineTo(x, y + r);
+        ctx.lineTo(x - r, y);
+        ctx.closePath();
+        break;
+    }
+    ctx.fill();
+    ctx.stroke();
+
+    // glow
+    ctx.save();
+    ctx.shadowColor = `rgba(${theme.glowColor}, 0.15)`;
+    ctx.shadowBlur = 20;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /* ── CANVAS SETUP ────────────────────────────────── */
+  const canvas = document.getElementById('tf-canvas');
+  const ctx = canvas.getContext('2d');
+  const stage = document.getElementById('tf-stage');
+  let W, H, dpr;
+
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    W = rect.width;
+    H = rect.height;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  /* ── PRETEXT STATE ───────────────────────────────── */
+  let prepared = null;
+
+  function rebuildText() {
+    const fontStr = `${CFG.FONT_SIZE}px '${CFG.FONT_FAMILY}'`;
+    try {
+      prepared = prepareWithSegments(SAMPLE_TEXT, fontStr, { whiteSpace: 'normal' });
+    } catch (e) {
+      console.warn('pretext prepare failed, retrying...', e);
+      prepared = null;
+    }
+  }
+
+  /* ── LAYOUT + RENDER ─────────────────────────────── */
+  function render() {
+    const theme = THEMES[activeTheme];
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = theme.bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Draw shapes
+    for (const shape of shapes) {
+      drawShape(ctx, shape, theme);
+    }
+
+    if (!prepared) return;
+
+    const margin = CFG.MARGIN;
+    const lineH = CFG.FONT_SIZE + CFG.LINE_HEIGHT;
+    const gap = CFG.SHAPE_GAP;
+    const colLeft = margin;
+    const colRight = W - margin;
+    const colWidth = colRight - colLeft;
+
+    if (colWidth <= 20) return;
+
+    ctx.font = `${CFG.FONT_SIZE}px '${CFG.FONT_FAMILY}'`;
+    ctx.fillStyle = theme.text;
+    ctx.textBaseline = 'top';
+
+    let y = margin;
+    let cursor = { segmentIndex: 0, graphemeIndex: 0 };
+
+    while (y + lineH < H + lineH && cursor) {
+      const lineCenterY = y + CFG.FONT_SIZE * 0.5;
+
+      // Calculate exclusions at this line's y
+      let lineLeft = colLeft;
+      let lineRight = colRight;
+      let exclusions = [];
+
+      for (const shape of shapes) {
+        const ex = shapeExclusion(shape, lineCenterY, gap);
+        if (ex) exclusions.push(ex);
+      }
+
+      // Sort exclusions by left edge
+      exclusions.sort((a, b) => a.left - b.left);
+
+      // Find the widest available spans
+      // For simplicity, handle: no exclusions, single exclusion splitting the line,
+      // or exclusion cutting from left/right
+      let spans = [];
+      let curLeft = colLeft;
+      for (const ex of exclusions) {
+        if (ex.left > curLeft) {
+          spans.push({ left: curLeft, right: Math.min(ex.left, colRight) });
+        }
+        curLeft = Math.max(curLeft, ex.right);
+      }
+      if (curLeft < colRight) {
+        spans.push({ left: curLeft, right: colRight });
+      }
+
+      if (spans.length === 0) {
+        // Line fully blocked — skip
+        y += lineH;
+        continue;
+      }
+
+      // Render text in each span on this line
+      let advancedCursor = false;
+      for (const span of spans) {
+        if (!cursor) break;
+        const spanWidth = span.right - span.left;
+        if (spanWidth < CFG.FONT_SIZE) continue;
+
+        const line = layoutNextLine(prepared, cursor, spanWidth);
+        if (!line) { cursor = null; break; }
+
+        ctx.fillText(line.text, span.left, y);
+        cursor = line.end;
+        advancedCursor = true;
+      }
+
+      if (!advancedCursor && cursor) {
+        // All spans too narrow; skip line
+        y += lineH;
+        continue;
+      }
+
+      y += lineH;
+    }
+  }
+
+  /* ── INTERACTION ─────────────────────────────────── */
+  let dragging = null;
+  let dragOffX = 0, dragOffY = 0;
+  let mouseX = -1, mouseY = -1;
+  let hintHidden = false;
+
+  function canvasXY(e) {
+    const rect = canvas.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    const { x, y } = canvasXY(e);
+
+    // Check if clicking on an existing shape
+    for (let i = shapes.length - 1; i >= 0; i--) {
+      if (shapeHitTest(shapes[i], x, y)) {
+        dragging = shapes[i];
+        dragOffX = x - shapes[i].x;
+        dragOffY = y - shapes[i].y;
+        canvas.setPointerCapture(e.pointerId);
+        return;
+      }
+    }
+
+    // Place new shape
+    if (selectedShapeType !== 'clear') {
+      shapes.push({ type: selectedShapeType, x, y, r: CFG.SHAPE_RADIUS });
+      if (!hintHidden) {
+        document.getElementById('tf-hint').classList.add('hidden');
+        hintHidden = true;
+      }
+    }
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    const { x, y } = canvasXY(e);
+    mouseX = x;
+    mouseY = y;
+    if (dragging) {
+      dragging.x = x - dragOffX;
+      dragging.y = y - dragOffY;
+    }
+  });
+
+  canvas.addEventListener('pointerup', () => { dragging = null; });
+  canvas.addEventListener('pointercancel', () => { dragging = null; });
+
+  // Scroll to resize shape
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    for (let i = shapes.length - 1; i >= 0; i--) {
+      if (shapeHitTest(shapes[i], mouseX, mouseY)) {
+        shapes[i].r = Math.max(20, Math.min(300, shapes[i].r - e.deltaY * 0.3));
+        break;
+      }
+    }
+  }, { passive: false });
+
+  // Delete key removes shape under cursor
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      for (let i = shapes.length - 1; i >= 0; i--) {
+        if (shapeHitTest(shapes[i], mouseX, mouseY)) {
+          shapes.splice(i, 1);
+          break;
+        }
+      }
+    }
+    if (e.key === 'f' || e.key === 'F') document.getElementById('tf-fs-btn').click();
+    if (e.key === 'h' || e.key === 'H') document.getElementById('tf-hide-btn').click();
+  });
+
+  /* ── SHAPE TOOLBAR ───────────────────────────────── */
+  document.querySelectorAll('.tf-shape-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const shape = btn.dataset.shape;
+      if (shape === 'clear') {
+        shapes = [];
+        return;
+      }
+      selectedShapeType = shape;
+      document.querySelectorAll('.tf-shape-btn').forEach(b => b.classList.toggle('active', b === btn));
+    });
+  });
+
+  /* ── THEME PICKER ────────────────────────────────── */
+  function applyTheme(idx) {
+    activeTheme = idx;
+    document.documentElement.style.setProperty('--tf-accent', THEMES[idx].accent);
+    document.querySelectorAll('.tf-theme-btn').forEach(btn => {
+      btn.classList.toggle('active', +btn.dataset.theme === idx);
+    });
+  }
+  document.querySelectorAll('.tf-theme-btn').forEach(btn => {
+    btn.addEventListener('click', () => applyTheme(+btn.dataset.theme));
+  });
+
+  /* ── SLIDERS ─────────────────────────────────────── */
+  function wire(id, valId, setter, display) {
+    const input = document.getElementById(id);
+    const valEl = document.getElementById(valId);
+    input.addEventListener('input', () => {
+      setter(+input.value);
+      valEl.textContent = display(+input.value);
+      rebuildText();
+    });
+  }
+  wire('s-size', 'v-size', v => { CFG.FONT_SIZE = v; }, v => v);
+  wire('s-leading', 'v-leading', v => { CFG.LINE_HEIGHT = v; }, v => v);
+  wire('s-margin', 'v-margin', v => { CFG.MARGIN = v; }, v => v);
+  wire('s-gap', 'v-gap', v => { CFG.SHAPE_GAP = v; }, v => v);
+  wire('s-shapeR', 'v-shapeR', v => { CFG.SHAPE_RADIUS = v; }, v => v);
+
+  document.getElementById('s-font').addEventListener('change', (e) => {
+    CFG.FONT_FAMILY = e.target.value;
+    rebuildText();
+  });
+
+  /* ── FULLSCREEN / HIDE ───────────────────────────── */
+  document.getElementById('tf-fs-btn').addEventListener('click', () => {
+    if (!document.fullscreenElement) stage.requestFullscreen().catch(() => {});
+    else document.exitFullscreen();
+  });
+  document.getElementById('tf-hide-btn').addEventListener('click', () => {
+    stage.classList.toggle('ui-hidden');
+  });
+
+  /* ── RESIZE ──────────────────────────────────────── */
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => { resize(); rebuildText(); }, 80);
+  });
+
+  /* ── ANIMATION LOOP ──────────────────────────────── */
+  function tick() {
+    requestAnimationFrame(tick);
+    render();
+  }
+
+  /* ── INIT ────────────────────────────────────────── */
+  async function init() {
+    resize();
+
+    // Wait for fonts to load
+    await document.fonts.ready;
+
+    rebuildText();
+
+    // Place a default circle
+    shapes.push({ type: 'circle', x: W * 0.5, y: H * 0.4, r: 100 });
+
+    document.getElementById('tf-loading').classList.add('hidden');
+    document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+    tick();
+  }
+
+  init();
+
+})();
+</script>
+
+</body>
+</html>

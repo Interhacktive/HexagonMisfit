@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#080810" />
+  <title>Text Flow</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400&family=Playfair+Display:wght@400;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #080810;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* safe-area for notched phones */
+    body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+
+    .stage {
+      position: fixed;
+      inset: 0;
+      background: #080810;
+      overflow: hidden;
+    }
+    canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+
+    /* ── OVERLAY ─────────────────────────────────── */
+    .overlay-tl {
+      position: absolute;
+      top: max(12px, env(safe-area-inset-top, 12px));
+      left: max(12px, env(safe-area-inset-left, 12px));
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .live-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #2dd4bf;
+      box-shadow: 0 0 8px rgba(45,212,191,0.7);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+    .exp-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: rgba(152,152,176,0.6);
+    }
+    .theme-picker {
+      display: flex;
+      gap: 6px;
+      pointer-events: auto;
+    }
+    .theme-btn {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.15);
+      cursor: pointer;
+      padding: 0;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .theme-btn:hover, .theme-btn:active { transform: scale(1.4); border-color: rgba(255,255,255,0.5); }
+    .theme-btn.active { border-color: rgba(255,255,255,0.9); transform: scale(1.25); }
+    .theme-btn[data-theme="0"] { background: #6C63FF; }
+    .theme-btn[data-theme="1"] { background: #FF6010; }
+    .theme-btn[data-theme="2"] { background: #00E044; }
+    .theme-btn[data-theme="3"] { background: #50B4FF; }
+    .theme-btn[data-theme="4"] { background: #D232FF; }
+
+    /* ── TOOLBAR ──────────────────────────────────── */
+    .toolbar {
+      position: absolute;
+      top: max(12px, env(safe-area-inset-top, 12px));
+      right: max(12px, env(safe-area-inset-right, 12px));
+      display: flex;
+      gap: 6px;
+      z-index: 12;
+    }
+    .tool-btn {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(8,8,16,0.7);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: rgba(200,200,220,0.6);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s, color 0.2s;
+      padding: 0;
+    }
+    .tool-btn:hover, .tool-btn:active { border-color: rgba(255,255,255,0.3); color: rgba(240,240,255,0.9); }
+    .tool-btn svg { width: 16px; height: 16px; }
+
+    /* ── SHAPE BAR ────────────────────────────────── */
+    .shape-bar {
+      position: absolute;
+      bottom: max(20px, env(safe-area-inset-bottom, 20px));
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      padding: 8px 12px;
+      background: rgba(8,8,16,0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      z-index: 11;
+    }
+    .shape-btn {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: transparent;
+      color: rgba(200,200,220,0.6);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+      padding: 0;
+    }
+    .shape-btn:active { transform: scale(0.92); }
+    .shape-btn.active { border-color: var(--accent, #6C63FF); color: #fff; background: rgba(108,99,255,0.25); }
+    .shape-btn svg { width: 20px; height: 20px; }
+
+    /* ── CONTROLS PANEL ──────────────────────────── */
+    .controls {
+      position: absolute;
+      top: max(56px, calc(env(safe-area-inset-top, 12px) + 44px));
+      right: max(12px, env(safe-area-inset-right, 12px));
+      z-index: 10;
+      background: rgba(8, 8, 16, 0.82);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px;
+      padding: 12px 16px;
+      min-width: 200px;
+    }
+    .controls-hdr {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(152,152,176,0.5);
+      margin-bottom: 12px;
+    }
+    .slider-row {
+      display: grid;
+      grid-template-columns: 50px 1fr 30px;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .slider-row:last-child { margin-bottom: 0; }
+    .slider-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: rgba(152,152,176,0.65);
+      text-align: right;
+    }
+    .slider-val {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: rgba(240,240,255,0.55);
+      text-align: right;
+      white-space: nowrap;
+    }
+    .slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--accent, #6C63FF);
+      border: none;
+      cursor: pointer;
+    }
+    .slider::-moz-range-thumb {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--accent, #6C63FF);
+      border: none;
+      cursor: pointer;
+    }
+    .select-row {
+      display: grid;
+      grid-template-columns: 50px 1fr;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .font-select {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: rgba(240,240,255,0.8);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 4px;
+      padding: 6px;
+      outline: none;
+      cursor: pointer;
+    }
+    .font-select option { background: #0a0a14; }
+
+    /* ── HINT ─────────────────────────────────────── */
+    .hint {
+      position: absolute;
+      bottom: max(80px, calc(env(safe-area-inset-bottom, 20px) + 64px));
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: rgba(152,152,176,0.4);
+      pointer-events: none;
+      z-index: 10;
+      white-space: nowrap;
+      transition: opacity 0.8s;
+    }
+    .hint.hidden { opacity: 0; }
+
+    /* ── LOADING ──────────────────────────────────── */
+    .loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #080810;
+      z-index: 50;
+      transition: opacity 0.4s;
+    }
+    .loading.hidden { opacity: 0; pointer-events: none; }
+    .loading-text {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      color: rgba(152,152,176,0.6);
+      letter-spacing: 0.1em;
+    }
+    .loading-spinner {
+      width: 24px; height: 24px;
+      border: 2px solid rgba(108,99,255,0.2);
+      border-top-color: #6C63FF;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── UI HIDE STATE ────────────────────────────── */
+    .stage.ui-hidden .controls,
+    .stage.ui-hidden .overlay-tl,
+    .stage.ui-hidden .toolbar,
+    .stage.ui-hidden .hint,
+    .stage.ui-hidden .shape-bar { opacity: 0; pointer-events: none; }
+    .controls, .overlay-tl, .toolbar, .hint, .shape-bar { transition: opacity 0.3s; }
+  </style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+
+  <div class="loading" id="loading">
+    <div class="loading-spinner"></div>
+    <span class="loading-text">loading pretext engine...</span>
+  </div>
+
+  <canvas id="canvas"></canvas>
+
+  <!-- Top-left overlay -->
+  <div class="overlay-tl">
+    <div class="live-dot"></div>
+    <span class="exp-label">text_flow</span>
+    <div class="theme-picker">
+      <button class="theme-btn active" data-theme="0" title="Nebula"></button>
+      <button class="theme-btn"        data-theme="1" title="Ember"></button>
+      <button class="theme-btn"        data-theme="2" title="Matrix"></button>
+      <button class="theme-btn"        data-theme="3" title="Cyan"></button>
+      <button class="theme-btn"        data-theme="4" title="Violet"></button>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <button class="tool-btn" id="hide-btn" title="Hide UI (H)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
+    </button>
+    <button class="tool-btn" id="fs-btn" title="Fullscreen (F)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>
+    </button>
+  </div>
+
+  <!-- Hint -->
+  <div class="hint" id="hint">tap to place shapes &mdash; drag to move</div>
+
+  <!-- Shape bar (bottom, phone-friendly) -->
+  <div class="shape-bar" id="shape-bar">
+    <button class="shape-btn active" data-shape="circle" title="Circle">
+      <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="7"/></svg>
+    </button>
+    <button class="shape-btn" data-shape="hexagon" title="Hexagon">
+      <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="9,1 16,5 16,13 9,17 2,13 2,5"/></svg>
+    </button>
+    <button class="shape-btn" data-shape="rect" title="Rectangle">
+      <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="14" height="12" rx="1"/></svg>
+    </button>
+    <button class="shape-btn" data-shape="diamond" title="Diamond">
+      <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="9,1 17,9 9,17 1,9"/></svg>
+    </button>
+    <button class="shape-btn" data-shape="clear" title="Clear all">
+      <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 4l10 10M14 4L4 14"/></svg>
+    </button>
+  </div>
+
+  <!-- Controls panel -->
+  <div class="controls" id="controls">
+    <p class="controls-hdr">// typography</p>
+    <div class="select-row">
+      <span class="slider-label">font</span>
+      <select class="font-select" id="s-font">
+        <option value="Inter" selected>Inter</option>
+        <option value="Space Grotesk">Space Grotesk</option>
+        <option value="Playfair Display">Playfair Display</option>
+        <option value="Merriweather">Merriweather</option>
+        <option value="Space Mono">Space Mono</option>
+      </select>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">size</span>
+      <input type="range" class="slider" id="s-size" min="12" max="48" value="18" step="1">
+      <span class="slider-val" id="v-size">18</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">leading</span>
+      <input type="range" class="slider" id="s-leading" min="12" max="36" value="16" step="1">
+      <span class="slider-val" id="v-leading">16</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">margin</span>
+      <input type="range" class="slider" id="s-margin" min="20" max="120" value="40" step="5">
+      <span class="slider-val" id="v-margin">40</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">gap</span>
+      <input type="range" class="slider" id="s-gap" min="0" max="60" value="20" step="2">
+      <span class="slider-val" id="v-gap">20</span>
+    </div>
+    <div class="slider-row">
+      <span class="slider-label">shape r</span>
+      <input type="range" class="slider" id="s-shapeR" min="30" max="200" value="80" step="5">
+      <span class="slider-val" id="v-shapeR">80</span>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+import { prepareWithSegments, layoutNextLine } from 'https://esm.sh/@chenglou/pretext@0.0.3';
+
+(function () {
+  'use strict';
+
+  /* ── CONFIG ──────────────────────────────────────── */
+  const CFG = {
+    FONT_FAMILY: 'Inter',
+    FONT_SIZE: 18,
+    LINE_HEIGHT: 16,
+    MARGIN: 40,
+    SHAPE_GAP: 20,
+    SHAPE_RADIUS: 80,
+  };
+
+  /* ── THEMES ──────────────────────────────────────── */
+  const THEMES = [
+    { bg: '#080810', text: 'rgba(210,206,255,0.85)', accent: '#6C63FF', shapeFill: 'rgba(108,99,255,0.08)', shapeStroke: 'rgba(108,99,255,0.35)', glowColor: '108,99,255' },
+    { bg: '#0c0806', text: 'rgba(255,220,190,0.85)', accent: '#FF6010', shapeFill: 'rgba(255,96,16,0.08)',  shapeStroke: 'rgba(255,96,16,0.35)',  glowColor: '255,96,16' },
+    { bg: '#040c06', text: 'rgba(160,255,180,0.85)', accent: '#00E044', shapeFill: 'rgba(0,224,68,0.08)',   shapeStroke: 'rgba(0,224,68,0.35)',   glowColor: '0,224,68' },
+    { bg: '#060a10', text: 'rgba(190,230,255,0.85)', accent: '#50B4FF', shapeFill: 'rgba(80,180,255,0.08)', shapeStroke: 'rgba(80,180,255,0.35)', glowColor: '80,180,255' },
+    { bg: '#0a0610', text: 'rgba(240,190,255,0.85)', accent: '#D232FF', shapeFill: 'rgba(210,50,255,0.08)', shapeStroke: 'rgba(210,50,255,0.35)', glowColor: '210,50,255' },
+  ];
+  let activeTheme = 0;
+
+  /* ── SAMPLE TEXT ──────────────────────────────────── */
+  const SAMPLE_TEXT = `Typography is the art and technique of arranging type to make written language legible, readable, and appealing when displayed. The arrangement of type involves selecting typefaces, point sizes, line lengths, line spacing, and letter spacing, and adjusting the space between pairs of letters. The term typography is also applied to the style, arrangement, and appearance of the letters, numbers, and symbols created by the process. Type design is a closely related craft, sometimes considered part of typography; most typographers do not design typefaces, and some type designers do not consider themselves typographers. Typography also may be used as an ornamental and decorative device, unrelated to the communication of information. Typography is the work of typesetters, compositors, typographers, graphic designers, art directors, manga artists, comic book artists, and, now, anyone who arranges words, letters, numbers, and symbols for publication, display, or distribution, from clerical workers and newsletter writers to anyone self-publishing materials. Until the Digital Age, typography was a specialized occupation. Digitization opened up typography to new generations of previously unrelated designers and lay users. As the capability to create typography has become ubiquitous, the application of principles and best practices developed over generations of skilled workers and professionals has diminished. Text reflow is the process of recalculating line breaks when the available width changes. Traditional approaches require DOM measurement, triggering expensive layout reflows in the browser. Pretext solves this by performing all measurement upfront and then using pure arithmetic to calculate line breaks at any width, enabling real-time reflow at 60fps without any DOM interaction. This experiment demonstrates variable-width line layout: each line can have a different available width, allowing text to flow around arbitrary shapes. As you drag shapes across the canvas, every line is recalculated instantly. The shapes carve exclusion zones from the text column, and pretext breaks each line independently using the remaining width. No DOM nodes are created or measured during the animation loop — everything happens in pure JavaScript math and is rendered directly to the canvas.`;
+
+  /* ── SHAPES ──────────────────────────────────────── */
+  let shapes = [];
+  let selectedShapeType = 'circle';
+
+  function shapeHitTest(shape, px, py) {
+    const dx = px - shape.x;
+    const dy = py - shape.y;
+    const r = shape.r;
+    switch (shape.type) {
+      case 'circle': return dx * dx + dy * dy <= r * r;
+      case 'hexagon': return dx * dx + dy * dy <= r * r;
+      case 'rect': return Math.abs(dx) <= r && Math.abs(dy) <= r * 0.75;
+      case 'diamond': return Math.abs(dx) / r + Math.abs(dy) / r <= 1;
+      default: return false;
+    }
+  }
+
+  function shapeExclusion(shape, y, gap) {
+    const dy = y - shape.y;
+    const r = shape.r + gap;
+    switch (shape.type) {
+      case 'circle': {
+        if (Math.abs(dy) >= r) return null;
+        const hw = Math.sqrt(r * r - dy * dy);
+        return { left: shape.x - hw, right: shape.x + hw };
+      }
+      case 'hexagon': {
+        if (Math.abs(dy) >= r) return null;
+        const hw = Math.sqrt(r * r - dy * dy);
+        return { left: shape.x - hw, right: shape.x + hw };
+      }
+      case 'rect': {
+        const rh = r * 0.75 + gap;
+        const rw = r + gap;
+        if (Math.abs(dy) >= rh) return null;
+        return { left: shape.x - rw, right: shape.x + rw };
+      }
+      case 'diamond': {
+        if (Math.abs(dy) >= r) return null;
+        const frac = 1 - Math.abs(dy) / r;
+        const hw = r * frac;
+        return { left: shape.x - hw, right: shape.x + hw };
+      }
+      default: return null;
+    }
+  }
+
+  function drawShape(ctx, shape, theme) {
+    ctx.fillStyle = theme.shapeFill;
+    ctx.strokeStyle = theme.shapeStroke;
+    ctx.lineWidth = 1.5;
+    const { x, y, r, type } = shape;
+    ctx.beginPath();
+    switch (type) {
+      case 'circle':
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        break;
+      case 'hexagon':
+        for (let i = 0; i < 6; i++) {
+          const angle = Math.PI / 6 + (Math.PI / 3) * i;
+          const px = x + r * Math.cos(angle);
+          const py = y + r * Math.sin(angle);
+          i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        break;
+      case 'rect':
+        ctx.rect(x - r, y - r * 0.75, r * 2, r * 1.5);
+        break;
+      case 'diamond':
+        ctx.moveTo(x, y - r);
+        ctx.lineTo(x + r, y);
+        ctx.lineTo(x, y + r);
+        ctx.lineTo(x - r, y);
+        ctx.closePath();
+        break;
+    }
+    ctx.fill();
+    ctx.stroke();
+    ctx.save();
+    ctx.shadowColor = `rgba(${theme.glowColor}, 0.15)`;
+    ctx.shadowBlur = 20;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /* ── CANVAS SETUP ────────────────────────────────── */
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const stage = document.getElementById('stage');
+  let W, H, dpr;
+
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  /* ── PRETEXT STATE ───────────────────────────────── */
+  let prepared = null;
+
+  function rebuildText() {
+    const fontStr = `${CFG.FONT_SIZE}px '${CFG.FONT_FAMILY}'`;
+    try {
+      prepared = prepareWithSegments(SAMPLE_TEXT, fontStr, { whiteSpace: 'normal' });
+    } catch (e) {
+      console.warn('pretext prepare failed', e);
+      prepared = null;
+    }
+  }
+
+  /* ── LAYOUT + RENDER ─────────────────────────────── */
+  function render() {
+    const theme = THEMES[activeTheme];
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = theme.bg;
+    ctx.fillRect(0, 0, W, H);
+
+    for (const shape of shapes) drawShape(ctx, shape, theme);
+
+    if (!prepared) return;
+
+    const margin = CFG.MARGIN;
+    const lineH = CFG.FONT_SIZE + CFG.LINE_HEIGHT;
+    const gap = CFG.SHAPE_GAP;
+    const colLeft = margin;
+    const colRight = W - margin;
+    if (colRight - colLeft <= 20) return;
+
+    ctx.font = `${CFG.FONT_SIZE}px '${CFG.FONT_FAMILY}'`;
+    ctx.fillStyle = theme.text;
+    ctx.textBaseline = 'top';
+
+    let y = margin;
+    let cursor = { segmentIndex: 0, graphemeIndex: 0 };
+
+    while (y + lineH < H + lineH && cursor) {
+      const lineCenterY = y + CFG.FONT_SIZE * 0.5;
+      let exclusions = [];
+      for (const shape of shapes) {
+        const ex = shapeExclusion(shape, lineCenterY, gap);
+        if (ex) exclusions.push(ex);
+      }
+      exclusions.sort((a, b) => a.left - b.left);
+
+      let spans = [];
+      let curLeft = colLeft;
+      for (const ex of exclusions) {
+        if (ex.left > curLeft) spans.push({ left: curLeft, right: Math.min(ex.left, colRight) });
+        curLeft = Math.max(curLeft, ex.right);
+      }
+      if (curLeft < colRight) spans.push({ left: curLeft, right: colRight });
+
+      if (spans.length === 0) { y += lineH; continue; }
+
+      let advancedCursor = false;
+      for (const span of spans) {
+        if (!cursor) break;
+        const spanWidth = span.right - span.left;
+        if (spanWidth < CFG.FONT_SIZE) continue;
+        const line = layoutNextLine(prepared, cursor, spanWidth);
+        if (!line) { cursor = null; break; }
+        ctx.fillText(line.text, span.left, y);
+        cursor = line.end;
+        advancedCursor = true;
+      }
+
+      if (!advancedCursor && cursor) { y += lineH; continue; }
+      y += lineH;
+    }
+  }
+
+  /* ── INTERACTION (touch + mouse) ─────────────────── */
+  let dragging = null;
+  let dragOffX = 0, dragOffY = 0;
+  let mouseX = -1, mouseY = -1;
+  let hintHidden = false;
+
+  function canvasXY(e) {
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches ? e.touches[0] || e.changedTouches[0] : e;
+    return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    const { x, y } = canvasXY(e);
+    for (let i = shapes.length - 1; i >= 0; i--) {
+      if (shapeHitTest(shapes[i], x, y)) {
+        dragging = shapes[i];
+        dragOffX = x - shapes[i].x;
+        dragOffY = y - shapes[i].y;
+        canvas.setPointerCapture(e.pointerId);
+        return;
+      }
+    }
+    if (selectedShapeType !== 'clear') {
+      shapes.push({ type: selectedShapeType, x, y, r: CFG.SHAPE_RADIUS });
+      if (!hintHidden) {
+        document.getElementById('hint').classList.add('hidden');
+        hintHidden = true;
+      }
+    }
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    const { x, y } = canvasXY(e);
+    mouseX = x; mouseY = y;
+    if (dragging) {
+      dragging.x = x - dragOffX;
+      dragging.y = y - dragOffY;
+    }
+  });
+
+  canvas.addEventListener('pointerup', () => { dragging = null; });
+  canvas.addEventListener('pointercancel', () => { dragging = null; });
+
+  // Pinch-to-resize on shapes (two-finger gesture)
+  let lastPinchDist = 0;
+  let pinchShape = null;
+  canvas.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      lastPinchDist = Math.sqrt(dx * dx + dy * dy);
+      const mx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const my = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      const rect = canvas.getBoundingClientRect();
+      const px = mx - rect.left, py = my - rect.top;
+      pinchShape = null;
+      for (let i = shapes.length - 1; i >= 0; i--) {
+        if (shapeHitTest(shapes[i], px, py)) { pinchShape = shapes[i]; break; }
+      }
+    }
+  }, { passive: true });
+
+  canvas.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2 && pinchShape) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const delta = dist - lastPinchDist;
+      pinchShape.r = Math.max(20, Math.min(300, pinchShape.r + delta * 0.5));
+      lastPinchDist = dist;
+    }
+  }, { passive: true });
+
+  canvas.addEventListener('touchend', () => { pinchShape = null; }, { passive: true });
+
+  // Mouse wheel to resize
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    for (let i = shapes.length - 1; i >= 0; i--) {
+      if (shapeHitTest(shapes[i], mouseX, mouseY)) {
+        shapes[i].r = Math.max(20, Math.min(300, shapes[i].r - e.deltaY * 0.3));
+        break;
+      }
+    }
+  }, { passive: false });
+
+  // Keyboard
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      for (let i = shapes.length - 1; i >= 0; i--) {
+        if (shapeHitTest(shapes[i], mouseX, mouseY)) { shapes.splice(i, 1); break; }
+      }
+    }
+    if (e.key === 'f' || e.key === 'F') document.getElementById('fs-btn').click();
+    if (e.key === 'h' || e.key === 'H') document.getElementById('hide-btn').click();
+  });
+
+  /* ── SHAPE BAR ───────────────────────────────────── */
+  document.querySelectorAll('.shape-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const shape = btn.dataset.shape;
+      if (shape === 'clear') { shapes = []; return; }
+      selectedShapeType = shape;
+      document.querySelectorAll('.shape-btn').forEach(b => b.classList.toggle('active', b === btn));
+    });
+  });
+
+  /* ── THEME PICKER ────────────────────────────────── */
+  function applyTheme(idx) {
+    activeTheme = idx;
+    document.documentElement.style.setProperty('--accent', THEMES[idx].accent);
+    document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.toggle('active', +btn.dataset.theme === idx));
+  }
+  document.querySelectorAll('.theme-btn').forEach(btn => {
+    btn.addEventListener('click', () => applyTheme(+btn.dataset.theme));
+  });
+
+  /* ── SLIDERS ─────────────────────────────────────── */
+  function wire(id, valId, setter, display) {
+    const input = document.getElementById(id);
+    const valEl = document.getElementById(valId);
+    input.addEventListener('input', () => {
+      setter(+input.value);
+      valEl.textContent = display(+input.value);
+      rebuildText();
+    });
+  }
+  wire('s-size', 'v-size', v => { CFG.FONT_SIZE = v; }, v => v);
+  wire('s-leading', 'v-leading', v => { CFG.LINE_HEIGHT = v; }, v => v);
+  wire('s-margin', 'v-margin', v => { CFG.MARGIN = v; }, v => v);
+  wire('s-gap', 'v-gap', v => { CFG.SHAPE_GAP = v; }, v => v);
+  wire('s-shapeR', 'v-shapeR', v => { CFG.SHAPE_RADIUS = v; }, v => v);
+  document.getElementById('s-font').addEventListener('change', (e) => {
+    CFG.FONT_FAMILY = e.target.value;
+    rebuildText();
+  });
+
+  /* ── FULLSCREEN / HIDE ───────────────────────────── */
+  document.getElementById('fs-btn').addEventListener('click', () => {
+    if (!document.fullscreenElement) stage.requestFullscreen().catch(() => {});
+    else document.exitFullscreen();
+  });
+  document.getElementById('hide-btn').addEventListener('click', () => {
+    stage.classList.toggle('ui-hidden');
+  });
+
+  /* ── RESIZE ──────────────────────────────────────── */
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => { resize(); rebuildText(); }, 80);
+  });
+
+  /* ── ANIMATION LOOP ──────────────────────────────── */
+  function tick() { requestAnimationFrame(tick); render(); }
+
+  /* ── INIT ────────────────────────────────────────── */
+  async function init() {
+    resize();
+    await document.fonts.ready;
+    rebuildText();
+    shapes.push({ type: 'circle', x: W * 0.5, y: H * 0.4, r: CFG.SHAPE_RADIUS });
+    document.getElementById('loading').classList.add('hidden');
+    tick();
+  }
+
+  /* ── SERVICE WORKER ──────────────────────────────── */
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+
+  init();
+
+})();
+</script>
+
+</body>
+</html>
