@@ -577,6 +577,11 @@
       <input type="range" class="fp-slider" id="s-scaleZ" min="10" max="300" value="100" step="5">
       <span class="fp-slider-val" id="v-scaleZ">1.00</span>
     </div>
+    <div style="display:flex;gap:6px;margin-top:4px;">
+      <button class="fp-invert-btn" id="inv-x" style="flex:1;padding:4px 0;font-family:var(--font-mono);font-size:9px;letter-spacing:0.06em;color:rgba(200,200,220,0.5);background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:4px;cursor:pointer;transition:all 0.2s;">inv X</button>
+      <button class="fp-invert-btn" id="inv-y" style="flex:1;padding:4px 0;font-family:var(--font-mono);font-size:9px;letter-spacing:0.06em;color:rgba(200,200,220,0.5);background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:4px;cursor:pointer;transition:all 0.2s;">inv Y</button>
+      <button class="fp-invert-btn" id="inv-z" style="flex:1;padding:4px 0;font-family:var(--font-mono);font-size:9px;letter-spacing:0.06em;color:rgba(200,200,220,0.5);background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:4px;cursor:pointer;transition:all 0.2s;">inv Z</button>
+    </div>
   </div>
 
 </div>
@@ -670,6 +675,9 @@
     SCALE_X: 1.0,
     SCALE_Y: 1.0,
     SCALE_Z: 1.0,
+    INVERT_X: false,
+    INVERT_Y: false,
+    INVERT_Z: false,
   };
 
   /* ── FACE STATE ──────────────────────────────────── */
@@ -1152,9 +1160,9 @@
         // At wz=0: px=wx, py=wy → front frame NEVER moves.
         // At wz>0: eye offset pulls the vanishing point → parallax.
 
-        const nx = (smoothX - 0.5) * 2 * CFG.SCALE_X;
-        const ny = (smoothY - 0.5) * 2 * CFG.SCALE_Y;
-        const nz = smoothZ * CFG.SCALE_Z;
+        const nx = (smoothX - 0.5) * 2 * CFG.SCALE_X * (CFG.INVERT_X ? -1 : 1);
+        const ny = (smoothY - 0.5) * 2 * CFG.SCALE_Y * (CFG.INVERT_Y ? -1 : 1);
+        const nz = smoothZ * CFG.SCALE_Z * (CFG.INVERT_Z ? -1 : 1);
 
         const ex = nx * 1.2;   // eye world X
         const ey = ny * 0.9;   // eye world Y
@@ -1352,8 +1360,8 @@
 
     // Map face position to offset: center=0, edges=±DEPTH
     // Face coords are mirrored (webcam), so invert X for natural movement
-    const normX = (smoothX - 0.5) * 2; // -1 to 1
-    const normY = (smoothY - 0.5) * 2;
+    const normX = (smoothX - 0.5) * 2 * (CFG.INVERT_X ? -1 : 1);
+    const normY = (smoothY - 0.5) * 2 * (CFG.INVERT_Y ? -1 : 1);
 
     ctx.clearRect(0, 0, W, H);
 
@@ -1477,6 +1485,20 @@
   wire('s-scaleX', 'v-scaleX', v => { CFG.SCALE_X = v / 100; }, v => (v / 100).toFixed(2));
   wire('s-scaleY', 'v-scaleY', v => { CFG.SCALE_Y = v / 100; }, v => (v / 100).toFixed(2));
   wire('s-scaleZ', 'v-scaleZ', v => { CFG.SCALE_Z = v / 100; }, v => (v / 100).toFixed(2));
+
+  // Invert toggles
+  function wireInvert(id, key) {
+    const btn = document.getElementById(id);
+    btn.addEventListener('click', () => {
+      CFG[key] = !CFG[key];
+      btn.style.borderColor = CFG[key] ? 'rgba(108,99,255,0.7)' : 'rgba(255,255,255,0.1)';
+      btn.style.color = CFG[key] ? '#fff' : 'rgba(200,200,220,0.5)';
+      btn.style.background = CFG[key] ? 'rgba(108,99,255,0.2)' : 'transparent';
+    });
+  }
+  wireInvert('inv-x', 'INVERT_X');
+  wireInvert('inv-y', 'INVERT_Y');
+  wireInvert('inv-z', 'INVERT_Z');
 
   /* ── FULLSCREEN / HIDE ───────────────────────────── */
   document.getElementById('fp-fs-btn').addEventListener('click', () => {
