@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Webcam Physics Blob — Hexagon Misfit Experiments</title>
-  <meta name="description" content="Interactive physics sandbox using webcam blob tracking. Draw boundaries, detect dark objects, and watch balls interact with generated physics shapes." />
+  <title>Face Parallax — Hexagon Misfit Experiments</title>
+  <meta name="description" content="Face tracking drives a head-coupled perspective illusion. Move your head to look around a layered 3D scene rendered on canvas." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../css/reset.css" />
   <link rel="stylesheet" href="../../css/tokens.css" />
   <link rel="stylesheet" href="../../css/layout.css" />
@@ -16,7 +16,7 @@
 
   <style>
     /* ── NAV ─────────────────────────────────────────── */
-    .wpb-nav {
+    .fp-nav {
       position: sticky;
       top: 0;
       z-index: 100;
@@ -26,12 +26,12 @@
       -webkit-backdrop-filter: blur(14px);
       border-bottom: 1px solid var(--color-border);
     }
-    .wpb-nav-inner {
+    .fp-nav-inner {
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
-    .wpb-nav-logo {
+    .fp-nav-logo {
       display: flex;
       align-items: center;
       gap: var(--space-3);
@@ -41,13 +41,13 @@
       color: var(--color-text-primary);
       text-decoration: none;
     }
-    .wpb-nav-logo img { height: 28px; width: auto; }
-    .wpb-nav-right {
+    .fp-nav-logo img { height: 28px; width: auto; }
+    .fp-nav-right {
       display: flex;
       align-items: center;
       gap: var(--space-6);
     }
-    .wpb-back {
+    .fp-back {
       display: inline-flex;
       align-items: center;
       gap: var(--space-2);
@@ -58,25 +58,76 @@
       text-decoration: none;
       transition: color 0.15s;
     }
-    .wpb-back:hover { color: var(--color-text-primary); }
-    .wpb-back svg { width: 12px; height: 12px; }
+    .fp-back:hover { color: var(--color-text-primary); }
+    .fp-back svg { width: 12px; height: 12px; }
 
-    /* ── DEMO AREA ────────────────────────────────────── */
-    .wpb-demo {
+    /* ── STAGE ───────────────────────────────────────── */
+    .fp-stage {
       position: relative;
       width: 100%;
-      height: clamp(500px, 75vh, 800px);
-      background: #000;
+      min-height: 100vh;
+      background: #060610;
       overflow: hidden;
+      user-select: none;
     }
-    #wpb-canvas {
+    .fp-stage:fullscreen, .fp-stage:-webkit-full-screen { border: none; border-radius: 0; }
+
+    canvas#fp-canvas {
       display: block;
       width: 100%;
+      height: 100vh;
+    }
+    video#fp-video {
+      position: absolute;
+      top: 0; left: 0;
+      width: 1px; height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* ── WEBCAM PREVIEW ──────────────────────────────── */
+    .fp-preview {
+      position: absolute;
+      bottom: var(--space-5);
+      left: var(--space-5);
+      width: 160px;
+      height: 120px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+      overflow: hidden;
+      z-index: 10;
+      background: #000;
+    }
+    .fp-preview video {
+      width: 100%;
       height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+    }
+    .fp-preview-dot {
+      position: absolute;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #6C63FF;
+      border: 2px solid rgba(255,255,255,0.6);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      transition: left 0.08s, top 0.08s;
+      z-index: 2;
+    }
+    .fp-preview-label {
+      position: absolute;
+      top: 6px;
+      left: 8px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      color: rgba(152,152,176,0.6);
+      z-index: 2;
     }
 
     /* ── START OVERLAY ────────────────────────────────── */
-    .wpb-start-overlay {
+    .fp-start {
       position: absolute;
       inset: 0;
       display: flex;
@@ -84,44 +135,41 @@
       align-items: center;
       justify-content: center;
       gap: var(--space-5);
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(6, 6, 16, 0.92);
       backdrop-filter: blur(8px);
-      z-index: 10;
+      z-index: 20;
       transition: opacity 0.5s;
     }
-    .wpb-start-overlay.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-    .wpb-start-icon {
-      width: 64px;
-      height: 64px;
+    .fp-start.hidden { opacity: 0; pointer-events: none; }
+    .fp-start-icon {
+      width: 72px; height: 72px;
       border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.15);
+      border: 2px solid rgba(255,255,255,0.12);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: rgba(240,240,245,0.5);
+      color: rgba(240,240,245,0.4);
     }
-    .wpb-start-icon svg { width: 32px; height: 32px; }
-    .wpb-start-title {
+    .fp-start-icon svg { width: 36px; height: 36px; }
+    .fp-start-title {
       font-family: var(--font-heading);
       font-size: var(--text-xl);
       font-weight: 700;
       color: var(--color-text-primary);
       text-align: center;
     }
-    .wpb-start-sub {
+    .fp-start-sub {
       font-family: var(--font-mono);
       font-size: var(--text-xs);
       letter-spacing: 0.1em;
       color: var(--color-text-muted);
       text-align: center;
-      max-width: 40ch;
+      max-width: 42ch;
+      line-height: 1.6;
     }
-    .wpb-start-btn {
+    .fp-start-btn {
       margin-top: var(--space-2);
-      padding: 0.6rem 1.8rem;
+      padding: 0.65rem 2rem;
       font-family: var(--font-mono);
       font-size: var(--text-xs);
       letter-spacing: 0.12em;
@@ -133,156 +181,196 @@
       cursor: pointer;
       transition: border-color 0.2s, background 0.2s;
     }
-    .wpb-start-btn:hover {
+    .fp-start-btn:hover {
       border-color: rgba(108,99,255,0.7);
       background: rgba(108,99,255,0.12);
     }
-    .wpb-error-msg {
+    .fp-error {
       display: none;
       font-family: var(--font-mono);
       font-size: var(--text-xs);
-      letter-spacing: 0.08em;
-      color: rgba(255, 80, 80, 0.8);
+      color: rgba(255,80,80,0.8);
       text-align: center;
       max-width: 38ch;
       line-height: 1.6;
     }
-    .wpb-error-msg.visible { display: block; }
+    .fp-error.visible { display: block; }
 
-    /* ── OVERLAYS ─────────────────────────────────────── */
-    .wpb-overlay-tl {
+    /* ── OVERLAY ──────────────────────────────────────── */
+    .fp-overlay-tl {
       position: absolute;
       top: var(--space-5);
       left: var(--space-5);
       display: flex;
       align-items: center;
-      gap: var(--space-3);
+      gap: var(--space-4);
       pointer-events: none;
-      z-index: 5;
+      z-index: 10;
     }
-    .wpb-live-dot {
+    .fp-live-dot {
       width: 8px; height: 8px;
       border-radius: 50%;
       background: var(--color-accent-secondary);
       box-shadow: 0 0 8px rgba(45,212,191,0.7);
-      animation: wpb-pulse 2s ease-in-out infinite;
+      animation: fp-pulse 2s ease-in-out infinite;
     }
-    @keyframes wpb-pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
-    .wpb-exp-label {
+    @keyframes fp-pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+    .fp-exp-label {
       font-family: var(--font-mono);
       font-size: var(--text-xs);
       letter-spacing: 0.1em;
       color: rgba(152,152,176,0.6);
     }
+    .fp-scene-picker {
+      display: flex;
+      gap: 6px;
+      pointer-events: auto;
+    }
+    .fp-scene-btn {
+      padding: 3px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: transparent;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.06em;
+      color: rgba(200,200,220,0.5);
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+    .fp-scene-btn:hover { border-color: rgba(255,255,255,0.3); color: rgba(240,240,255,0.8); }
+    .fp-scene-btn.active { border-color: rgba(108,99,255,0.6); color: #fff; background: rgba(108,99,255,0.15); }
 
-    .wpb-overlay-br {
+    /* ── TOOLBAR ──────────────────────────────────────── */
+    .fp-toolbar {
+      position: absolute;
+      top: var(--space-5);
+      right: var(--space-5);
+      display: flex;
+      gap: 6px;
+      z-index: 12;
+    }
+    .fp-tool-btn {
+      width: 30px; height: 30px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(8,8,16,0.7);
+      backdrop-filter: blur(10px);
+      color: rgba(200,200,220,0.6);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s, color 0.2s;
+      padding: 0;
+    }
+    .fp-tool-btn:hover { border-color: rgba(255,255,255,0.3); color: rgba(240,240,255,0.9); }
+    .fp-tool-btn svg { width: 14px; height: 14px; }
+
+    .fp-stage.ui-hidden .fp-controls,
+    .fp-stage.ui-hidden .fp-overlay-tl,
+    .fp-stage.ui-hidden .fp-toolbar,
+    .fp-stage.ui-hidden .fp-preview { opacity: 0; pointer-events: none; }
+    .fp-controls, .fp-overlay-tl, .fp-toolbar, .fp-preview { transition: opacity 0.3s; }
+
+    /* ── CONTROLS ─────────────────────────────────────── */
+    .fp-controls {
       position: absolute;
       bottom: var(--space-5);
       right: var(--space-5);
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: var(--space-3);
-      z-index: 5;
+      z-index: 10;
+      background: rgba(8, 8, 16, 0.82);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px;
+      padding: var(--space-4) var(--space-5);
+      min-width: 210px;
     }
-
-    /* ── CONTROLS ─────────────────────────────────────── */
-    .wpb-controls {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-3);
-      background: rgba(10,10,15,0.8);
-      padding: var(--space-4);
-      border-radius: var(--radius-lg);
-      border: 1px solid rgba(255,255,255,0.15);
-      backdrop-filter: blur(8px);
-      width: 280px;
-    }
-    
-    .wpb-control-group {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-2);
-    }
-    
-    .wpb-control-title {
+    .fp-controls-hdr {
       font-family: var(--font-mono);
-      font-size: var(--text-xs);
-      letter-spacing: 0.08em;
-      color: var(--color-text-muted);
+      font-size: 10px;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
+      color: rgba(152,152,176,0.5);
+      margin-bottom: var(--space-4);
     }
-    
-    .wpb-btn {
-      font-family: var(--font-mono);
-      font-size: var(--text-xs);
-      letter-spacing: 0.08em;
-      padding: 0.4rem 0.8rem;
-      border-radius: var(--radius-sm);
-      border: 1px solid rgba(255,255,255,0.2);
-      background: rgba(255,255,255,0.05);
-      color: var(--color-text-primary);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    
-    .wpb-btn:hover {
-      border-color: rgba(108,99,255,0.6);
-      background: rgba(108,99,255,0.15);
-    }
-    
-    .wpb-btn.active {
-      border-color: rgba(45,212,191,0.8);
-      background: rgba(45,212,191,0.2);
-      color: var(--color-text-primary);
-    }
-    
-    .wpb-slider-group {
-      display: flex;
+    .fp-slider-row {
+      display: grid;
+      grid-template-columns: 60px 1fr 34px;
       align-items: center;
       gap: var(--space-2);
+      margin-bottom: var(--space-3);
     }
-    
-    .wpb-slider {
-      flex: 1;
-      cursor: pointer;
-    }
-    
-    .wpb-value {
+    .fp-slider-row:last-child { margin-bottom: 0; }
+    .fp-slider-label {
       font-family: var(--font-mono);
-      font-size: var(--text-xs);
-      color: var(--color-text-muted);
-      min-width: 40px;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: rgba(152,152,176,0.65);
       text-align: right;
     }
+    .fp-slider-val {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: rgba(240,240,255,0.55);
+      text-align: right;
+      white-space: nowrap;
+    }
+    .fp-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+    .fp-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: #6C63FF;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 0 6px rgba(108,99,255,0.4);
+    }
+    .fp-slider::-moz-range-thumb {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: #6C63FF;
+      border: none;
+      cursor: pointer;
+    }
 
-    /* ── INFO SECTION ─────────────────────────────────── */
-    .wpb-info {
+    /* ── INFO ─────────────────────────────────────────── */
+    .fp-info {
       padding-block: var(--space-10) var(--space-20);
       border-top: 1px solid var(--color-border);
     }
-    .wpb-info-inner {
+    .fp-info-inner {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: var(--space-12);
       align-items: start;
     }
     @media (max-width: 720px) {
-      .wpb-info-inner { grid-template-columns: 1fr; gap: var(--space-8); }
+      .fp-info-inner { grid-template-columns: 1fr; gap: var(--space-8); }
     }
-    .wpb-info-meta {
+    .fp-info-meta {
       display: flex;
       align-items: center;
       gap: var(--space-3);
       margin-bottom: var(--space-4);
     }
-    .wpb-info-num {
+    .fp-info-num {
       font-family: var(--font-mono);
       font-size: var(--text-xs);
       letter-spacing: 0.12em;
       color: var(--color-accent-primary);
     }
-    .wpb-info-num::before {
+    .fp-info-num::before {
       content: '';
       display: inline-block;
       width: 20px; height: 1px;
@@ -290,7 +378,7 @@
       margin-right: var(--space-2);
       vertical-align: middle;
     }
-    .wpb-info h1 {
+    .fp-info h1 {
       font-family: var(--font-heading);
       font-size: clamp(1.75rem, 4vw, 2.75rem);
       font-weight: 700;
@@ -298,18 +386,18 @@
       color: var(--color-text-primary);
       margin-bottom: var(--space-5);
     }
-    .wpb-info p {
+    .fp-info p {
       color: var(--color-text-secondary);
       line-height: var(--leading-normal);
       margin-bottom: var(--space-4);
     }
-    .wpb-info-tags {
+    .fp-info-tags {
       display: flex;
       flex-wrap: wrap;
       gap: var(--space-2);
       margin-top: var(--space-6);
     }
-    .wpb-controls-title {
+    .fp-controls-title {
       font-family: var(--font-mono);
       font-size: var(--text-xs);
       letter-spacing: 0.1em;
@@ -317,17 +405,17 @@
       color: var(--color-text-muted);
       margin-bottom: var(--space-5);
     }
-    .wpb-control-list {
+    .fp-control-list {
       display: flex;
       flex-direction: column;
       gap: var(--space-4);
     }
-    .wpb-control {
+    .fp-control {
       display: flex;
       align-items: flex-start;
       gap: var(--space-4);
     }
-    .wpb-control-key {
+    .fp-control-key {
       font-family: var(--font-mono);
       font-size: var(--text-xs);
       padding: 0.2rem 0.5rem;
@@ -338,25 +426,25 @@
       white-space: nowrap;
       flex-shrink: 0;
     }
-    .wpb-control-desc {
+    .fp-control-desc {
       font-size: var(--text-sm);
       color: var(--color-text-secondary);
       line-height: var(--leading-snug);
     }
 
     /* ── FOOTER ───────────────────────────────────────── */
-    .wpb-footer {
+    .fp-footer {
       border-top: 1px solid var(--color-border);
       padding-block: var(--space-8);
     }
-    .wpb-footer-inner {
+    .fp-footer-inner {
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
       gap: var(--space-4);
     }
-    .wpb-footer-logo {
+    .fp-footer-logo {
       display: flex;
       align-items: center;
       gap: var(--space-3);
@@ -366,8 +454,8 @@
       color: var(--color-text-muted);
       text-decoration: none;
     }
-    .wpb-footer-logo img { height: 22px; width: auto; }
-    .wpb-footer-copy {
+    .fp-footer-logo img { height: 22px; width: auto; }
+    .fp-footer-copy {
       font-family: var(--font-mono);
       font-size: var(--text-xs);
       color: var(--color-text-muted);
@@ -377,15 +465,15 @@
 <body>
 
 <!-- ── NAV ──────────────────────────────────────────── -->
-<nav class="wpb-nav">
+<nav class="fp-nav">
   <div class="container">
-    <div class="wpb-nav-inner">
-      <a href="../../" class="wpb-nav-logo">
+    <div class="fp-nav-inner">
+      <a href="../../" class="fp-nav-logo">
         <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
         Hexagon Misfit
       </a>
-      <div class="wpb-nav-right">
-        <a href="../" class="wpb-back">
+      <div class="fp-nav-right">
+        <a href="../" class="fp-back">
           <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
             <path d="M8 1L3 6l5 5"/>
           </svg>
@@ -397,582 +485,790 @@
   </div>
 </nav>
 
-<!-- ── DEMO ─────────────────────────────────────────── -->
-<div class="wpb-demo" id="wpb-wrap">
-  <canvas id="wpb-canvas" aria-label="Interactive physics simulation with webcam blob tracking"></canvas>
 
-  <!-- Start / Permission Overlay -->
-  <div class="wpb-start-overlay" id="wpb-overlay">
-    <div class="wpb-start-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="2" y="7" width="20" height="14" rx="2"/>
-        <path d="M16 3l-4 4-4-4"/>
-        <circle cx="12" cy="14" r="3"/>
+<!-- ── STAGE ─────────────────────────────────────────── -->
+<div class="fp-stage" id="fp-stage">
+
+  <!-- Start overlay -->
+  <div class="fp-start" id="fp-start">
+    <div class="fp-start-icon">
+      <svg viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <circle cx="18" cy="14" r="7"/>
+        <path d="M6 32c0-6.627 5.373-12 12-12s12 5.373 12 12"/>
       </svg>
     </div>
-    <p class="wpb-start-title">Webcam Physics Blob</p>
-    <p class="wpb-start-sub">Draw a boundary, place dark objects inside, and watch physics balls interact with the detected shapes in real-time.</p>
-    <button class="wpb-start-btn" id="wpb-start-btn">enable camera</button>
-    <p class="wpb-error-msg" id="wpb-error-msg">Camera access was denied or is unavailable.<br>Check your browser permissions and try again.</p>
+    <h2 class="fp-start-title">Face Parallax</h2>
+    <p class="fp-start-sub">Move your head to look around a layered 3D scene. Your face position drives head-coupled perspective — like looking through a window.</p>
+    <button class="fp-start-btn" id="fp-start-btn">Enable Camera</button>
+    <p class="fp-error" id="fp-error"></p>
   </div>
 
-  <!-- Top-left label -->
-  <div class="wpb-overlay-tl">
-    <div class="wpb-live-dot"></div>
-    <span class="wpb-exp-label">09 / webcam_physics_blob</span>
+  <!-- Hidden video -->
+  <video id="fp-video" playsinline autoplay muted></video>
+
+  <!-- Canvas -->
+  <canvas id="fp-canvas"></canvas>
+
+  <!-- Webcam preview -->
+  <div class="fp-preview" id="fp-preview" style="opacity:0;">
+    <video id="fp-preview-vid" playsinline autoplay muted></video>
+    <div class="fp-preview-dot" id="fp-preview-dot"></div>
+    <span class="fp-preview-label">TRACKING</span>
   </div>
 
-  <!-- Bottom-right controls -->
-  <div class="wpb-overlay-br">
-    <div class="wpb-controls">
-      <div class="wpb-control-group">
-        <div class="wpb-control-title">Mode</div>
-        <div style="display: flex; gap: 6px;">
-          <button class="wpb-btn active" id="btn-draw">Draw Boundary</button>
-          <button class="wpb-btn" id="btn-drop">Drop Balls</button>
-        </div>
-      </div>
-      
-      <div class="wpb-control-group">
-        <div class="wpb-control-title">Threshold</div>
-        <div class="wpb-slider-group">
-          <input type="range" class="wpb-slider" id="threshold-slider" min="0" max="255" value="60">
-          <span class="wpb-value" id="threshold-value">60</span>
-        </div>
-      </div>
-      
-      <div class="wpb-control-group">
-        <div class="wpb-control-title">Ball Size</div>
-        <div class="wpb-slider-group">
-          <input type="range" class="wpb-slider" id="ball-size-slider" min="5" max="30" value="12">
-          <span class="wpb-value" id="ball-size-value">12</span>
-        </div>
-      </div>
-      
-      <div class="wpb-control-group">
-        <div class="wpb-control-title">Gravity</div>
-        <div class="wpb-slider-group">
-          <input type="range" class="wpb-slider" id="gravity-slider" min="0" max="2" step="0.1" value="1">
-          <span class="wpb-value" id="gravity-value">1.0</span>
-        </div>
-      </div>
-      
-      <div class="wpb-control-group">
-        <button class="wpb-btn" id="btn-clear">Clear Shapes</button>
-        <button class="wpb-btn" id="btn-reset">Reset All</button>
-      </div>
+  <!-- Top-left overlay -->
+  <div class="fp-overlay-tl">
+    <div class="fp-live-dot"></div>
+    <span class="fp-exp-label">09 / face_parallax</span>
+    <div class="fp-scene-picker" id="fp-scene-picker">
+      <button class="fp-scene-btn active" data-scene="0">Cosmos</button>
+      <button class="fp-scene-btn" data-scene="1">City</button>
+      <button class="fp-scene-btn" data-scene="2">Forest</button>
     </div>
   </div>
+
+  <!-- Toolbar -->
+  <div class="fp-toolbar">
+    <button class="fp-tool-btn" id="fp-hide-btn" title="Hide / show UI (H)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
+    </button>
+    <button class="fp-tool-btn" id="fp-fs-btn" title="Fullscreen (F)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>
+    </button>
+  </div>
+
+  <!-- Controls -->
+  <div class="fp-controls" id="fp-controls">
+    <p class="fp-controls-hdr">// parallax</p>
+    <div class="fp-slider-row">
+      <span class="fp-slider-label">depth</span>
+      <input type="range" class="fp-slider" id="s-depth" min="10" max="200" value="80" step="5">
+      <span class="fp-slider-val" id="v-depth">80</span>
+    </div>
+    <div class="fp-slider-row">
+      <span class="fp-slider-label">smooth</span>
+      <input type="range" class="fp-slider" id="s-smooth" min="2" max="20" value="8" step="1">
+      <span class="fp-slider-val" id="v-smooth">8</span>
+    </div>
+    <div class="fp-slider-row">
+      <span class="fp-slider-label">layers</span>
+      <input type="range" class="fp-slider" id="s-layers" min="3" max="8" value="6" step="1">
+      <span class="fp-slider-val" id="v-layers">6</span>
+    </div>
+    <div class="fp-slider-row">
+      <span class="fp-slider-label">speed</span>
+      <input type="range" class="fp-slider" id="s-speed" min="0" max="100" value="30" step="5">
+      <span class="fp-slider-val" id="v-speed">0.30</span>
+    </div>
+  </div>
+
 </div>
 
+
 <!-- ── INFO ─────────────────────────────────────────── -->
-<section class="wpb-info">
+<section class="fp-info">
   <div class="container">
-    <div class="wpb-info-inner">
+    <div class="fp-info-inner">
+
       <div>
-        <div class="wpb-info-meta">
-          <span class="wpb-info-num">09</span>
+        <div class="fp-info-meta">
+          <span class="fp-info-num">09</span>
           <span class="tag tag-teal">LIVE</span>
         </div>
-        <h1>Webcam Physics Blob</h1>
-        <p>
-          An interactive physics sandbox that uses your webcam to detect dark objects and convert them into physics boundaries. Draw a rectangle to define the play area, place dark objects inside, and watch balls interact with the detected shapes in real-time.
-        </p>
-        <p>
-          The system processes your webcam feed in real-time, applying thresholding to convert the image to black and white, then uses blob detection to find dark objects and convert them into vector shapes that act as fixed physics bodies.
-        </p>
-        <div class="wpb-info-tags">
-          <span class="tag">Webcam Processing</span>
-          <span class="tag">Blob Detection</span>
-          <span class="tag">Physics Simulation</span>
-          <span class="tag">Real-time</span>
-          <span class="tag">Matter.js</span>
+        <h1>Face Parallax</h1>
+        <p>Your webcam tracks your face position and translates it into head-coupled perspective — the screen becomes a window into a layered 3D scene. Move your head left and the scene shifts to reveal what's on the right, lean closer and layers spread apart.</p>
+        <p>Uses MediaPipe Face Detection running entirely in-browser via TensorFlow.js. Each scene is composed of procedurally generated parallax layers with different depth multipliers, creating a convincing illusion of depth without WebGL or 3D engines.</p>
+        <div class="fp-info-tags">
+          <span class="tag">Face Detection</span>
+          <span class="tag">MediaPipe</span>
+          <span class="tag">Head-Coupled Perspective</span>
+          <span class="tag">Parallax Layers</span>
+          <span class="tag">Canvas 2D</span>
+          <span class="tag">Procedural Generation</span>
         </div>
       </div>
 
       <div>
-        <p class="wpb-controls-title">// interaction</p>
-        <div class="wpb-control-list">
-          <div class="wpb-control">
-            <span class="wpb-control-key">Draw Boundary</span>
-            <span class="wpb-control-desc">Click and drag to draw a rectangle that defines the physics boundary area.</span>
+        <p class="fp-controls-title">// controls</p>
+        <div class="fp-control-list">
+          <div class="fp-control">
+            <span class="fp-control-key">Move head</span>
+            <span class="fp-control-desc">Shift your head left/right/up/down to look around the scene.</span>
           </div>
-          <div class="wpb-control">
-            <span class="wpb-control-key">Drop Balls</span>
-            <span class="wpb-control-desc">Click anywhere above the boundary to drop physics balls that will interact with detected objects.</span>
+          <div class="fp-control">
+            <span class="fp-control-key">depth</span>
+            <span class="fp-control-desc">Maximum parallax displacement in pixels. Higher = more dramatic depth effect.</span>
           </div>
-          <div class="wpb-control">
-            <span class="wpb-control-key">Threshold Slider</span>
-            <span class="wpb-control-desc">Adjust the brightness threshold for detecting dark objects. Lower values detect darker objects.</span>
+          <div class="fp-control">
+            <span class="fp-control-key">smooth</span>
+            <span class="fp-control-desc">Smoothing factor for face tracking. Higher = less jitter, more lag.</span>
           </div>
-          <div class="wpb-control">
-            <span class="wpb-control-key">Ball Size</span>
-            <span class="wpb-control-desc">Control the size of the physics balls that are dropped into the simulation.</span>
+          <div class="fp-control">
+            <span class="fp-control-key">F</span>
+            <span class="fp-control-desc">Toggle fullscreen mode.</span>
           </div>
-          <div class="wpb-control">
-            <span class="wpb-control-key">Gravity</span>
-            <span class="wpb-control-desc">Adjust the gravity strength in the physics simulation.</span>
-          </div>
-          <div class="wpb-control">
-            <span class="wpb-control-key">Clear Shapes</span>
-            <span class="wpb-control-desc">Remove all detected physics shapes from the simulation.</span>
-          </div>
-          <div class="wpb-control">
-            <span class="wpb-control-key">Reset All</span>
-            <span class="wpb-control-desc">Clear all shapes and balls, returning to the initial state.</span>
+          <div class="fp-control">
+            <span class="fp-control-key">H</span>
+            <span class="fp-control-desc">Hide / show all UI controls.</span>
           </div>
         </div>
       </div>
+
     </div>
   </div>
 </section>
 
-<!-- ── FOOTER ───────────────────────────────────────── -->
-<footer class="wpb-footer">
+
+<!-- ── FOOTER ────────────────────────────────────────── -->
+<footer class="fp-footer">
   <div class="container">
-    <div class="wpb-footer-inner">
-      <a href="../../" class="wpb-footer-logo">
+    <div class="fp-footer-inner">
+      <a href="../../" class="fp-footer-logo">
         <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
         Hexagon Misfit
       </a>
-      <a href="../" class="wpb-back">
-        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-          <path d="M8 1L3 6l5 5"/>
-        </svg>
-        All Experiments
-      </a>
-      <span class="wpb-footer-copy">&copy; <span id="footer-year"></span> Hexagon Misfit</span>
+      <a href="../" class="fp-back">&larr; All experiments</a>
+      <span class="fp-footer-copy">&copy; <span id="footer-year"></span> Hexagon Misfit</span>
     </div>
   </div>
 </footer>
 
-<!-- ════════════════════════════════════════════════════════
-  EXTERNAL LIBRARIES
-════════════════════════════════════════════════════════ -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
 
-<!-- ════════════════════════════════════════════════════════
-  WEBCAM PHYSICS BLOB ENGINE
-════════════════════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════════════
+  FACE PARALLAX ENGINE
+══════════════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+
 <script>
 (function () {
   'use strict';
 
-  /* ─── STATE ──────────────────────────────────────────────── */
-  let running = false;
-  let mode = 'draw'; // 'draw' or 'drop'
-  let threshold = 60;
-  let ballSize = 12;
-  let gravity = 1.0;
-  
-  let drawing = false;
-  let rectStart = null;
-  let rectEnd = null;
-  let boundaryRect = null;
-  
-  let detectedBodies = [];
-  let lastDetectionTime = 0;
-  let detectionInterval = 1000; // ms
+  /* ── CONFIG ──────────────────────────────────────── */
+  const CFG = {
+    DEPTH: 80,
+    SMOOTH: 8,
+    LAYERS: 6,
+    SPEED: 0.30,
+  };
 
-  /* ─── ELEMENTS ───────────────────────────────────────────── */
-  const canvas = document.getElementById('wpb-canvas');
-  const ctx = canvas.getContext('2d', { alpha: false });
-  const overlay = document.getElementById('wpb-overlay');
-  const startBtn = document.getElementById('wpb-start-btn');
-  const errorMsg = document.getElementById('wpb-error-msg');
-  
-  const btnDraw = document.getElementById('btn-draw');
-  const btnDrop = document.getElementById('btn-drop');
-  const thresholdSlider = document.getElementById('threshold-slider');
-  const thresholdValue = document.getElementById('threshold-value');
-  const ballSizeSlider = document.getElementById('ball-size-slider');
-  const ballSizeValue = document.getElementById('ball-size-value');
-  const gravitySlider = document.getElementById('gravity-slider');
-  const gravityValue = document.getElementById('gravity-value');
-  const btnClear = document.getElementById('btn-clear');
-  const btnReset = document.getElementById('btn-reset');
+  /* ── FACE STATE ──────────────────────────────────── */
+  // Normalized face center: 0=left/top, 1=right/bottom. 0.5=centered.
+  let faceX = 0.5, faceY = 0.5;
+  let smoothX = 0.5, smoothY = 0.5;
+  let faceDetected = false;
 
-  /* ─── OFFSCREEN CANVAS FOR VIDEO SAMPLING ────────────────── */
-  const offscreen = document.createElement('canvas');
-  const offCtx = offscreen.getContext('2d', { willReadFrequently: true });
-  offCtx.imageSmoothingEnabled = true;
-  offCtx.imageSmoothingQuality = 'high';
+  /* ── CANVAS ──────────────────────────────────────── */
+  const canvas = document.getElementById('fp-canvas');
+  const ctx = canvas.getContext('2d');
+  const stage = document.getElementById('fp-stage');
+  let W, H, dpr;
 
-  /* ─── VIDEO ELEMENT ──────────────────────────────────────── */
-  const video = document.createElement('video');
-  video.playsInline = true;
-  video.muted = true;
-  video.autoplay = true;
-
-  /* ─── MATTER.JS SETUP ────────────────────────────────────── */
-  const Engine = Matter.Engine,
-        Render = Matter.Render,
-        Runner = Matter.Runner,
-        Bodies = Matter.Bodies,
-        Composite = Matter.Composite,
-        Events = Matter.Events,
-        Vector = Matter.Vector,
-        Body = Matter.Body;
-
-  const engine = Engine.create();
-  const world = engine.world;
-  
-  // Set gravity
-  engine.gravity.y = gravity;
-
-  /* ─── RESIZE ─────────────────────────────────────────────── */
   function resize() {
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = canvas.parentElement.clientHeight;
-    
-    // Update Matter.js bounds
-    if (boundaryRect) {
-      // Recreate boundary if it exists
-      createBoundary(boundaryRect.x, boundaryRect.y, boundaryRect.w, boundaryRect.h);
-    }
-  }
-  window.addEventListener('resize', resize);
-  resize();
-
-  /* ─── START CAMERA ───────────────────────────────────────── */
-  startBtn.addEventListener('click', async () => {
-    startBtn.disabled = true;
-    startBtn.textContent = 'connecting...';
-    errorMsg.classList.remove('visible');
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: false,
-      });
-      video.srcObject = stream;
-      await video.play();
-      overlay.classList.add('hidden');
-      running = true;
-      raf = requestAnimationFrame(loop);
-    } catch (err) {
-      startBtn.disabled = false;
-      startBtn.textContent = 'try again';
-      errorMsg.classList.add('visible');
-    }
-  });
-
-  /* ─── CONTROLS ───────────────────────────────────────────── */
-  btnDraw.addEventListener('click', () => {
-    mode = 'draw';
-    btnDraw.classList.add('active');
-    btnDrop.classList.remove('active');
-  });
-  
-  btnDrop.addEventListener('click', () => {
-    mode = 'drop';
-    btnDrop.classList.add('active');
-    btnDraw.classList.remove('active');
-  });
-
-  thresholdSlider.addEventListener('input', () => {
-    threshold = parseInt(thresholdSlider.value, 10);
-    thresholdValue.textContent = threshold;
-  });
-
-  ballSizeSlider.addEventListener('input', () => {
-    ballSize = parseInt(ballSizeSlider.value, 10);
-    ballSizeValue.textContent = ballSize;
-  });
-
-  gravitySlider.addEventListener('input', () => {
-    gravity = parseFloat(gravitySlider.value);
-    gravityValue.textContent = gravity.toFixed(1);
-    engine.gravity.y = gravity;
-  });
-
-  btnClear.addEventListener('click', () => {
-    // Remove all detected bodies
-    detectedBodies.forEach(body => {
-      Composite.remove(world, body);
-    });
-    detectedBodies = [];
-  });
-
-  btnReset.addEventListener('click', () => {
-    // Clear all
-    Composite.clear(world, false);
-    detectedBodies = [];
-    boundaryRect = null;
-    rectStart = null;
-    rectEnd = null;
-  });
-
-  /* ─── INPUT HANDLING ─────────────────────────────────────── */
-  canvas.addEventListener('mousedown', (e) => {
-    if (!running) return;
-    
+    dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    if (mode === 'draw') {
-      drawing = true;
-      rectStart = { x, y };
-      rectEnd = { x, y };
-    } else if (mode === 'drop') {
-      dropBall(x, y);
-    }
-  });
-
-  canvas.addEventListener('mousemove', (e) => {
-    if (!running || !drawing) return;
-    
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    rectEnd = { x, y };
-  });
-
-  canvas.addEventListener('mouseup', () => {
-    if (!running || !drawing) return;
-    
-    drawing = false;
-    
-    if (rectStart && rectEnd) {
-      const x = Math.min(rectStart.x, rectEnd.x);
-      const y = Math.min(rectStart.y, rectEnd.y);
-      const w = Math.abs(rectEnd.x - rectStart.x);
-      const h = Math.abs(rectEnd.y - rectStart.y);
-      
-      if (w > 20 && h > 20) {
-        createBoundary(x, y, w, h);
-      }
-    }
-    
-    rectStart = null;
-    rectEnd = null;
-  });
-
-  /* ─── MATTER.JS BOUNDARY CREATION ────────────────────────── */
-  function createBoundary(x, y, w, h) {
-    // Remove existing boundary
-    if (boundaryRect) {
-      Composite.remove(world, boundaryRect.bodies);
-    }
-    
-    // Create new boundary
-    const thickness = 5;
-    const bodies = [
-      Bodies.rectangle(x + w/2, y - thickness/2, w, thickness, { isStatic: true }), // Top
-      Bodies.rectangle(x + w/2, y + h + thickness/2, w, thickness, { isStatic: true }), // Bottom
-      Bodies.rectangle(x - thickness/2, y + h/2, thickness, h, { isStatic: true }), // Left
-      Bodies.rectangle(x + w + thickness/2, y + h/2, thickness, h, { isStatic: true }) // Right
-    ];
-    
-    Composite.add(world, bodies);
-    boundaryRect = { x, y, w, h, bodies };
+    W = rect.width;
+    H = rect.height;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    buildScenes();
   }
 
-  /* ─── DROP BALL ──────────────────────────────────────────── */
-  function dropBall(x, y) {
-    if (!boundaryRect) return;
-    
-    // Only drop if above the boundary
-    if (y < boundaryRect.y) {
-      const ball = Bodies.circle(x, y, ballSize, {
-        restitution: 0.8,
-        friction: 0.005,
-        density: 0.002
-      });
-      Composite.add(world, ball);
-    }
+  /* ── SCENE DEFINITIONS ───────────────────────────── */
+  // Each scene is an array of layers. Each layer has:
+  //   depth: 0 (background) to 1 (foreground) — parallax multiplier
+  //   draw(ctx, W, H, offX, offY, time): render function
+  let activeScene = 0;
+  let scenes = [];
+
+  function seededRand(seed) {
+    let s = seed;
+    return function() {
+      s = (s * 16807 + 0) % 2147483647;
+      return (s - 1) / 2147483646;
+    };
   }
 
-  /* ─── BLOB DETECTION ─────────────────────────────────────── */
-  function detectBlobs() {
-    if (!boundaryRect || !running) return;
-    
-    const now = Date.now();
-    if (now - lastDetectionTime < detectionInterval) return;
-    lastDetectionTime = now;
-
-    // Set up offscreen canvas to match boundary dimensions
-    offscreen.width = boundaryRect.w;
-    offscreen.height = boundaryRect.h;
-    
-    // Draw video to offscreen canvas (cropped to boundary)
-    offCtx.drawImage(video, 
-      boundaryRect.x, boundaryRect.y, boundaryRect.w, boundaryRect.h,
-      0, 0, boundaryRect.w, boundaryRect.h
-    );
-
-    // Get pixel data
-    const imageData = offCtx.getImageData(0, 0, boundaryRect.w, boundaryRect.h);
-    const data = imageData.data;
-    
-    // Simple thresholding
-    const binary = new Uint8Array(boundaryRect.w * boundaryRect.h);
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
-      const lum = (0.299 * r + 0.587 * g + 0.114 * b);
-      
-      binary[i / 4] = lum < threshold ? 1 : 0;
-    }
-
-    // Find connected components (blobs)
-    const visited = new Uint8Array(binary.length);
-    const blobs = [];
-    
-    for (let y = 0; y < boundaryRect.h; y++) {
-      for (let x = 0; x < boundaryRect.w; x++) {
-        const idx = y * boundaryRect.w + x;
-        if (binary[idx] === 1 && visited[idx] === 0) {
-          const blob = floodFill(binary, visited, x, y, boundaryRect.w, boundaryRect.h);
-          if (blob.length > 100) { // Minimum size threshold
-            blobs.push(blob);
-          }
-        }
-      }
-    }
-
-    // Convert blobs to physics bodies
-    blobs.forEach(blob => {
-      const vertices = simplifyBlob(blob, boundaryRect.w);
-      if (vertices.length >= 3) {
-        const body = Bodies.fromVertices(
-          boundaryRect.x + vertices[0].x,
-          boundaryRect.y + vertices[0].y,
-          [vertices],
-          {
-            isStatic: true,
-            render: { fillStyle: 'rgba(108, 99, 255, 0.3)', strokeStyle: 'rgba(108, 99, 255, 0.8)', lineWidth: 2 }
-          },
-          true
-        );
-        Composite.add(world, body);
-        detectedBodies.push(body);
-      }
-    });
-  }
-
-  /* ─── FLOOD FILL ALGORITHM ───────────────────────────────── */
-  function floodFill(binary, visited, startX, startY, width, height) {
-    const stack = [{ x: startX, y: startY }];
-    const blob = [];
-    const startIdx = startY * width + startX;
-    
-    visited[startIdx] = 1;
-    
-    while (stack.length > 0) {
-      const { x, y } = stack.pop();
-      blob.push({ x, y });
-      
-      // Check 4-connected neighbors
-      const neighbors = [
-        { x: x + 1, y },
-        { x: x - 1, y },
-        { x, y: y + 1 },
-        { x, y: y - 1 }
-      ];
-      
-      for (const n of neighbors) {
-        if (n.x >= 0 && n.x < width && n.y >= 0 && n.y < height) {
-          const idx = n.y * width + n.x;
-          if (binary[idx] === 1 && visited[idx] === 0) {
-            visited[idx] = 1;
-            stack.push(n);
-          }
-        }
-      }
-    }
-    
-    return blob;
-  }
-
-  /* ─── SIMPLIFY BLOB TO VERTICES ──────────────────────────── */
-  function simplifyBlob(blob, width) {
-    // Find bounding box
-    let minX = Infinity, minY = Infinity;
-    let maxX = -Infinity, maxY = -Infinity;
-    
-    blob.forEach(p => {
-      minX = Math.min(minX, p.x);
-      minY = Math.min(minY, p.y);
-      maxX = Math.max(maxX, p.x);
-      maxY = Math.max(maxY, p.y);
-    });
-    
-    // Create a simple rectangular approximation for performance
-    // In a full implementation, you'd use more sophisticated contour detection
-    return [
-      { x: minX, y: minY },
-      { x: maxX, y: minY },
-      { x: maxX, y: maxY },
-      { x: minX, y: maxY }
+  function buildScenes() {
+    scenes = [
+      buildCosmos(),
+      buildCity(),
+      buildForest(),
     ];
   }
 
-  /* ─── RENDER LOOP ────────────────────────────────────────── */
-  let raf = null;
-  
-  function loop() {
-    if (!running) return;
-    raf = requestAnimationFrame(loop);
+  /* ── SCENE 0: COSMOS ─────────────────────────────── */
+  function buildCosmos() {
+    const layers = [];
+    const rand = seededRand(42);
 
-    if (video.readyState < 2) return;
-
-    // Clear canvas
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Draw video feed (full size)
-    ctx.save();
-    ctx.scale(-1, 1);
-    ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
-    ctx.restore();
-
-    // Draw boundary rectangle
-    if (boundaryRect) {
-      ctx.strokeStyle = 'rgba(108, 99, 255, 0.8)';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(boundaryRect.x, boundaryRect.y, boundaryRect.w, boundaryRect.h);
+    // Layer 0: deep star field
+    const stars0 = [];
+    for (let i = 0; i < 200; i++) {
+      stars0.push({ x: rand() * 1.4 - 0.2, y: rand() * 1.4 - 0.2, r: rand() * 1.2 + 0.3, b: rand() * 0.4 + 0.2 });
     }
+    layers.push({
+      depth: 0,
+      draw(ctx, W, H, ox, oy, t) {
+        for (const s of stars0) {
+          const blink = s.b + Math.sin(t * 0.5 + s.x * 20) * 0.15;
+          ctx.fillStyle = `rgba(180,190,255,${blink})`;
+          ctx.beginPath();
+          ctx.arc(s.x * W + ox, s.y * H + oy, s.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    });
 
-    // Draw drawing rectangle
-    if (drawing && rectStart && rectEnd) {
-      ctx.strokeStyle = 'rgba(45, 212, 191, 0.8)';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([5, 5]);
-      const x = Math.min(rectStart.x, rectEnd.x);
-      const y = Math.min(rectStart.y, rectEnd.y);
-      const w = Math.abs(rectEnd.x - rectStart.x);
-      const h = Math.abs(rectEnd.y - rectStart.y);
-      ctx.strokeRect(x, y, w, h);
-      ctx.setLineDash([]);
+    // Layer 1: nebula clouds
+    const nebulae = [];
+    for (let i = 0; i < 5; i++) {
+      nebulae.push({
+        x: rand() * 1.2 - 0.1, y: rand() * 1.2 - 0.1,
+        rx: rand() * 200 + 100, ry: rand() * 120 + 60,
+        hue: rand() * 60 + 240, a: rand() * 0.06 + 0.02,
+      });
     }
+    layers.push({
+      depth: 0.15,
+      draw(ctx, W, H, ox, oy, t) {
+        for (const n of nebulae) {
+          const cx = n.x * W + ox + Math.sin(t * 0.1 + n.hue) * 15;
+          const cy = n.y * H + oy + Math.cos(t * 0.08 + n.x * 10) * 10;
+          const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, n.rx);
+          grad.addColorStop(0, `hsla(${n.hue}, 70%, 55%, ${n.a})`);
+          grad.addColorStop(1, `hsla(${n.hue}, 70%, 30%, 0)`);
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.ellipse(cx, cy, n.rx, n.ry, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    });
 
-    // Update physics
-    Engine.update(engine, 1000 / 60);
+    // Layer 2: mid star field
+    const stars1 = [];
+    for (let i = 0; i < 100; i++) {
+      stars1.push({ x: rand() * 1.4 - 0.2, y: rand() * 1.4 - 0.2, r: rand() * 1.8 + 0.5, b: rand() * 0.5 + 0.4 });
+    }
+    layers.push({
+      depth: 0.3,
+      draw(ctx, W, H, ox, oy, t) {
+        for (const s of stars1) {
+          const blink = s.b + Math.sin(t * 0.7 + s.y * 30) * 0.2;
+          ctx.fillStyle = `rgba(220,225,255,${blink})`;
+          ctx.beginPath();
+          ctx.arc(s.x * W + ox, s.y * H + oy, s.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    });
 
-    // Draw physics bodies
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.lineWidth = 1;
-    
-    Composite.allBodies(world).forEach(body => {
-      if (!body.isStatic) {
-        // Draw balls
+    // Layer 3: planet
+    layers.push({
+      depth: 0.5,
+      draw(ctx, W, H, ox, oy, t) {
+        const cx = W * 0.55 + ox;
+        const cy = H * 0.45 + oy;
+        const r = Math.min(W, H) * 0.12;
+        // shadow
+        const grad = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.2, r * 0.1, cx, cy, r);
+        grad.addColorStop(0, 'rgba(120,140,200,0.8)');
+        grad.addColorStop(0.7, 'rgba(50,60,120,0.6)');
+        grad.addColorStop(1, 'rgba(20,20,60,0)');
+        ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.arc(body.position.x, body.position.y, body.circleRadius || ballSize, 0, Math.PI * 2);
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
         ctx.fill();
+        // ring
+        ctx.strokeStyle = 'rgba(160,170,220,0.25)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, r * 1.8, r * 0.35, -0.2, 0, Math.PI * 2);
         ctx.stroke();
       }
     });
 
-    // Detect blobs periodically
-    detectBlobs();
+    // Layer 4: bright foreground stars
+    const stars2 = [];
+    for (let i = 0; i < 30; i++) {
+      stars2.push({ x: rand() * 1.6 - 0.3, y: rand() * 1.6 - 0.3, r: rand() * 2.5 + 1, b: rand() * 0.3 + 0.7 });
+    }
+    layers.push({
+      depth: 0.75,
+      draw(ctx, W, H, ox, oy, t) {
+        for (const s of stars2) {
+          ctx.fillStyle = `rgba(255,255,255,${s.b})`;
+          ctx.beginPath();
+          ctx.arc(s.x * W + ox, s.y * H + oy, s.r, 0, Math.PI * 2);
+          ctx.fill();
+          // cross flare
+          ctx.strokeStyle = `rgba(255,255,255,${s.b * 0.3})`;
+          ctx.lineWidth = 0.5;
+          const fx = s.x * W + ox, fy = s.y * H + oy, fl = s.r * 4;
+          ctx.beginPath();
+          ctx.moveTo(fx - fl, fy); ctx.lineTo(fx + fl, fy);
+          ctx.moveTo(fx, fy - fl); ctx.lineTo(fx, fy + fl);
+          ctx.stroke();
+        }
+      }
+    });
+
+    // Layer 5: dust / particles
+    const dust = [];
+    for (let i = 0; i < 40; i++) {
+      dust.push({ x: rand() * 2 - 0.5, y: rand() * 2 - 0.5, r: rand() * 1.5 + 0.3, speed: rand() * 0.02 + 0.005 });
+    }
+    layers.push({
+      depth: 1.0,
+      draw(ctx, W, H, ox, oy, t) {
+        ctx.fillStyle = 'rgba(200,210,255,0.5)';
+        for (const d of dust) {
+          const px = ((d.x + t * d.speed) % 2 - 0.5) * W + ox;
+          const py = d.y * H + oy;
+          ctx.beginPath();
+          ctx.arc(px, py, d.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    });
+
+    return layers;
   }
 
-  /* ─── FOOTER YEAR ────────────────────────────────────────── */
+  /* ── SCENE 1: CITY ───────────────────────────────── */
+  function buildCity() {
+    const layers = [];
+    const rand = seededRand(777);
+
+    // Layer 0: gradient sky
+    layers.push({
+      depth: 0,
+      draw(ctx, W, H, ox, oy, t) {
+        const grad = ctx.createLinearGradient(0, oy, 0, H + oy);
+        grad.addColorStop(0, '#0a0a20');
+        grad.addColorStop(0.5, '#141432');
+        grad.addColorStop(1, '#1e1040');
+        ctx.fillStyle = grad;
+        ctx.fillRect(-200, -200, W + 400, H + 400);
+      }
+    });
+
+    // Layer 1: moon + clouds
+    layers.push({
+      depth: 0.1,
+      draw(ctx, W, H, ox, oy, t) {
+        // moon
+        const mx = W * 0.75 + ox, my = H * 0.18 + oy;
+        const grad = ctx.createRadialGradient(mx, my, 0, mx, my, 40);
+        grad.addColorStop(0, 'rgba(255,250,230,0.9)');
+        grad.addColorStop(0.5, 'rgba(255,250,230,0.3)');
+        grad.addColorStop(1, 'rgba(255,250,230,0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(mx, my, 60, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255,250,230,0.85)';
+        ctx.beginPath();
+        ctx.arc(mx, my, 18, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+
+    // Layer 2: far buildings
+    const farBldgs = [];
+    for (let i = 0; i < 25; i++) {
+      farBldgs.push({ x: rand() * 1.6 - 0.3, w: rand() * 40 + 20, h: rand() * 150 + 80 });
+    }
+    layers.push({
+      depth: 0.3,
+      draw(ctx, W, H, ox, oy, t) {
+        ctx.fillStyle = 'rgba(20,18,40,0.9)';
+        for (const b of farBldgs) {
+          const bx = b.x * W + ox;
+          ctx.fillRect(bx, H * 0.65 - b.h + oy, b.w, b.h + H * 0.4);
+        }
+      }
+    });
+
+    // Layer 3: mid buildings with windows
+    const midBldgs = [];
+    for (let i = 0; i < 18; i++) {
+      const bw = rand() * 60 + 30;
+      const bh = rand() * 200 + 120;
+      const wins = [];
+      const cols = Math.floor(bw / 12);
+      const rows = Math.floor(bh / 18);
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (rand() > 0.4) wins.push({ r, c, on: rand() > 0.5 });
+        }
+      }
+      midBldgs.push({ x: rand() * 1.6 - 0.3, w: bw, h: bh, wins });
+    }
+    layers.push({
+      depth: 0.55,
+      draw(ctx, W, H, ox, oy, t) {
+        for (const b of midBldgs) {
+          const bx = b.x * W + ox;
+          const by = H * 0.7 - b.h + oy;
+          ctx.fillStyle = 'rgba(15,14,30,0.95)';
+          ctx.fillRect(bx, by, b.w, b.h + H * 0.35);
+          for (const w of b.wins) {
+            const flicker = w.on && Math.sin(t * 0.3 + w.r + w.c * 3) > -0.8;
+            ctx.fillStyle = flicker ? 'rgba(255,230,150,0.6)' : 'rgba(40,35,60,0.3)';
+            ctx.fillRect(bx + 4 + w.c * 12, by + 6 + w.r * 18, 8, 12);
+          }
+        }
+      }
+    });
+
+    // Layer 4: close building silhouettes
+    const closeBldgs = [];
+    for (let i = 0; i < 6; i++) {
+      closeBldgs.push({ x: rand() * 1.8 - 0.4, w: rand() * 80 + 50, h: rand() * 280 + 200 });
+    }
+    layers.push({
+      depth: 0.8,
+      draw(ctx, W, H, ox, oy, t) {
+        ctx.fillStyle = 'rgba(8,6,18,0.97)';
+        for (const b of closeBldgs) {
+          ctx.fillRect(b.x * W + ox, H * 0.75 - b.h + oy, b.w, b.h + H * 0.3);
+        }
+      }
+    });
+
+    // Layer 5: street lights / particles
+    const lights = [];
+    for (let i = 0; i < 15; i++) {
+      lights.push({ x: rand() * 2 - 0.5, y: 0.7 + rand() * 0.2, hue: rand() > 0.5 ? 30 : 200, r: rand() * 3 + 2 });
+    }
+    layers.push({
+      depth: 1.0,
+      draw(ctx, W, H, ox, oy, t) {
+        for (const l of lights) {
+          const px = l.x * W + ox;
+          const py = l.y * H + oy;
+          const grad = ctx.createRadialGradient(px, py, 0, px, py, l.r * 8);
+          grad.addColorStop(0, `hsla(${l.hue}, 80%, 70%, 0.4)`);
+          grad.addColorStop(1, `hsla(${l.hue}, 80%, 50%, 0)`);
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(px, py, l.r * 8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = `hsla(${l.hue}, 90%, 80%, 0.8)`;
+          ctx.beginPath();
+          ctx.arc(px, py, l.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    });
+
+    return layers;
+  }
+
+  /* ── SCENE 2: FOREST ─────────────────────────────── */
+  function buildForest() {
+    const layers = [];
+    const rand = seededRand(1337);
+
+    // Layer 0: sky
+    layers.push({
+      depth: 0,
+      draw(ctx, W, H, ox, oy, t) {
+        const grad = ctx.createLinearGradient(0, oy - 100, 0, H * 0.6 + oy);
+        grad.addColorStop(0, '#0a1a0a');
+        grad.addColorStop(1, '#0a200f');
+        ctx.fillStyle = grad;
+        ctx.fillRect(-200, -200, W + 400, H + 400);
+      }
+    });
+
+    // Layer 1: distant mountains
+    layers.push({
+      depth: 0.1,
+      draw(ctx, W, H, ox, oy, t) {
+        ctx.fillStyle = 'rgba(15,35,20,0.7)';
+        ctx.beginPath();
+        ctx.moveTo(-100 + ox, H * 0.55 + oy);
+        for (let x = -100; x <= W + 200; x += 80) {
+          const mh = Math.sin(x * 0.005 + 1) * H * 0.12 + Math.sin(x * 0.012) * H * 0.06;
+          ctx.lineTo(x + ox, H * 0.45 - mh + oy);
+        }
+        ctx.lineTo(W + 200 + ox, H + 100 + oy);
+        ctx.lineTo(-100 + ox, H + 100 + oy);
+        ctx.fill();
+      }
+    });
+
+    // Layer 2: far trees
+    function makeTree(rand) {
+      return { x: rand() * 1.8 - 0.4, h: rand() * 120 + 60, w: rand() * 20 + 12 };
+    }
+    const farTrees = [];
+    for (let i = 0; i < 30; i++) farTrees.push(makeTree(rand));
+    layers.push({
+      depth: 0.3,
+      draw(ctx, W, H, ox, oy, t) {
+        for (const tr of farTrees) {
+          const tx = tr.x * W + ox;
+          const base = H * 0.65 + oy;
+          // trunk
+          ctx.fillStyle = 'rgba(30,20,10,0.7)';
+          ctx.fillRect(tx - 2, base - tr.h * 0.3, 4, tr.h * 0.3 + H * 0.4);
+          // canopy (triangle)
+          ctx.fillStyle = 'rgba(20,55,25,0.8)';
+          ctx.beginPath();
+          ctx.moveTo(tx, base - tr.h);
+          ctx.lineTo(tx - tr.w, base - tr.h * 0.15);
+          ctx.lineTo(tx + tr.w, base - tr.h * 0.15);
+          ctx.fill();
+        }
+      }
+    });
+
+    // Layer 3: mid trees
+    const midTrees = [];
+    for (let i = 0; i < 20; i++) midTrees.push(makeTree(rand));
+    layers.push({
+      depth: 0.55,
+      draw(ctx, W, H, ox, oy, t) {
+        for (const tr of midTrees) {
+          const tx = tr.x * W + ox;
+          const base = H * 0.7 + oy;
+          ctx.fillStyle = 'rgba(20,12,6,0.8)';
+          ctx.fillRect(tx - 3, base - tr.h * 0.35, 6, tr.h * 0.35 + H * 0.35);
+          ctx.fillStyle = 'rgba(15,60,20,0.9)';
+          ctx.beginPath();
+          ctx.moveTo(tx, base - tr.h * 1.1);
+          ctx.lineTo(tx - tr.w * 1.2, base - tr.h * 0.1);
+          ctx.lineTo(tx + tr.w * 1.2, base - tr.h * 0.1);
+          ctx.fill();
+        }
+      }
+    });
+
+    // Layer 4: fireflies
+    const flies = [];
+    for (let i = 0; i < 25; i++) {
+      flies.push({ x: rand() * 1.4 - 0.2, y: rand() * 0.5 + 0.3, phase: rand() * Math.PI * 2, speed: rand() * 0.5 + 0.3 });
+    }
+    layers.push({
+      depth: 0.7,
+      draw(ctx, W, H, ox, oy, t) {
+        for (const f of flies) {
+          const glow = (Math.sin(t * f.speed + f.phase) + 1) * 0.5;
+          if (glow < 0.3) continue;
+          const px = f.x * W + ox + Math.sin(t * 0.2 + f.phase) * 20;
+          const py = f.y * H + oy + Math.cos(t * 0.15 + f.x * 5) * 15;
+          const grad = ctx.createRadialGradient(px, py, 0, px, py, 12);
+          grad.addColorStop(0, `rgba(180,255,80,${glow * 0.6})`);
+          grad.addColorStop(1, 'rgba(180,255,80,0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(px, py, 12, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    });
+
+    // Layer 5: close tree silhouettes
+    const closeTrees = [];
+    for (let i = 0; i < 8; i++) {
+      closeTrees.push({ x: rand() * 2 - 0.5, h: rand() * 200 + 180, w: rand() * 35 + 25 });
+    }
+    layers.push({
+      depth: 1.0,
+      draw(ctx, W, H, ox, oy, t) {
+        ctx.fillStyle = 'rgba(5,10,5,0.95)';
+        for (const tr of closeTrees) {
+          const tx = tr.x * W + ox;
+          const base = H * 0.75 + oy;
+          ctx.fillRect(tx - 4, base - tr.h * 0.3, 8, tr.h * 0.3 + H * 0.3);
+          ctx.beginPath();
+          ctx.moveTo(tx, base - tr.h);
+          ctx.lineTo(tx - tr.w, base);
+          ctx.lineTo(tx + tr.w, base);
+          ctx.fill();
+        }
+        // ground
+        ctx.fillStyle = 'rgba(5,12,5,0.9)';
+        ctx.fillRect(-200, H * 0.82 + oy, W + 400, H * 0.3);
+      }
+    });
+
+    return layers;
+  }
+
+  /* ── RENDER ──────────────────────────────────────── */
+  let time = 0;
+
+  function render() {
+    time += CFG.SPEED * 0.016;
+
+    // Smooth face position
+    const lerpFactor = 1 / CFG.SMOOTH;
+    smoothX += (faceX - smoothX) * lerpFactor;
+    smoothY += (faceY - smoothY) * lerpFactor;
+
+    // Map face position to offset: center=0, edges=±DEPTH
+    // Face coords are mirrored (webcam), so invert X for natural movement
+    const normX = (smoothX - 0.5) * 2; // -1 to 1
+    const normY = (smoothY - 0.5) * 2;
+
+    ctx.clearRect(0, 0, W, H);
+
+    const scene = scenes[activeScene];
+    if (!scene) return;
+
+    const numLayers = Math.min(CFG.LAYERS, scene.length);
+    for (let i = 0; i < numLayers; i++) {
+      const layer = scene[i];
+      const depthScale = layer.depth * CFG.DEPTH;
+      const offX = normX * depthScale;
+      const offY = normY * depthScale * 0.6; // less vertical
+      layer.draw(ctx, W, H, offX, offY, time);
+    }
+
+    // Vignette
+    const vigGrad = ctx.createRadialGradient(W / 2, H / 2, W * 0.25, W / 2, H / 2, W * 0.75);
+    vigGrad.addColorStop(0, 'rgba(0,0,0,0)');
+    vigGrad.addColorStop(1, 'rgba(0,0,0,0.5)');
+    ctx.fillStyle = vigGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Window frame border
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(8, 8, W - 16, H - 16);
+  }
+
+  /* ── FACE DETECTION ──────────────────────────────── */
+  let faceDetector = null;
+  const video = document.getElementById('fp-video');
+  const previewVid = document.getElementById('fp-preview-vid');
+  const previewDot = document.getElementById('fp-preview-dot');
+
+  async function startFaceDetection(stream) {
+    video.srcObject = stream;
+    previewVid.srcObject = stream;
+    await video.play();
+    await previewVid.play();
+
+    faceDetector = new FaceDetection({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`
+    });
+
+    faceDetector.setOptions({
+      model: 'short',
+      minDetectionConfidence: 0.5,
+    });
+
+    faceDetector.onResults((results) => {
+      if (results.detections && results.detections.length > 0) {
+        const det = results.detections[0];
+        const bb = det.boundingBox;
+        // Center of face bounding box, normalized 0-1
+        faceX = bb.xCenter;
+        faceY = bb.yCenter;
+        faceDetected = true;
+
+        // Update preview dot (mirrored)
+        previewDot.style.left = ((1 - faceX) * 100) + '%';
+        previewDot.style.top = (faceY * 100) + '%';
+        previewDot.style.background = '#6C63FF';
+      } else {
+        faceDetected = false;
+        previewDot.style.background = 'rgba(255,80,80,0.6)';
+      }
+    });
+
+    // Process frames
+    async function detect() {
+      if (video.readyState >= 2) {
+        await faceDetector.send({ image: video });
+      }
+      requestAnimationFrame(detect);
+    }
+    detect();
+  }
+
+  /* ── START ───────────────────────────────────────── */
+  document.getElementById('fp-start-btn').addEventListener('click', async () => {
+    const errEl = document.getElementById('fp-error');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 320 }, height: { ideal: 240 } }
+      });
+      document.getElementById('fp-start').classList.add('hidden');
+      document.getElementById('fp-preview').style.opacity = '1';
+      await startFaceDetection(stream);
+    } catch (e) {
+      errEl.textContent = 'Camera access denied or unavailable. ' + e.message;
+      errEl.classList.add('visible');
+    }
+  });
+
+  /* ── SCENE PICKER ────────────────────────────────── */
+  document.querySelectorAll('.fp-scene-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeScene = +btn.dataset.scene;
+      document.querySelectorAll('.fp-scene-btn').forEach(b => b.classList.toggle('active', b === btn));
+    });
+  });
+
+  /* ── SLIDERS ─────────────────────────────────────── */
+  function wire(id, valId, setter, display) {
+    const input = document.getElementById(id);
+    const valEl = document.getElementById(valId);
+    input.addEventListener('input', () => {
+      setter(+input.value);
+      valEl.textContent = display(+input.value);
+    });
+  }
+  wire('s-depth', 'v-depth', v => { CFG.DEPTH = v; }, v => v);
+  wire('s-smooth', 'v-smooth', v => { CFG.SMOOTH = v; }, v => v);
+  wire('s-layers', 'v-layers', v => { CFG.LAYERS = v; }, v => v);
+  wire('s-speed', 'v-speed', v => { CFG.SPEED = v / 100; }, v => (v / 100).toFixed(2));
+
+  /* ── FULLSCREEN / HIDE ───────────────────────────── */
+  document.getElementById('fp-fs-btn').addEventListener('click', () => {
+    if (!document.fullscreenElement) stage.requestFullscreen().catch(() => {});
+    else document.exitFullscreen();
+  });
+  document.getElementById('fp-hide-btn').addEventListener('click', () => {
+    stage.classList.toggle('ui-hidden');
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT') return;
+    if (e.key === 'f' || e.key === 'F') document.getElementById('fp-fs-btn').click();
+    if (e.key === 'h' || e.key === 'H') document.getElementById('fp-hide-btn').click();
+  });
+
+  /* ── MOUSE FALLBACK ──────────────────────────────── */
+  // If no face detected, use mouse position as fallback
+  document.addEventListener('mousemove', (e) => {
+    if (!faceDetected) {
+      faceX = e.clientX / window.innerWidth;
+      faceY = e.clientY / window.innerHeight;
+    }
+  });
+
+  /* ── RESIZE ──────────────────────────────────────── */
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(resize, 80);
+  });
+
+  /* ── LOOP ────────────────────────────────────────── */
+  function tick() { requestAnimationFrame(tick); render(); }
+
+  /* ── INIT ────────────────────────────────────────── */
+  resize();
   document.getElementById('footer-year').textContent = new Date().getFullYear();
+  tick();
 
 })();
 </script>

@@ -694,15 +694,17 @@
 
       <!-- ════ EXPERIMENT 09 — WEBCAM PHYSICS BLOB ════ -->
       <article class="exp-card">
-        <a href="webcam-physics-blob/" class="exp-geo-preview" aria-label="View Webcam Physics Blob experiment" style="background:#000;overflow:hidden;">
+        <a href="webcam-physics-blob/" class="exp-geo-preview" aria-label="View Face Parallax experiment" style="background:#060610;overflow:hidden;">
           <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;">
             <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style="opacity:0.6;">
-              <rect x="8" y="8" width="32" height="32" rx="4" stroke="#6C63FF" stroke-width="1.5"/>
-              <circle cx="16" cy="16" r="3" fill="#2DD4BF"/>
-              <circle cx="32" cy="24" r="3" fill="#FF6010"/>
-              <circle cx="24" cy="32" r="3" fill="#00E044"/>
+              <circle cx="24" cy="18" r="9" stroke="#6C63FF" stroke-width="1.5" fill="none"/>
+              <path d="M10 40c0-7.732 6.268-14 14-14s14 6.268 14 14" stroke="#6C63FF" stroke-width="1.5" fill="none"/>
+              <line x1="4" y1="10" x2="4" y2="38" stroke="rgba(108,99,255,0.3)" stroke-width="1"/>
+              <line x1="44" y1="10" x2="44" y2="38" stroke="rgba(108,99,255,0.3)" stroke-width="1"/>
+              <line x1="4" y1="10" x2="44" y2="10" stroke="rgba(108,99,255,0.3)" stroke-width="1"/>
+              <line x1="4" y1="38" x2="44" y2="38" stroke="rgba(108,99,255,0.3)" stroke-width="1"/>
             </svg>
-            <span style="font-family:'Space Mono',monospace;font-size:10px;color:#6C63FF;opacity:0.7;">Physics + Webcam</span>
+            <span style="font-family:'Space Mono',monospace;font-size:10px;color:#6C63FF;opacity:0.7;">Face + Parallax</span>
           </div>
           <div class="exp-demo-corner">
             <div class="exp-demo-dot exp-demo-dot--live"></div>
@@ -716,15 +718,15 @@
             <span class="section-label" style="margin-bottom: 0;">09</span>
             <span class="tag tag-teal">LIVE</span>
           </div>
-          <h2 class="exp-card-title">Webcam Physics Blob</h2>
+          <h2 class="exp-card-title">Face Parallax</h2>
           <p class="exp-card-desc">
-            Interactive physics sandbox using webcam blob tracking. Draw boundaries, detect dark objects, and watch balls interact with generated physics shapes in real-time.
+            Face tracking drives head-coupled perspective across layered 3D scenes. Move your head to look around — the screen becomes a window into another world.
           </p>
           <div class="exp-card-tags">
-            <span class="tag">Webcam Processing</span>
-            <span class="tag">Blob Detection</span>
-            <span class="tag">Physics Simulation</span>
-            <span class="tag">Matter.js</span>
+            <span class="tag">Face Detection</span>
+            <span class="tag">MediaPipe</span>
+            <span class="tag">Parallax Layers</span>
+            <span class="tag">Canvas 2D</span>
           </div>
         </div>
       </article>
