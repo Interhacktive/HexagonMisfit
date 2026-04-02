@@ -171,16 +171,22 @@
       <div class="cs-fact"><span class="cs-fact-label">Year</span><span class="cs-fact-value">2025</span></div>
       <div class="cs-fact"><span class="cs-fact-label">Service</span><span class="cs-fact-value">Permanent Installation</span></div>
       <div class="cs-fact"><span class="cs-fact-label">Location</span><span class="cs-fact-value">Stadium of Light, Sunderland</span></div>
-      <div class="cs-fact"><span class="cs-fact-label">Collaborator</span><span class="cs-fact-value">Hot Dark Matter, London</span></div>
+      <div class="cs-fact"><span class="cs-fact-label">Collaborator</span><span class="cs-fact-value">Hot Dark Matter</span></div>
     </div>
   </div>
 </div>
 
 <section class="cs-video" aria-label="Project video">
   <div class="container">
-    <div class="cs-video-wrap" style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;">
-      <!-- TODO: replace with actual Hexagon Misfit YouTube video ID -->
-      <iframe src="https://www.youtube.com/embed/PLACEHOLDER" title="Ring of Light — Pixel Plaza" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;"></iframe>
+    <div class="cs-video-wrap">
+      <video
+        controls
+        playsinline
+        preload="none"
+        poster="https://cdn.prod.website-files.com/67b6a9ac780b924c936f06b2/69438a1b36396888405b59e5_RingOfLight4.png"
+      >
+        <source src="../assets/images/ringoflight/pixelplaza.mov" type="video/mp4" />
+      </video>
     </div>
   </div>
 </section>
@@ -191,14 +197,14 @@
       <div>
         <span class="cs-label">The Brief</span>
         <blockquote class="cs-overview-quote">"We need something that feels alive — that actually reflects what the city is doing, not just a static landmark."</blockquote>
-        <p class="cs-body-text">London-based studio Hot Dark Matter engaged Hexagon Misfit to design and build the visualization system for Ring of Light — a permanent public installation anchoring the new city centre district adjacent to Sunderland's Stadium of Light, where music festivals are held throughout the year. Hot Dark Matter fabricated the LED wall cabinets. Hexagon Misfit designed and built everything that makes them think.</p>
+        <p class="cs-body-text">London-based studio Hot Dark Matter engaged Hexagon Misfit to design and build the visualization system for Ring of Light — a permanent public installation anchoring the new city centre district adjacent to Sunderland's Stadium of Light, where music festivals are held throughout the year. Hot Dark Matter fabricated the LED wall cabinets, made data drive audio and gathered sensor and city data. Hexagon Misfit designed and built everything that makes the pillar come to life visually.</p>
         <p class="cs-body-text">The sculpture continuously ingests over a dozen live smart city data streams — car traffic, foot traffic, wind speed, air quality, WiFi usage, temperature, rainfall, sea level, and more — translating each signal into shifting light. The visual language drifts with seasons and the time of day: dawn, midday, dusk, and night each carry a distinct ambient palette. When every data stream reaches high engagement simultaneously, the system triggers rare special event modes with distinct sounds and visuals that no single viewer is likely to see twice. Each pillar has an interior-facing proximity sensor, and during music festival activations, visitors scan a QR code to take direct control of their pillar's sound and light.</p>
       </div>
       <aside class="cs-overview-sidebar" aria-label="Project scope">
         <p class="cs-overview-sidebar-title">Scope of Work</p>
         <ul class="cs-scope-list">
           <li>Smart city data pipeline (12+ live feeds)</li>
-          <li>Unreal Engine visualization system</li>
+          <li>Unreal Engine Pre-visualization system</li>
           <li>Notch real-time VFX</li>
           <li>Hot Dark Matter LED wall cabinets</li>
           <li>Proximity sensors — interior, per pillar</li>
@@ -216,11 +222,12 @@
     <div class="cs-challenge-grid">
       <div>
         <span class="cs-label">The Challenge</span>
-        <h2 class="cs-h2">A sculpture that has to read the city — and survive it.</h2>
+        <h2 class="cs-h2">Beautiful at 3am. Readable at noon. Controllable by a crowd of strangers.</h2>
       </div>
       <div>
-        <p class="cs-body-text">The northeast coast of England is not gentle to outdoor electronics. Salt air, horizontal rain, sustained winds — the installation had to operate continuously without any human intervention in conditions that regularly defeat far simpler hardware.</p>
-        <p class="cs-body-text">Beyond the environmental constraints, the visual logic had to be genuinely meaningful. A decorative LED ring that just cycles colors is not a smart city visualization — it's a nightclub sign. The data had to drive the aesthetics in ways that were intuitively readable, even to someone who had never heard of the project, seeing it for the first time from across the car park.</p>
+        <p class="cs-body-text">The hardest design problem wasn't rendering 12+ live data streams — it was making them feel like a single coherent thing. Wind speed, rainfall, foot traffic, sea level, air quality, WiFi density, temperature, energy usage: each stream needed its own visual voice without any of them overpowering the others. Too literal and you get a dashboard. Too abstract and you get a screen saver. The aesthetic had to sit right in between — legible without labels, beautiful without being arbitrary.</p>
+        <p class="cs-body-text">That problem compounds across a full day. Dawn in Sunderland looks nothing like midday, and nothing like 2am on a Friday during a festival. The system needed to hold its own visual logic — a continuous, slow-shifting palette built from time of day and season — while layering live data activity on top without the whole thing feeling like it's fighting itself. The challenge was less "what does wind look like" and more "what does wind look like at dusk in October, with high foot traffic and low air quality, while still feeling like the same sculpture it was at noon."</p>
+        <p class="cs-body-text">During music festivals, a second layer of complexity arrives: up to a dozen people simultaneously controlling their own pillar's sound and light via QR web app. The interaction had to be immediately obvious — scan, see your pillar respond, understand you're driving it — without a word of instruction. And it had to stay harmonious. One person going full intensity can't wreck the experience for everyone else. The system needed soft limits, neighbor blending, and a visual language where individual contributions read as personal without fragmenting the whole ring into noise.</p>
       </div>
     </div>
   </div>
@@ -261,23 +268,16 @@
     <h2 class="cs-h2">On site and in operation.</h2>
     <div class="cs-gallery-grid" role="list">
       <div class="cs-gallery-item cs-gallery-item--span-col" role="listitem">
-        <img src="https://cdn.prod.website-files.com/67b6a9ac780b924c936f06b2/69438a1b36396888405b59e5_RingOfLight4.png" alt="Ring of Light at Stadium of Light" loading="lazy" />
+        <img src="../assets/images/ringoflight/RingOfLight3.png" alt="Ring of Light night view" loading="lazy" />
       </div>
-      <div class="cs-gallery-item cs-gallery-placeholder" role="listitem" aria-label="Photo placeholder">
-        <div class="cs-gallery-placeholder-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
-        <span>Add photo</span>
+      <div class="cs-gallery-item" role="listitem">
+        <img src="../assets/images/ringoflight/RingOfLight2.png" alt="Ring of Light detail view" loading="lazy" />
       </div>
-      <div class="cs-gallery-item cs-gallery-placeholder" role="listitem" aria-label="Photo placeholder">
-        <div class="cs-gallery-placeholder-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
-        <span>Add photo</span>
+      <div class="cs-gallery-item" role="listitem">
+        <img src="../assets/images/ringoflight/RingOfLight4.png" alt="Ring of Light at Stadium of Light" loading="lazy" />
       </div>
-      <div class="cs-gallery-item cs-gallery-placeholder" role="listitem" aria-label="Photo placeholder">
-        <div class="cs-gallery-placeholder-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
-        <span>Add photo</span>
-      </div>
-      <div class="cs-gallery-item cs-gallery-placeholder" role="listitem" aria-label="Photo placeholder">
-        <div class="cs-gallery-placeholder-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
-        <span>Add photo</span>
+      <div class="cs-gallery-item" role="listitem">
+        <img src="../assets/images/ringoflight/RingOfLight5.png" alt="Ring of Light ambient state" loading="lazy" />
       </div>
     </div>
   </div>
@@ -288,12 +288,13 @@
     <div class="cs-outcome-grid">
       <div>
         <span class="cs-label">The Result</span>
-        <h2 class="cs-h2">A recognized civic landmark — and a proof of concept for data-driven public art.</h2>
-        <p class="cs-body-text">Ring of Light has become one of the most-photographed public artworks in Sunderland. It anchors the Stadium of Light precinct and has been featured prominently in the city's smart city initiative communications — used in grant applications, press materials, and official city branding.</p>
-        <p class="cs-body-text">Beyond its role as a landmark, the piece demonstrated that live data can drive genuinely beautiful public art at civic scale — and that the system supporting it can be trusted to run without anyone watching.</p>
+        <h2 class="cs-h2">A fixture outside the Stadium of Light — and a proof that city data can be genuinely beautiful.</h2>
+        <p class="cs-body-text">For football fans gathering outside the Stadium of Light before and after a match, Ring of Light is part of the experience. The sculpture sits in their path, visibly alive — shifting with the weather, the time of day, the energy of the city around it. People stop. They look at it. They try to figure out what it's responding to. That curiosity is the piece working exactly as intended.</p>
+        <p class="cs-body-text">During festival activations, visitors discover they can control their pillar through the QR web app — and that moment of realization consistently draws people in. Watching your own input show up in the ring, then spread to the pillars beside you, tends to pull in nearby strangers who want to try it too.</p>
+        <p class="cs-body-text">Beyond the immediate experience, the piece demonstrates something that wasn't obvious before it existed: that smart city data — the dry infrastructure of traffic counts and air quality sensors — can be a material for public art. It runs continuously without anyone watching over it, and it looks different every time you see it.</p>
       </div>
       <div>
-        <p class="cs-outcome-pull">"The sculpture captures something real about the city at any given moment. It's not just decoration — it's a reflection."</p>
+        <p class="cs-outcome-pull">"People stop to figure out what it's responding to. That curiosity is the piece working exactly as intended."</p>
       </div>
     </div>
   </div>
@@ -312,8 +313,8 @@
         <span class="cs-stat-label">Live city data streams<br>ingested continuously</span>
       </div>
       <div class="cs-stat-card">
-        <span class="cs-stat-value">0</span>
-        <span class="cs-stat-label">Unscheduled<br>interventions</span>
+        <span class="cs-stat-value" id="days-active">—</span>
+        <span class="cs-stat-label">Days active since<br>Oct 15, 2025</span>
       </div>
     </div>
   </div>
@@ -339,6 +340,21 @@
   </div>
 </footer>
 
-<script>document.getElementById('footer-year').textContent = new Date().getFullYear();</script>
+<script>
+  document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+  // Calculate days active since installation (October 15, 2025)
+  (function() {
+    const installDate = new Date('2025-10-15T00:00:00');
+    const today = new Date();
+    const diffTime = today - installDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const daysActiveEl = document.getElementById('days-active');
+    if (daysActiveEl) {
+      daysActiveEl.textContent = diffDays;
+    }
+  })();
+
+</script>
 </body>
 </html>
