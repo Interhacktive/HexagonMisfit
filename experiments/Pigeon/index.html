@@ -1503,7 +1503,7 @@ body {
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 9.5L11 3L19 9.5V19C19 19.6 18.6 20 18 20H14V15H8V20H4C3.4 20 3 19.6 3 19V9.5Z" fill="var(--ink)"/></svg>
             <span class="nav-label">Home</span>
           </div>
-          <div class="nav-item" onclick="showScreen('s-tracking')">
+          <div class="nav-item" id="nav-track" style="display:none;" onclick="showScreen('s-tracking')">
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="var(--muted)" stroke-width="1.8"/><path d="M11 7V11L14 13" stroke="var(--muted)" stroke-width="1.8" stroke-linecap="round"/></svg>
             <span class="nav-label">Track</span>
           </div>
@@ -2149,6 +2149,7 @@ function goToPricing(e) {
 function goToTracking(e) {
   addRipple(e);
   playFileSound('sounds/pigeon_flapping.mp3');
+  document.getElementById('nav-track').style.display = 'flex';
   // Assign pigeon by tier
   const p = state.pigeons[state.tier - 1];
   state.assignedPigeon = p;
@@ -2338,10 +2339,25 @@ function initAddressInputs() {
   }
 }
 
+const PRESET_LOCATIONS = {
+  from: [
+    { short: '14 E 1st St, East Village',   display: '14 E 1st St, East Village, Manhattan, NYC', lat: 40.7238, lng: -73.9897 },
+    { short: '72 Bedford St, West Village',  display: '72 Bedford St, West Village, Manhattan, NYC', lat: 40.7334, lng: -74.0035 },
+    { short: '310 Flatbush Ave, Brooklyn',   display: '310 Flatbush Ave, Park Slope, Brooklyn, NYC', lat: 40.6723, lng: -73.9751 },
+  ],
+  to: [
+    { short: '82 Elm St, Upper West Side',   display: '82 Elm St, Upper West Side, Manhattan, NYC', lat: 40.7870, lng: -73.9754 },
+    { short: '201 Mulberry St, Nolita',      display: '201 Mulberry St, Nolita, Manhattan, NYC',     lat: 40.7228, lng: -73.9952 },
+    { short: '55 Water St, Financial Dist',  display: '55 Water St, Financial District, Manhattan, NYC', lat: 40.7035, lng: -74.0088 },
+  ],
+};
+
 function setupNominatimAutocomplete(inputId, dropdownId, onSelect) {
   const input    = document.getElementById(inputId);
   const dropdown = document.getElementById(dropdownId);
   if (!input || !dropdown) return;
+
+  const presetKey = inputId.startsWith('from') ? 'from' : 'to';
 
   let debounceTimer;
   let activeRequest = false;
@@ -2356,10 +2372,26 @@ function setupNominatimAutocomplete(inputId, dropdownId, onSelect) {
     dropdown.style.width = inputRect.width + 'px';
   }
 
+  // Show preset suggestions on focus when empty
+  input.addEventListener('focus', () => {
+    if (input.value.trim().length === 0) {
+      positionDropdown();
+      renderDropdown(dropdown, PRESET_LOCATIONS[presetKey], input, onSelect);
+    }
+  });
+
   input.addEventListener('input', () => {
     const query = input.value.trim();
     clearTimeout(debounceTimer);
-    if (query.length < 3) { dropdown.classList.remove('visible'); return; }
+    if (query.length < 3) {
+      if (query.length === 0) {
+        positionDropdown();
+        renderDropdown(dropdown, PRESET_LOCATIONS[presetKey], input, onSelect);
+      } else {
+        dropdown.classList.remove('visible');
+      }
+      return;
+    }
 
     debounceTimer = setTimeout(async () => {
       if (activeRequest) return;
@@ -2718,6 +2750,7 @@ function initStarRating() {
 
 function sendAnother(e) {
   addRipple(e);
+  document.getElementById('nav-track').style.display = 'none';
   if (trackMap) { trackMap.remove(); trackMap = null; }
   if (birdAnimFrame) { cancelAnimationFrame(birdAnimFrame); birdAnimFrame = null; }
   birdMarker = null;
