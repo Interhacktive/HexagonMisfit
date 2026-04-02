@@ -1415,16 +1415,14 @@ body {
 /* Scrollbar on body for tall content */
 .screen-body { scroll-behavior: smooth; }
 
-/* Scroll-fade indicator — gradient at bottom of scrollable area */
+/* Scroll-fade indicator — subtle gradient at very bottom of scrollable area */
 .screen-body::after {
   content: '';
   display: block;
   position: sticky;
   bottom: 0;
-  left: 0;
-  right: 0;
-  height: 56px;
-  margin-top: -56px;
+  height: 28px;
+  margin-top: -28px;
   background: linear-gradient(to bottom, transparent, var(--bg));
   pointer-events: none;
   flex-shrink: 0;
@@ -2302,7 +2300,7 @@ function goToPricing(e) {
 
 function goToTracking(e) {
   addRipple(e);
-  playFileSound('sounds/pigeon_flapping.mp3');
+  playPigeonSound();
   document.getElementById('nav-track').style.display = 'flex';
   // Assign pigeon by tier
   const p = state.pigeons[state.tier - 1];
@@ -3019,9 +3017,9 @@ document.addEventListener('click', (e) => {
   if (target.closest('.profile-card') || target.closest('.pigeon-track-photo') || target.closest('.delivery-pigeon-photo')) {
     playPigeonSound();
   }
-  // Whoosh for screen transitions (not btn-gold — that uses flapping instead)
-  if (target.closest('.btn-primary') || target.closest('.back-btn')) {
-    playWhoosh();
+  // Cooing for back buttons and primary nav buttons
+  if (target.closest('.back-btn') || target.closest('.btn-primary')) {
+    playPigeonSound();
   }
   // Click for small interactions
   if (target.closest('.tier-card') || target.closest('.toggle-track') || target.closest('.nav-item') || target.closest('.star-btn')) {
