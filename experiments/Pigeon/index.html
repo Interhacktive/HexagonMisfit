@@ -1318,8 +1318,8 @@ body {
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 3.5H16C16.6 3.5 17 3.9 17 4.5V11.5C17 12.1 16.6 12.5 16 12.5H10L8 15L6 12.5H2C1.4 12.5 1 12.1 1 11.5V4.5C1 3.9 1.4 3.5 2 3.5Z" stroke="#C4A35A" stroke-width="1.6" stroke-linejoin="round"/></svg>
               </div>
               <div class="tier-info">
-                <div class="tier-name">Digital Message</div>
-                <div class="tier-desc">Type in app · dispatched from nearest office</div>
+                <div class="tier-name">We Write, We Fly</div>
+                <div class="tier-desc">We craft your message · pigeon delivers</div>
               </div>
               <div class="tier-price">$4.20</div>
             </div>
@@ -1329,21 +1329,10 @@ body {
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="4" width="16" height="12" rx="2" stroke="#8C8C7A" stroke-width="1.6"/><path d="M5 4V3C5 2.4 5.4 2 6 2H12C12.6 2 13 2.4 13 3V4" stroke="#8C8C7A" stroke-width="1.6"/><path d="M1 8H17" stroke="#8C8C7A" stroke-width="1.2" stroke-dasharray="3 2"/></svg>
               </div>
               <div class="tier-info">
-                <div class="tier-name">Office Drop-off</div>
-                <div class="tier-desc">Handwrite your note · drop at nearest office</div>
+                <div class="tier-name">You Write, We Fly</div>
+                <div class="tier-desc">Your words, your handwriting · pigeon delivers</div>
               </div>
               <div class="tier-price">$6.50</div>
-            </div>
-
-            <div class="tier-card ripple-btn" id="tier-3" onclick="selectTier(3, event)">
-              <div class="tier-icon">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2C6.2 2 4 4.2 4 7C4 10.5 9 16 9 16C9 16 14 10.5 14 7C14 4.2 11.8 2 9 2Z" stroke="#8C8C7A" stroke-width="1.6"/><circle cx="9" cy="7" r="2" stroke="#8C8C7A" stroke-width="1.6"/></svg>
-              </div>
-              <div class="tier-info">
-                <div class="tier-name">Home Pickup</div>
-                <div class="tier-desc">Pigeon flies to you · collects note in person</div>
-              </div>
-              <div class="tier-price">$9.80</div>
             </div>
           </div>
 
@@ -1906,9 +1895,8 @@ const state = {
     { id:3, name:'Moss',            role:'Rookie · Quick Drop',    img:'pigeons/pigeon03.png', rating:4.6, deliveries:8  },
   ],
   tiers: {
-    1: { name: 'Digital Message', price: 4.20, basePrice: 2.00, distPrice: 1.05, grainPrice: 0.30, eta: 38, fromLabel: 'Pigeon HQ — East Village', fromNote: 'Pigeon HQ · nearest to recipient', fromDist: '0.4 mi away', ctaSub: 'Est. $4.20 · ~38 min', hasEtaDetail: false },
-    2: { name: 'Office Drop-off',  price: 6.50, basePrice: 3.50, distPrice: 1.65, grainPrice: 0.50, eta: 42, fromLabel: 'Pigeon HQ — Brooklyn',    fromNote: 'Office drop-off · 0.3 mi from you', fromDist: '0.3 mi away', ctaSub: 'Est. $6.50 · ~42 min', hasEtaDetail: true  },
-    3: { name: 'Home Pickup',      price: 9.80, basePrice: 6.50, distPrice: 1.65, grainPrice: 0.50, eta: 53, fromLabel: '14 Rooftop Lane, Brooklyn', fromNote: 'Pigeon comes to you',             fromDist: 'Your address', ctaSub: 'Est. $9.80 · ~53 min', hasEtaDetail: false },
+    1: { name: 'We Write, We Fly', price: 4.20, basePrice: 2.00, distPrice: 1.05, grainPrice: 0.30, eta: 38, fromLabel: 'Pigeon HQ — East Village', fromNote: 'Pigeon HQ · nearest to recipient', fromDist: '0.4 mi away', ctaSub: 'Est. $4.20 · ~38 min', hasEtaDetail: false },
+    2: { name: 'You Write, We Fly', price: 6.50, basePrice: 3.50, distPrice: 1.65, grainPrice: 0.50, eta: 42, fromLabel: 'Pigeon HQ — Brooklyn',    fromNote: 'Office drop-off · 0.3 mi from you', fromDist: '0.3 mi away', ctaSub: 'Est. $6.50 · ~42 min', hasEtaDetail: true  },
   }
 };
 
@@ -2020,7 +2008,7 @@ function selectTier(n, e) {
   const t = state.tiers[n];
 
   // Update tier card UI
-  [1,2,3].forEach(i => {
+  [1,2].forEach(i => {
     document.getElementById('tier-' + i).classList.toggle('selected', i === n);
   });
 
