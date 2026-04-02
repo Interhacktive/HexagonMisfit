@@ -15,17 +15,17 @@ input, textarea { font: inherit; outline: none; border: none; background: none; 
 
 /* ── Variables ── */
 :root {
-  --bg: #FAFAF8;
-  --ink: #1A1A18;
-  --muted: #8C8C7A;
-  --cream: #F0EDE6;
-  --border: #EDEAE3;
-  --gold: #C4A35A;
-  --gold-dark: #A88740;
-  --sage: #3D6B4F;
-  --dark-surface: #242420;
-  --dark-bg: #1A1A18;
-  --dark-card: #2A2A26;
+  --bg: #b7c6dd;
+  --ink: #434b6f;
+  --muted: #7b97c3;
+  --cream: #d4dde6;
+  --border: #c8d1dd;
+  --gold: #ff5b17;
+  --gold-dark: #e04a0e;
+  --sage: #2e727a;
+  --dark-surface: #282c30;
+  --dark-bg: #1e2125;
+  --dark-card: #2e3338;
   --r-sm: 10px;
   --r-md: 14px;
   --r-lg: 18px;
@@ -346,15 +346,15 @@ body {
 }
 .logo-name {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 700;
-  color: var(--ink);
+  color: var(--gold);
   letter-spacing: -0.04em;
 }
 .logo-tag {
   font-size: 13px;
-  color: var(--muted);
-  padding-left: 38px;
+  color: #4a6fa5;
+  padding-left: 62px;
   padding-top: 2px;
 }
 
@@ -1275,13 +1275,7 @@ body {
         <div class="screen-body">
           <!-- Logo -->
           <div class="home-logo">
-            <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
-              <ellipse cx="14" cy="16" rx="9" ry="7" fill="rgba(196,163,90,0.15)"/>
-              <path d="M14 4C11 4 8 6.5 8 9.5C8 11.5 9 13 10.5 14L9 20H19L17.5 14C19 13 20 11.5 20 9.5C20 6.5 17 4 14 4Z" fill="#C4A35A"/>
-              <circle cx="11.5" cy="9" r="1.1" fill="#1A1A18"/>
-              <path d="M20 9.5C22 8.5 24 9.5 23 11.5" stroke="#C4A35A" stroke-width="1.5" stroke-linecap="round"/>
-              <path d="M10 20L9 23L11 22.5L14 24L17 22.5L19 23L18 20" fill="#8C8C7A"/>
-            </svg>
+            <img src="images/pigeonLogo-small.png" alt="Pigeon" style="width:52px;height:52px;object-fit:contain;">
             <div>
               <div class="logo-name">pigeon</div>
               <div class="logo-tag">city-wide delivery. naturally.</div>
@@ -1316,35 +1310,6 @@ body {
             </div>
           </div>
 
-          <!-- Profiles grid: three pigeon personas -->
-          <div class="profiles-grid" aria-label="Pigeon profiles">
-            <div class="profile-card">
-              <div class="photo-frame"><img src="pigeons/pigeon01.png" alt="Clara"></div>
-              <div class="profile-meta">
-                <div class="profile-name">Clara</div>
-                <div class="profile-role">Scout · Lead Navigator</div>
-                <div class="profile-bio">Fast, fearless, and obsessed with rooftops. Delivers with precision.</div>
-              </div>
-            </div>
-
-            <div class="profile-card">
-              <div class="photo-frame"><img src="pigeons/pigeon02.png" alt="Sir Reginald III"></div>
-              <div class="profile-meta">
-                <div class="profile-name">Sir Reginald III</div>
-                <div class="profile-role">Veteran · Courier</div>
-                <div class="profile-bio">Six years of service. Calm under pressure, loves grain rewards.</div>
-              </div>
-            </div>
-
-            <div class="profile-card">
-              <div class="photo-frame"><img src="pigeons/pigeon03.png" alt="Moss"></div>
-              <div class="profile-meta">
-                <div class="profile-name">Moss</div>
-                <div class="profile-role">Rookie · Quick Drop</div>
-                <div class="profile-bio">Young and eager — renowned for creative delivery routes.</div>
-              </div>
-            </div>
-          </div>
 
           <!-- Tiers -->
           <div class="tiers-block">
@@ -2023,6 +1988,7 @@ function goToPricing(e) {
 
 function goToTracking(e) {
   addRipple(e);
+  playFileSound('sounds/pigeon_flapping.mp3');
   // Assign pigeon by tier
   const p = state.pigeons[state.tier - 1];
   state.assignedPigeon = p;
@@ -2049,6 +2015,7 @@ function showWeather() {
 /* ── Tier selection ── */
 function selectTier(n, e) {
   if (e) addRipple(e);
+  playPigeonSound();
   state.tier = n;
   const t = state.tiers[n];
 
@@ -2507,6 +2474,7 @@ function initTrackingMap() {
 
 function triggerDelivered() {
   if (birdAnimFrame) { cancelAnimationFrame(birdAnimFrame); birdAnimFrame = null; }
+  playFileSound('sounds/pigeon_success.mp3');
   const p = state.assignedPigeon || state.pigeons[state.tier - 1];
   document.getElementById('delivered-pigeon-photo').src = p.img;
   document.getElementById('delivered-pigeon-name').textContent = p.name;
@@ -2576,6 +2544,111 @@ function sendAnother(e) {
 // Init on load
 initAddressInputs();
 initStarRating();
+
+/* ── Sound Effects ── */
+const pigeonSounds = ['sounds/pigeon_cooing1.mp3', 'sounds/pigeon_cooing2.mp3', 'sounds/pigeon_cooing3.mp3'];
+let pigeonSoundIndex = 0;
+
+function playFileSound(src, vol = 0.5) {
+  try {
+    const audio = new Audio(src);
+    audio.volume = vol;
+    audio.play().catch(() => {});
+  } catch {}
+}
+
+function playPigeonSound() {
+  const idx = Math.floor(Math.random() * pigeonSounds.length);
+  playFileSound(pigeonSounds[idx]);
+  pigeonSoundIndex++;
+}
+
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+  return audioCtx;
+}
+
+function playWhoosh() {
+  try {
+    const ctx = getAudioCtx();
+    const now = ctx.currentTime;
+    const bufferSize = ctx.sampleRate * 0.3;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 2);
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(3000, now);
+    filter.frequency.exponentialRampToValueAtTime(300, now + 0.3);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.15, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+    src.connect(filter).connect(g).connect(ctx.destination);
+    src.start(now);
+  } catch {}
+}
+
+function playChime() {
+  try {
+    const ctx = getAudioCtx();
+    const now = ctx.currentTime;
+    const freqs = [523, 659, 784, 1047];
+    freqs.forEach((f, i) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(f, now + i * 0.12);
+      g.gain.setValueAtTime(0.08, now + i * 0.12);
+      g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.4);
+      o.connect(g).connect(ctx.destination);
+      o.start(now + i * 0.12);
+      o.stop(now + i * 0.12 + 0.4);
+    });
+  } catch {}
+}
+
+function playClick() {
+  try {
+    const ctx = getAudioCtx();
+    const now = ctx.currentTime;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(600, now);
+    o.frequency.exponentialRampToValueAtTime(400, now + 0.06);
+    g.gain.setValueAtTime(0.06, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    o.connect(g).connect(ctx.destination);
+    o.start(now);
+    o.stop(now + 0.08);
+  } catch {}
+}
+
+// First-interaction startup cooing (browsers block autoplay without a user gesture)
+document.addEventListener('click', () => { playPigeonSound(); }, { once: true });
+
+// Add sound effects to interactions
+document.addEventListener('click', (e) => {
+  const target = e.target;
+  // Pigeon sounds for profile clicks
+  if (target.closest('.profile-card') || target.closest('.pigeon-track-photo') || target.closest('.delivery-pigeon-photo')) {
+    playPigeonSound();
+  }
+  // Whoosh for screen transitions (not btn-gold — that uses flapping instead)
+  if (target.closest('.btn-primary') || target.closest('.back-btn')) {
+    playWhoosh();
+  }
+  // Click for small interactions
+  if (target.closest('.tier-card') || target.closest('.toggle-track') || target.closest('.nav-item') || target.closest('.star-btn')) {
+    playClick();
+  }
+}, true);
 
 /* ── Keyboard shortcut hint ── */
 console.log('%c Pigeon App', 'font-size:18px;font-weight:bold');
