@@ -1238,6 +1238,30 @@ body {
   0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
   100% { transform: translateY(130px) rotate(720deg); opacity: 0; }
 }
+/* Grain particle animation */
+.grain-particle {
+  position: absolute;
+  width: 5px;
+  height: 4px;
+  border-radius: 50%;
+  background: #C4A35A;
+  animation: grainFall var(--dur, 0.5s) ease-in var(--delay, 0s) forwards;
+}
+@keyframes grainFall {
+  0%   { transform: translateY(-80px) rotate(0deg); opacity: 0; }
+  15%  { opacity: 1; }
+  100% { transform: translateY(var(--land-y, 30px)) rotate(var(--spin, 180deg)); opacity: 0.85; }
+}
+.grain-pile-mound {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 12px;
+  background: radial-gradient(ellipse at center bottom, #C4A35A 60%, transparent 100%);
+  border-radius: 50%;
+  transition: width 0.4s ease;
+}
 .delivery-headline {
   font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700;
   color: var(--ink); letter-spacing: -0.04em; line-height: 1.1; margin-top: 16px;
@@ -1815,6 +1839,8 @@ body {
               <button class="star-btn" data-val="4">&#x2B50;</button>
               <button class="star-btn" data-val="5">&#x2B50;</button>
             </div>
+            <!-- Grain pile animation -->
+            <div id="grain-pile-container" style="position:relative;height:52px;overflow:hidden;margin-top:8px;"></div>
           </div>
 
           <!-- Tip section -->
@@ -2644,6 +2670,36 @@ function buildConfetti() {
   }
 }
 
+function animateGrain(starCount) {
+  const container = document.getElementById('grain-pile-container');
+  if (!container) return;
+  container.innerHTML = '';
+  const count = starCount * 6;
+  const centerX = container.offsetWidth / 2;
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'grain-particle';
+    const spreadX = (Math.random() - 0.5) * 80;
+    const landY = 28 + Math.random() * 12;
+    const hue = 30 + Math.random() * 20;
+    p.style.cssText =
+      `left:${centerX + spreadX}px;` +
+      `top:0;` +
+      `--dur:${0.3 + Math.random() * 0.35}s;` +
+      `--delay:${Math.random() * 0.3}s;` +
+      `--land-y:${landY}px;` +
+      `--spin:${(Math.random() - 0.5) * 360}deg;` +
+      `background:hsl(${hue},55%,55%);` +
+      `width:${3 + Math.random() * 4}px;height:${2 + Math.random() * 3}px;`;
+    container.appendChild(p);
+  }
+  // Mound grows with star count
+  const mound = document.createElement('div');
+  mound.className = 'grain-pile-mound';
+  mound.style.width = (starCount * 18) + 'px';
+  container.appendChild(mound);
+}
+
 function initStarRating() {
   document.querySelectorAll('.star-btn').forEach(star => {
     star.addEventListener('click', () => {
@@ -2652,6 +2708,8 @@ function initStarRating() {
       document.querySelectorAll('.star-btn').forEach(s =>
         s.classList.toggle('filled', parseInt(s.dataset.val) <= val)
       );
+      playFileSound('sounds/pigeon_grain.mp3', 0.4);
+      animateGrain(val);
       const adj = val === 5 ? 'Outstanding flight!' : val >= 4 ? 'Excellent pigeon!' : 'Thanks for rating!';
       showToast(adj + ' ' + (state.assignedPigeon?.name || 'Your pigeon') + ' appreciates it.');
     });
