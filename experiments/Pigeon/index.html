@@ -1222,7 +1222,7 @@ body {
   display: flex; align-items: center; justify-content: center;
 }
 .delivery-big-pigeon {
-  font-size: 72px; line-height: 1; display: block;
+  display: block;
   animation: deliveredBounce 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 @keyframes deliveredBounce {
@@ -1781,7 +1781,7 @@ body {
             Add Note
           </button>
           <button class="btn-ghost" style="background:var(--ink);color:#FAFAF8;" onclick="triggerDelivered()">
-            &#x1F54A;&#xFE0F; Mark Delivered
+            <img src="images/pigeonLogo-smaller.png" style="width:18px;height:18px;vertical-align:middle;object-fit:contain;"> Mark Delivered
           </button>
         </div>
       </div><!-- /s-tracking -->
@@ -1804,7 +1804,7 @@ body {
           <div class="delivery-hero">
             <div class="delivery-emoji-wrap">
               <div class="confetti-container" id="confetti-container"></div>
-              <span class="delivery-big-pigeon">&#x1F54A;&#xFE0F;</span>
+              <span class="delivery-big-pigeon"><img src="images/pigeonLogo-smaller.png" style="width:80px;height:80px;object-fit:contain;"></span>
             </div>
             <div class="delivery-headline">Message delivered!</div>
             <div class="delivery-sub" id="delivered-sub">
@@ -2606,7 +2606,7 @@ function initTrackingMap() {
 
   // Bird marker
   const birdIcon = L.divIcon({
-    html: '<div style="font-size:20px;line-height:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.25))">🕊️</div>',
+    html: '<div style="width:28px;height:28px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.25))"><img src="images/pigeonLogo-smaller.png" style="width:100%;height:100%;object-fit:contain;"></div>',
     className: '',
     iconAnchor: [10, 10],
   });
