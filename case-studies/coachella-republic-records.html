@@ -574,6 +574,9 @@
     }
     .cs-footer a { color: var(--color-accent-primary); text-decoration: none; }
     .cs-footer a:hover { text-decoration: underline; }
+    .cs-video { padding-block: var(--space-20); border-bottom: 1px solid var(--color-border); }
+    .cs-video-wrap { margin-top: var(--space-10); border-radius: var(--radius-xl); overflow: hidden; border: 1px solid var(--color-border); background: #000; position: relative; padding-bottom: 56.25%; height: 0; }
+    .cs-video-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; }
 
     /* ── RESPONSIVE ────────────────────────────────── */
     @media (max-width: 900px) {
@@ -616,9 +619,9 @@
         Hexagon Misfit
       </a>
       <div class="cs-nav-right">
-        <a href="index.html" class="cs-back-link">
+        <a href="../#work" class="cs-back-link">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 8H1M7 2L1 8l6 6"/></svg>
-          All Case Studies
+          All Work
         </a>
         <a href="../#contact" class="btn btn-outline" style="font-size: var(--text-xs); padding: 0.5rem 1rem;">Let's Talk</a>
       </div>
@@ -695,6 +698,25 @@
 
 
 <!-- ═══════════════════════════════════════════════
+  VIDEO
+══════════════════════════════════════════════════ -->
+<section class="cs-video" aria-label="Project video">
+  <div class="container">
+    <div class="cs-video-wrap">
+      <iframe
+        src="https://www.youtube.com/embed/4y1zpiLCL3I"
+        title="Coachella — Republic Records VIP"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen
+      ></iframe>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
   OVERVIEW
 ══════════════════════════════════════════════════ -->
 <section class="cs-overview" id="overview" aria-label="Project overview">
@@ -707,10 +729,10 @@
           "We need visuals that feel as alive as the music — nothing pre-rendered, nothing canned. Everything live."
         </blockquote>
         <p class="cs-body-text">
-          Republic Records brought Hexagon Misfit in to create the visual environment for their Coachella VIP party, featuring Phantogram. The brief was clear: fully live, fully reactive — no pre-rendered loops, no canned sequences.
+          Republic Records brought Hexagon Misfit in to create the visual environment for their Coachella VIP party, featuring Phantogram and Giorgio Moroder. The brief was clear: fully live, fully reactive — no pre-rendered loops, no canned sequences.
         </p>
         <p class="cs-body-text">
-          The result was a real-time generative visual system built in TouchDesigner, driven entirely by audio analysis of the live set. Every beat, every frequency shift, every build in the music drove corresponding changes in the visuals — the room breathing with the music.
+          The result was a real-time generative visual system built in Unity3D and Notch, driven entirely by audio analysis of the live set. Every beat, every frequency shift, every build in the music drove corresponding changes in the visuals — the room breathing with the music.
         </p>
       </div>
 
@@ -718,7 +740,7 @@
         <p class="cs-overview-sidebar-title">Scope of Work</p>
         <ul class="cs-scope-list">
           <li>Real-time audio analysis pipeline</li>
-          <li>TouchDesigner generative visual system</li>
+          <li>Unity3D &amp; Notch generative visual system</li>
           <li>Multi-display output configuration</li>
           <li>Live operation throughout event</li>
           <li>Content direction and visual design</li>
@@ -739,54 +761,16 @@
 
       <div>
         <span class="cs-label">The Challenge</span>
-        <h2 class="cs-h2">A live visual environment that has to match the energy of a Coachella set — in real time.</h2>
+        <h2 class="cs-h2">A live visual environment for the Coachella VIP party — responsive, never canned.</h2>
       </div>
 
       <div>
         <p class="cs-body-text">
-          Live event visuals at Coachella carry a particular pressure: the crowd is experienced, the bar is high, and the music doesn't wait. A pre-rendered video loop is immediately apparent to anyone who's paying attention.
+          The Coachella VIP party is a different kind of room — industry, artists, people who have seen every trick. A pre-rendered loop is immediately obvious. The visual system had to respond convincingly to the live set: not just the beat, but the texture, the dynamics, the specific energy of Phantogram and Giorgio Moroder performing that night.
         </p>
         <p class="cs-body-text">
-          The system had to respond convincingly to the nuances of a live performance — not just the beat, but the texture, the dynamics, the moments of tension and release — without any human at the controls adjusting it in real time.
+          Building in Unity3D and Notch meant the system could be genuinely generative — geometry, color, and motion all derived from the audio in real time, producing a visual environment that was unique to that performance and couldn't be replicated.
         </p>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-
-<!-- ═══════════════════════════════════════════════
-  OUR APPROACH
-══════════════════════════════════════════════════ -->
-<section class="cs-approach" aria-label="Our approach">
-  <div class="container">
-    <span class="cs-label">Our Approach</span>
-    <h2 class="cs-h2">Four phases from brief to opening night.</h2>
-    <div class="cs-steps">
-
-      <div class="cs-step">
-        <p class="cs-step-num">01 — Audio Analysis</p>
-        <h3 class="cs-step-title">Frequency-Driven Pipeline</h3>
-        <p class="cs-step-desc">TouchDesigner's audio analysis tools were configured to extract frequency bands, amplitude envelopes, and transient events from the live audio feed. Each parameter drove distinct visual behaviors across the system.</p>
-      </div>
-
-      <div class="cs-step">
-        <p class="cs-step-num">02 — Generative System</p>
-        <h3 class="cs-step-title">Real-Time Visual Engine</h3>
-        <p class="cs-step-desc">A fully generative visual system was built that responded to the audio analysis data — geometry, color, texture, and motion all driven in real time. Nothing was pre-authored or pre-timed.</p>
-      </div>
-
-      <div class="cs-step">
-        <p class="cs-step-num">03 — Output Configuration</p>
-        <h3 class="cs-step-title">Multi-Display Integration</h3>
-        <p class="cs-step-desc">The system was output across multiple displays throughout the venue, creating an immersive visual environment that wrapped the space rather than being confined to a single screen.</p>
-      </div>
-
-      <div class="cs-step">
-        <p class="cs-step-num">04 — Live Operation</p>
-        <h3 class="cs-step-title">Full Event Coverage</h3>
-        <p class="cs-step-desc">Our team operated the system live throughout the event, monitoring system health and making macro adjustments as the set progressed — ensuring the visuals stayed in sync with the energy of the performance.</p>
       </div>
 
     </div>
@@ -848,90 +832,6 @@
 
 
 <!-- ═══════════════════════════════════════════════
-  OUTCOME
-══════════════════════════════════════════════════ -->
-<section class="cs-outcome" aria-label="Project outcome">
-  <div class="container">
-    <div class="cs-outcome-grid">
-
-      <div>
-        <span class="cs-label">The Result</span>
-        <h2 class="cs-h2">A room that breathed with the music — and a client relationship that continued from there.</h2>
-        <p class="cs-body-text">
-          The visual environment was received enthusiastically by the Republic Records team and Phantogram's crew. The fully live approach created a visual experience that felt unique to that specific set — something that couldn't be replicated or re-used.
-        </p>
-      </div>
-
-      <div>
-        <p class="cs-outcome-pull">
-          "When the visuals are truly live, the crowd feels it — even if they can't say why."
-        </p>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-
-<!-- ═══════════════════════════════════════════════
-  KEY STATS
-══════════════════════════════════════════════════ -->
-<section class="cs-stats" aria-label="Key project statistics">
-  <div class="container">
-    <span class="cs-label">By the Numbers</span>
-    <div class="cs-stats-grid">
-
-      <div class="cs-stat-card">
-        <span class="cs-stat-value">100%</span>
-        <span class="cs-stat-label">Live — zero<br>pre-rendered content</span>
-      </div>
-
-      <div class="cs-stat-card">
-        <span class="cs-stat-value">3</span>
-        <span class="cs-stat-label">Hours of<br>fully live visuals</span>
-      </div>
-
-      <div class="cs-stat-card">
-        <span class="cs-stat-value">1</span>
-        <span class="cs-stat-label">System operators<br>on site</span>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-
-<!-- ═══════════════════════════════════════════════
-  TECHNOLOGY STACK
-══════════════════════════════════════════════════ -->
-<section class="cs-tech" aria-label="Technology used">
-  <div class="container">
-    <span class="cs-label">Technology Stack</span>
-    <h2 class="cs-h2">The tools that made it happen.</h2>
-
-    <div class="cs-tech-grid">
-
-      <div class="cs-tech-item">
-        <p class="cs-tech-item-role">Visual Engine</p>
-        <p class="cs-tech-item-name">TouchDesigner</p>
-      </div>
-
-      <div class="cs-tech-item">
-        <p class="cs-tech-item-role">Analysis</p>
-        <p class="cs-tech-item-name">Audio-reactive pipeline</p>
-      </div>
-
-      <div class="cs-tech-item">
-        <p class="cs-tech-item-role">Rendering</p>
-        <p class="cs-tech-item-name">Real-time generative</p>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-
-<!-- ═══════════════════════════════════════════════
   CTA
 ══════════════════════════════════════════════════ -->
 <section class="cs-cta" aria-label="Contact call to action">
@@ -942,7 +842,7 @@
       <p>Tell us about your project — venue, timeline, campaign goal. We'll respond within 24 hours with initial thoughts. No pitch deck required.</p>
       <div style="display: flex; justify-content: center; gap: var(--space-4); flex-wrap: wrap;">
         <a href="../#contact" class="btn btn-primary">Start a Conversation</a>
-        <a href="index.html" class="btn btn-outline">More Case Studies</a>
+        <a href="../#work" class="btn btn-outline">All Work</a>
       </div>
     </div>
   </div>
@@ -957,7 +857,6 @@
     <p>
       &copy; <span id="footer-year"></span> Hexagon Misfit &nbsp;·&nbsp;
       <a href="../#contact">Get in Touch</a> &nbsp;·&nbsp;
-      <a href="index.html">All Case Studies</a> &nbsp;·&nbsp;
       <a href="../#work">All Work</a>
     </p>
   </div>
