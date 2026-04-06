@@ -539,10 +539,12 @@
 }
 
 .portfolio-card-img {
+  display: block;
   position: relative;
   aspect-ratio: 16 / 10;
   overflow: hidden;
   background: var(--color-bg-elevated);
+  cursor: pointer;
 }
 .portfolio-card-img img {
   display: block;

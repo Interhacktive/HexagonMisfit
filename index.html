@@ -620,12 +620,12 @@
     if (p.clientType) cardEl.dataset.clientType = p.clientType;
     cardEl.setAttribute('data-animate', '');
     cardEl.innerHTML = `
-      <div class="portfolio-card-img">
+      <a href="${linkHref}" class="portfolio-card-img" aria-label="View ${p.title}">
         <img src="${p.heroImage}" alt="${p.title}" loading="lazy" />
         <div class="portfolio-card-overlay">
           <p class="portfolio-card-overlay-text">${p.headline}</p>
         </div>
-      </div>
+      </a>
       <div class="portfolio-card-body">
         <div class="portfolio-card-meta">
           <span class="portfolio-card-client">${p.client}</span>

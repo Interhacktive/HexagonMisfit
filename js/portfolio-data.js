@@ -159,7 +159,7 @@ const PROJECTS = [
     id: 'intel-hq-lobby',
     title: "Intel HQ Lobby",
     client: "Intel",
-    year: 2023,
+    year: 2018,
     clientType: 'tech',
     category: CAT.INSTALLATION,
     tags: ['Interactive Wall', 'Depth Camera', 'TouchDesigner', 'LED'],

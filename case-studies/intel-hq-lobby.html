@@ -642,7 +642,7 @@
   <div class="cs-hero-content">
     <div class="container">
       <div class="cs-hero-chip" aria-label="Project type and year">
-        Interactive Installation &nbsp;·&nbsp; Santa Clara, CA &nbsp;·&nbsp; 2023
+        Interactive Installation &nbsp;·&nbsp; Santa Clara, CA &nbsp;·&nbsp; 2018
       </div>
       <h1 class="cs-hero-title">Intel HQ<br>Lobby</h1>
       <p class="cs-hero-tagline">
@@ -675,7 +675,7 @@
       </div>
       <div class="cs-fact">
         <span class="cs-fact-label">Year</span>
-        <span class="cs-fact-value">2023</span>
+        <span class="cs-fact-value">2018</span>
       </div>
       <div class="cs-fact">
         <span class="cs-fact-label">Service</span>
@@ -710,7 +710,7 @@
           Intel needed their Santa Clara headquarters to embody their identity as a technology leader from the moment a visitor walked through the door. The lobby had to communicate innovation to partners, employees, and press alike — continuously, without an operator.
         </p>
         <p class="cs-body-text">
-          Working with All of it Now and Prefrontal Cortex, we designed and built a two-part permanent installation: a large-format Brand Story Wall driven by RealSense depth cameras, and an inverted 360° LED ceiling skylight. Both systems were previewed in VR before a single panel was installed.
+          Working with All of it Now and Prefrontal Cortex, we designed and built a two-part permanent installation: a large-format Brand Story Wall driven by six synchronized Intel RealSense D455 depth cameras, and an inverted 360° LED ceiling skylight. One of the centerpiece experiences is a digital fishtank built in Unity3D — a living environment that responds to visitors as they move through the lobby. Both systems were previewed in VR before a single panel was installed. Intel's Santa Clara HQ sees thousands of visitors each day — employees, partners, press, and tourists — making unattended reliability non-negotiable.
         </p>
       </div>
 
@@ -718,8 +718,8 @@
         <p class="cs-overview-sidebar-title">Scope of Work</p>
         <ul class="cs-scope-list">
           <li>VR prototype for pre-build client sign-off</li>
-          <li>Intel RealSense depth camera integration</li>
-          <li>Particle simulation engine (visitor silhouette tracking)</li>
+          <li>6 × Intel RealSense D455 depth cameras (synchronized via Intel NUC)</li>
+          <li>Particle simulation &amp; digital fishtank (Unity3D)</li>
           <li>Custom LED ceiling skylight fabrication</li>
           <li>Hardened 24/7 architecture with automatic error recovery</li>
           <li>Six months post-launch on-call support</li>
@@ -748,7 +748,7 @@
           Intel needed to approve a large-scale, permanent installation across two major architectural features — without being able to visualize it in place. Traditional renderings and mockups weren't sufficient for a project of this complexity and budget.
         </p>
         <p class="cs-body-text">
-          The technical challenge was equally demanding: the Brand Story Wall had to track every visitor who entered the lobby, generate real-time particle simulations around their silhouettes, and do so without a single operator — every hour, every day, indefinitely.
+          The technical challenge was equally demanding: the Brand Story Wall had to track every visitor who entered the lobby — thousands of people per day — generate real-time particle simulations and interactive digital environments around their silhouettes, and do so without a single operator, every hour, every day, indefinitely.
         </p>
       </div>
 
@@ -775,7 +775,7 @@
       <div class="cs-step">
         <p class="cs-step-num">02 — Sensor Integration</p>
         <h3 class="cs-step-title">Depth Camera Pipeline</h3>
-        <p class="cs-step-desc">A multi-camera RealSense D455 array was configured to track visitor silhouettes across the full width of the lobby. The depth data fed directly into a custom particle simulation pipeline built in TouchDesigner.</p>
+        <p class="cs-step-desc">Six Intel RealSense D455 depth cameras were configured and synchronized via Intel NUC computers to track visitor silhouettes across the full width of the lobby. The depth data fed into a Notch and Unity3D rendering pipeline — including a digital fishtank built in Unity3D that responds to movement in the space, and particle simulations rendered through Unreal Engine.</p>
       </div>
 
       <div class="cs-step">
@@ -916,18 +916,18 @@
     <div class="cs-tech-grid">
 
       <div class="cs-tech-item">
-        <p class="cs-tech-item-role">Rendering</p>
-        <p class="cs-tech-item-name">Intel RealSense D455</p>
+        <p class="cs-tech-item-role">Depth Sensing</p>
+        <p class="cs-tech-item-name">6 × Intel RealSense D455</p>
       </div>
 
       <div class="cs-tech-item">
         <p class="cs-tech-item-role">Interactivity</p>
-        <p class="cs-tech-item-name">TouchDesigner</p>
+        <p class="cs-tech-item-name">Intel NUC (camera sync)</p>
       </div>
 
       <div class="cs-tech-item">
         <p class="cs-tech-item-role">Visualization</p>
-        <p class="cs-tech-item-name">Unity VFX Graph</p>
+        <p class="cs-tech-item-name">Notch · Unity3D · Unreal Engine</p>
       </div>
 
       <div class="cs-tech-item">
@@ -938,11 +938,6 @@
       <div class="cs-tech-item">
         <p class="cs-tech-item-role">Hardware</p>
         <p class="cs-tech-item-name">Custom LED Panels</p>
-      </div>
-
-      <div class="cs-tech-item">
-        <p class="cs-tech-item-role">Platform</p>
-        <p class="cs-tech-item-name">NVIDIA RTX Workstation</p>
       </div>
 
     </div>
