@@ -92,6 +92,9 @@
     .cs-footer { border-top:1px solid var(--color-border); padding-block:var(--space-8); text-align:center; color:var(--color-text-muted); font-size:var(--text-sm); }
     .cs-footer a { color:var(--color-accent-primary); text-decoration:none; }
     .cs-footer a:hover { text-decoration:underline; }
+    .cs-video { padding-block:var(--space-20); border-bottom:1px solid var(--color-border); }
+    .cs-video-wrap { margin-top:var(--space-10); border-radius:var(--radius-xl); overflow:hidden; border:1px solid var(--color-border); background:#000; position:relative; padding-bottom:56.25%; height:0; }
+    .cs-video-wrap iframe { position:absolute; top:0; left:0; width:100%; height:100%; display:block; }
     @media (max-width:900px) {
       .cs-overview-grid,.cs-challenge-grid,.cs-outcome-grid { grid-template-columns:1fr; }
       .cs-steps { grid-template-columns:1fr; }
@@ -135,7 +138,7 @@
     <div class="container">
       <div class="cs-hero-chip">Live Performance &nbsp;·&nbsp; CES, Las Vegas &nbsp;·&nbsp; 2020</div>
       <h1 class="cs-hero-title">Intel CES Keynote</h1>
-      <p class="cs-hero-tagline">Real-time volumetric visualization of acrobats on an 85'×40' LED wall — zero latency, zero margin for error, broadcast live to millions.</p>
+      <p class="cs-hero-tagline">Real-time volumetric visualization of acrobats on an 85'×40' LED wall — broadcast live to a packed stadium, with zero tolerance for failure.</p>
       <div class="cs-hero-actions">
         <a href="../#contact" class="btn btn-primary">Start a Similar Project</a>
         <a href="#overview" class="btn btn-outline">Read the Story</a>
@@ -166,20 +169,37 @@
       <div>
         <span class="cs-label">The Brief</span>
         <blockquote class="cs-overview-quote">"We need something that will stop the room — and actually demonstrate what RealSense can do, live, in front of everyone."</blockquote>
-        <p class="cs-body-text">Intel's CES keynote is one of the most-watched tech events of the year. The brief was to create a live onstage performance moment that would make RealSense depth sensing technology immediately tangible to a non-technical audience — tens of thousands in the room, millions watching the broadcast.</p>
-        <p class="cs-body-text">We partnered with Zero Gravity Arts and All of it Now to design and deliver a live performance in which trampoline acrobats were captured in real time by a multi-camera RealSense array, rendered as volumetric point cloud figures, and displayed across an 85-foot-wide LED wall — with zero latency, live, while Brian Krzanich was onstage.</p>
+        <p class="cs-body-text">Intel's CES keynote is one of the most-watched tech events of the year. The brief was to create a live onstage performance moment that would make RealSense depth sensing technology immediately tangible to a packed stadium audience — visceral, readable, and impossible to dismiss as prerecorded.</p>
+        <p class="cs-body-text">Working with Zero Gravity Arts, All of it Now, and Prefrontal Cortex, we designed and built a live performance in which trampoline acrobats were captured in real time by an array of six Intel RealSense D435 depth cameras, stitched into a single volumetric point cloud, and rendered across an 85-foot-wide LED wall via a combination of Notch real-time VFX, a Unity-based rendering pipeline, and custom depth camera stitching software — all while Brian Krzanich was onstage.</p>
       </div>
       <aside class="cs-overview-sidebar" aria-label="Project scope">
         <p class="cs-overview-sidebar-title">Scope of Work</p>
         <ul class="cs-scope-list">
-          <li>Real-time depth capture pipeline (RealSense D435)</li>
-          <li>Point cloud processing &amp; Unity VFX Graph system</li>
-          <li>Notch LED wall output integration</li>
+          <li>6 × Intel RealSense D435 depth cameras</li>
+          <li>6 × Intel NUC mini computers</li>
+          <li>2 × Disguise media servers</li>
+          <li>Notch real-time VFX + Unity rendering pipeline</li>
+          <li>Custom depth camera stitching software</li>
           <li>LED floor animation coordination</li>
-          <li>3-day rehearsal &amp; pipeline validation</li>
-          <li>Live show operation</li>
+          <li>1 week rehearsals, setup &amp; teardown</li>
+          <li>Collaborators: All Of It Now · Prefrontal Cortex · Zero Gravity Arts</li>
         </ul>
       </aside>
+    </div>
+  </div>
+</section>
+
+<section class="cs-video" aria-label="Project video">
+  <div class="container">
+    <div class="cs-video-wrap">
+      <iframe
+        src="https://www.youtube.com/embed/Ow_MsRLAkQc"
+        title="Intel CES Keynote — RealSense Live Performance"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen
+      ></iframe>
     </div>
   </div>
 </section>
@@ -189,11 +209,11 @@
     <div class="cs-challenge-grid">
       <div>
         <span class="cs-label">The Challenge</span>
-        <h2 class="cs-h2">Zero latency. Zero tolerance for failure. Global broadcast audience.</h2>
+        <h2 class="cs-h2">Zero tolerance for failure. A show that had to work — in front of a packed stadium, broadcast globally.</h2>
       </div>
       <div>
-        <p class="cs-body-text">The show could not stop. The pipeline had to work — not probably work, not almost work. Any visible lag between performer and rendering would break the illusion and undermine the entire demonstration. An early approach using Optitrack motion capture suits proved too fragile under live show conditions: suits malfunctioning, tracking inconsistencies, complexity that didn't survive contact with reality.</p>
-        <p class="cs-body-text">The pivot to raw RealSense point cloud data solved the reliability problem but introduced a new challenge: streaming, processing, and rendering dense depth data across a 40-foot stage in real time, at the quality required for a global broadcast. We had three days of rehearsals to validate the pipeline. That was the entire margin.</p>
+        <p class="cs-body-text">The show could not stop. Not pause, not glitch, not fall back on a prerecorded sequence. The pipeline had to work in front of a full room, on a global broadcast, with no second take. An early approach using Optitrack motion capture suits proved too fragile: suits malfunctioning, tracking inconsistencies, complexity that didn't survive contact with a real production environment.</p>
+        <p class="cs-body-text">The pivot to raw RealSense D435 point cloud data solved reliability — but introduced a harder problem. Trampoline acrobats move fast. Very fast. Capturing a performer mid-air with six depth cameras, stitching the volumes in real time, and rendering the result across 85 feet of LED wall with enough fidelity to be legible from the back of a packed stadium required a week of rehearsals: setup, teardown, and reset, over and over. Timing the system against live acrobats. Tuning for the speed of motion. Finding where the pipeline broke and fixing it before the show day.</p>
       </div>
     </div>
   </div>
@@ -202,7 +222,7 @@
 <section class="cs-approach" aria-label="Our approach">
   <div class="container">
     <span class="cs-label">Our Approach</span>
-    <h2 class="cs-h2">From prototype failure to zero-latency live show — in four phases.</h2>
+    <h2 class="cs-h2">From prototype failure to a live show that had to work — in four phases.</h2>
     <div class="cs-steps">
       <div class="cs-step">
         <p class="cs-step-num">01 — Initial R&amp;D</p>
@@ -212,12 +232,12 @@
       <div class="cs-step">
         <p class="cs-step-num">02 — Pivot to Point Cloud</p>
         <h3 class="cs-step-title">Raw RealSense Depth Data</h3>
-        <p class="cs-step-desc">We rebuilt the pipeline around raw point cloud data from a multi-camera Intel RealSense D435 array. No suits, no markers, no infrastructure the performer had to wear or maintain. The cameras see the performers directly. A custom processing layer stitched the camera volumes and fed a continuous point cloud stream into Unity VFX Graph for rendering.</p>
+        <p class="cs-step-desc">We rebuilt the pipeline around raw point cloud data from six Intel RealSense D435 depth cameras mounted across the stage. No suits, no markers. The cameras see the performers directly. Custom stitching software fused the six camera volumes into a single continuous depth field, which fed into both a Notch real-time VFX pipeline and a Unity-based rendering system — output driven to the LED wall via two Disguise media servers. Six Intel NUC mini computers handled the per-camera processing workload.</p>
       </div>
       <div class="cs-step">
         <p class="cs-step-num">03 — Pipeline Validation</p>
         <h3 class="cs-step-title">Three Days of Rehearsals</h3>
-        <p class="cs-step-desc">Three days of full-dress rehearsals with the Zero Gravity Arts acrobats on the actual CES stage. Every edge case was stress-tested: performers overlapping, multiple depth cameras in conflict, the latency budget at different render complexities. By day three the pipeline was solid enough that we were making aesthetic choices rather than debugging.</p>
+        <p class="cs-step-desc">A full week on the CES stage with the Zero Gravity Arts acrobats — setup, rehearsal, teardown, reset, repeat. The speed of trampoline acrobatics pushed the system hard: fast-moving limbs, mid-air poses, performers crossing each other's depth volumes. Every edge case got stress-tested live. By the end of the week the system was stable enough that we were making aesthetic choices rather than fixing crashes.</p>
       </div>
       <div class="cs-step">
         <p class="cs-step-num">04 — Live Show</p>
@@ -259,7 +279,7 @@
         <span class="cs-label">The Result</span>
         <h2 class="cs-h2">The highlight of the keynote — and the highlight of the year for RealSense.</h2>
         <p class="cs-body-text">The demonstration ran flawlessly. The point cloud rendering of the acrobats drew a visible reaction from the audience — the moment people understood what they were seeing, that the figures on the wall were being generated live from the performers in front of them, was immediate and visceral.</p>
-        <p class="cs-body-text">Forbes called it "the most visually rich performance ... ever seen at a tech show — colorful, complex and stunning." The clip became the most-shared moment from the entire CES keynote and directly drove commercial interest in the RealSense D435 product line in the months that followed.</p>
+        <p class="cs-body-text">Forbes called it "the most visually rich performance ... ever seen at a tech show — colorful, complex and stunning." The moment became the highlight of the keynote and directly drove commercial interest in the RealSense D435 product line in the months that followed.</p>
       </div>
       <div>
         <p class="cs-outcome-pull">"The most visually rich performance I've ever seen at a tech show — colorful, complex and stunning." — Forbes</p>
@@ -273,18 +293,19 @@
     <span class="cs-label">By the Numbers</span>
     <div class="cs-stats-grid">
       <div class="cs-stat-card">
-        <span class="cs-stat-value">85'</span>
-        <span class="cs-stat-label">LED wall width<br>(40' tall)</span>
+        <span class="cs-stat-value">6</span>
+        <span class="cs-stat-label">Intel RealSense D435<br>depth cameras</span>
       </div>
       <div class="cs-stat-card">
-        <span class="cs-stat-value">60fps</span>
-        <span class="cs-stat-label">Real-time render<br>zero latency</span>
+        <span class="cs-stat-value">6</span>
+        <span class="cs-stat-label">Intel NUC mini<br>computers</span>
       </div>
       <div class="cs-stat-card">
-        <span class="cs-stat-value">3</span>
-        <span class="cs-stat-label">Days of rehearsal<br>to validate the pipeline</span>
+        <span class="cs-stat-value">2</span>
+        <span class="cs-stat-label">Disguise media<br>servers</span>
       </div>
     </div>
+    <p style="text-align:center; margin-top:var(--space-8); font-family:var(--font-mono); font-size:var(--text-xs); letter-spacing:0.1em; text-transform:uppercase; color:var(--color-text-muted);">Notch Real-Time VFX &nbsp;·&nbsp; Unity Pipeline &nbsp;·&nbsp; In collaboration with All Of It Now · Prefrontal Cortex · Zero Gravity Arts</p>
   </div>
 </section>
 

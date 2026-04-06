@@ -51,7 +51,7 @@ const PROJECTS = [
     id: 'houston-architectural-model',
     title: "Houston Architectural Model",
     client: "City of Houston",
-    year: 2022,
+    year: 2025,
     clientType: 'city',
     category: CAT.INSTALLATION,
     tags: ['Interactive Model', 'TouchDesigner', 'Custom Hardware'],
