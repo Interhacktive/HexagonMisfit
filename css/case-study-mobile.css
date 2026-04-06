@@ -1,0 +1,112 @@
+/* ─── Case Study Mobile Breakpoints ───────────────────────────────────────── */
+/* Loaded after each case study page's inline <style> so these override
+   desktop-only rules at equal specificity.                                    */
+
+/* ── 900px: tablet / small laptop ─────────────────────────────────────────── */
+@media (max-width: 900px) {
+  /* Collapse all two-column section grids */
+  .cs-overview-grid,
+  .cs-challenge-grid,
+  .cs-outcome-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+  }
+
+  /* Approach steps: single column */
+  .cs-steps {
+    grid-template-columns: 1fr;
+  }
+
+  /* Stats: 2 columns instead of 3 */
+  .cs-stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Gallery: 2 columns with flatter rows */
+  .cs-gallery-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 200px 200px 200px;
+  }
+  .cs-gallery-item--span-col {
+    grid-row: auto;
+  }
+
+  /* Tech grid if used */
+  .cs-tech-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ── 680px: most phones in portrait ───────────────────────────────────────── */
+@media (max-width: 680px) {
+  /* Hero: prevent taller-than-viewport on small phones */
+  .cs-hero {
+    min-height: 480px;
+  }
+
+  /* Hero content: less bottom padding so text isn't pushed too low */
+  .cs-hero-content {
+    padding-bottom: var(--space-8);
+  }
+
+  /* Facts bar: stack vertically, remove horizontal dividers */
+  .cs-fact {
+    min-width: 0;
+    width: 100%;
+    border-right: none;
+    padding-inline: 0;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: var(--space-3);
+  }
+  .cs-fact:first-child {
+    padding-left: 0;
+  }
+  .cs-fact:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  /* Nav: hide "Let's Talk" button on very small screens to avoid cramping */
+  .cs-nav-right .btn-outline {
+    display: none;
+  }
+
+  /* Section padding: reduce vertical breathing room */
+  .cs-overview,
+  .cs-challenge,
+  .cs-approach,
+  .cs-gallery,
+  .cs-outcome,
+  .cs-stats,
+  .cs-video,
+  .cs-cta {
+    padding-block: var(--space-12);
+  }
+}
+
+/* ── 580px: small phones ───────────────────────────────────────────────────── */
+@media (max-width: 580px) {
+  /* Stats: single column on small phones */
+  .cs-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Gallery: single column with fixed height per item */
+  .cs-gallery-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+  .cs-gallery-item {
+    height: 220px;
+  }
+
+  /* Tech grid: single column */
+  .cs-tech-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Steps gap */
+  .cs-steps {
+    gap: var(--space-4);
+  }
+}

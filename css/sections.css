@@ -1108,3 +1108,25 @@
   .hero { min-height: 480px; }
   .hero-content { padding-block: var(--space-10); }
 }
+
+/* ── 480px: small phones ───────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  /* Hero: reduce vertical breathing room */
+  .hero-content { padding-block: var(--space-16); }
+  .hero-actions { flex-direction: column; align-items: flex-start; }
+
+  /* Portfolio filters: smaller padding so buttons don't overflow */
+  .filter-btn { padding: var(--space-1) var(--space-3); font-size: var(--text-xs); }
+  .portfolio-filter { gap: var(--space-1); }
+  .portfolio-filter--client .filter-btn { padding: var(--space-1) var(--space-2); }
+
+  /* About stats: keep 2-col but reduce padding */
+  .about-stat { padding: var(--space-4); }
+  .about-stat-value { font-size: var(--text-2xl); }
+
+  /* Footer: stack vertically */
+  .footer-inner { flex-direction: column; align-items: flex-start; gap: var(--space-4); }
+
+  /* Process: already collapses at 480px, just reduce padding */
+  .process-step { gap: var(--space-3); }
+}

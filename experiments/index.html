@@ -47,6 +47,7 @@
       align-items: center;
       gap: var(--space-8);
       list-style: none;
+      flex-wrap: wrap;
     }
     .exp-nav-links a {
       font-family: var(--font-heading);
@@ -347,6 +348,13 @@
       transition: color var(--duration-fast);
     }
     .exp-footer-links a:hover { color: var(--color-text-primary); }
+
+    /* ── MOBILE ───────────────────────────────────────── */
+    @media (max-width: 480px) {
+      .exp-nav-links { gap: var(--space-4); }
+      .exp-demo-wrap { height: 340px; }
+      .exp-card--featured .exp-demo-wrap { height: clamp(260px, 45vh, 360px); }
+    }
   </style>
 </head>
 <body>
