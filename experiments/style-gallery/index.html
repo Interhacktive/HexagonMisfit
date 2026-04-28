@@ -196,8 +196,8 @@
       --sg-bg-card:         #E0E5EC;
       --sg-bg-elevated:     #E0E5EC;
       --sg-text:            #2D3436;
-      --sg-text-secondary:  #636E72;
-      --sg-text-muted:      #95A5A6;
+      --sg-text-secondary:  #3D4549;
+      --sg-text-muted:      #5E6B6C;
       --sg-accent:          #6C63FF;
       --sg-accent-transparent: rgba(108, 99, 255, 0.2);
       --sg-accent2:         #a855f7;
@@ -568,12 +568,14 @@
       height: 64px;
       background: var(--sg-accent2);
       border-radius: var(--sg-radius-sm);
+      clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
       cursor: pointer;
-      transition: border-radius 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), clip-path 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), border-radius 0.5s;
+      transition: border-radius 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  clip-path 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-    .sg-anim-morph.shape-pill   { border-radius: 32px; }
-    .sg-anim-morph.shape-circle { border-radius: 50%; }
-    .sg-anim-morph.shape-tri    { border-radius: 0; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
+    .sg-anim-morph.shape-pill   { border-radius: 32px; clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%); }
+    .sg-anim-morph.shape-circle { border-radius: 50%;  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%); }
+    .sg-anim-morph.shape-tri    { border-radius: 0;    clip-path: polygon(50% 0%, 50% 0%, 0% 100%, 100% 100%); }
 
     /* ── 4. Reveal Hover ── */
     .sg-anim-reveal {
@@ -2250,7 +2252,6 @@
         var y = (e.clientY - rect.top) / rect.height;
         card.style.setProperty('--shine-x', x);
         card.style.setProperty('--shine-y', y);
-        card.style.transform = 'translate(' + ((x - 0.5) * 100) + '%, ' + ((y - 0.5) * 100) + '%)';
       }
     });
   });
