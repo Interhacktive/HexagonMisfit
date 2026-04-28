@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hand Puppet Demo — Hexagon Misfit</title>
+  <meta name="description" content="Control a silhouette puppet with your hands. Webcam hand tracking drives a real-time marionette with physics strings." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../css/reset.css" />
+  <link rel="stylesheet" href="../../css/tokens.css" />
+  <link rel="stylesheet" href="../../css/layout.css" />
+  <link rel="stylesheet" href="../../css/components.css" />
+  <link rel="stylesheet" href="../../css/animations.css" />
+
+  <style>
+    /* ── NAV ─────────────────────────────────────────── */
+    .ht-nav {
+      position: sticky; top: 0; z-index: 100;
+      padding-block: var(--space-5);
+      background: rgba(10,10,15,0.92);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .ht-nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .ht-nav-logo {
+      display: flex; align-items: center; gap: var(--space-3);
+      font-family: var(--font-heading); font-size: var(--text-sm);
+      font-weight: 700; color: var(--color-text-primary); text-decoration: none;
+    }
+    .ht-nav-logo img { height: 28px; width: auto; }
+    .ht-nav-links {
+      display: flex; align-items: center; gap: var(--space-8);
+      list-style: none; flex-wrap: wrap;
+    }
+    .ht-nav-links a {
+      font-family: var(--font-heading); font-size: var(--text-sm);
+      font-weight: 500; color: var(--color-text-secondary);
+      text-decoration: none; transition: color var(--duration-fast);
+    }
+    .ht-nav-links a:hover { color: var(--color-text-primary); }
+
+    /* ── STAGE ───────────────────────────────────────── */
+    .ht-stage {
+      position: relative;
+      width: 100%; height: 100svh;
+      background: #0A0A0F;
+      overflow: hidden;
+    }
+    .ht-stage canvas {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+    }
+    #ht-gl  { z-index: 1; }
+    #ht-hud { z-index: 2; pointer-events: none; }
+
+    /* ── CORNER BRACKETS ─────────────────────────────── */
+    .ht-corner {
+      position: absolute; width: 22px; height: 22px;
+      pointer-events: none; z-index: 3;
+    }
+    .ht-corner--tl { top: 16px; left: 16px;
+      border-top: 1px solid; border-left: 1px solid; }
+    .ht-corner--tr { top: 16px; right: 16px;
+      border-top: 1px solid; border-right: 1px solid; }
+    .ht-corner--bl { bottom: 16px; left: 16px;
+      border-bottom: 1px solid; border-left: 1px solid; }
+    .ht-corner--br { bottom: 16px; right: 16px;
+      border-bottom: 1px solid; border-right: 1px solid; }
+
+    /* ── OVERLAY TOP-LEFT ────────────────────────────── */
+    .ht-overlay-tl {
+      position: absolute; top: var(--space-6); left: var(--space-6);
+      z-index: 4; display: flex; align-items: center; gap: var(--space-3);
+    }
+    .ht-live-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #2DD4BF;
+      box-shadow: 0 0 6px #2DD4BF;
+      animation: ht-pulse 2s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    @keyframes ht-pulse {
+      0%,100% { opacity: 1; } 50% { opacity: 0.4; }
+    }
+    .ht-exp-label {
+      font-family: var(--font-mono); font-size: 10px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: rgba(152,152,176,0.7);
+    }
+    .ht-theme-picker {
+      display: flex; gap: 5px; margin-left: var(--space-2);
+    }
+    .ht-theme-btn {
+      width: 12px; height: 12px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.15); cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s; padding: 0;
+    }
+    .ht-theme-btn.active { transform: scale(1.35); border-color: rgba(255,255,255,0.6); }
+
+    /* ── TOOLBAR ─────────────────────────────────────── */
+    .ht-toolbar {
+      position: absolute; top: var(--space-6); right: var(--space-6);
+      z-index: 4; display: flex; gap: var(--space-2);
+    }
+    .ht-tool-btn {
+      width: 32px; height: 32px; border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(8,8,16,0.65); backdrop-filter: blur(8px);
+      color: rgba(200,200,220,0.55); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; transition: border-color 0.2s, color 0.2s;
+    }
+    .ht-tool-btn:hover { border-color: rgba(255,255,255,0.3); color: rgba(240,240,255,0.9); }
+
+    /* ── CONTROLS PANEL ──────────────────────────────── */
+    .ht-controls {
+      position: absolute; bottom: var(--space-6); right: var(--space-6);
+      z-index: 4; background: rgba(8,8,18,0.72);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px; padding: var(--space-4) var(--space-5);
+      display: flex; flex-direction: column; gap: 10px;
+      min-width: 240px;
+      transition: opacity 0.35s, transform 0.35s;
+    }
+    .ht-controls-hdr {
+      font-family: var(--font-mono); font-size: 9px;
+      letter-spacing: 0.15em; color: rgba(152,152,176,0.45);
+      text-transform: uppercase; margin-bottom: 2px;
+    }
+    .ht-slider-row {
+      display: grid; grid-template-columns: 72px 1fr 34px;
+      align-items: center; gap: 8px;
+    }
+    .ht-slider-label {
+      font-family: var(--font-mono); font-size: 10px;
+      color: rgba(200,200,220,0.6); letter-spacing: 0.05em;
+    }
+    .ht-slider {
+      -webkit-appearance: none; appearance: none;
+      height: 2px; border-radius: 2px;
+      background: rgba(255,255,255,0.12); outline: none; cursor: pointer;
+    }
+    .ht-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 11px; height: 11px;
+      border-radius: 50%; background: var(--ht-accent, #6C63FF);
+      box-shadow: 0 0 5px var(--ht-accent, #6C63FF);
+      cursor: pointer;
+    }
+    .ht-slider::-moz-range-thumb {
+      width: 11px; height: 11px; border-radius: 50%;
+      background: var(--ht-accent, #6C63FF); border: none;
+      box-shadow: 0 0 5px var(--ht-accent, #6C63FF); cursor: pointer;
+    }
+    .ht-slider-val {
+      font-family: var(--font-mono); font-size: 10px;
+      color: rgba(200,200,220,0.5); text-align: right;
+    }
+
+    /* ── STATUS BADGE ────────────────────────────────── */
+    .ht-status {
+      position: absolute; bottom: var(--space-6); left: var(--space-6);
+      z-index: 4; display: flex; align-items: center; gap: var(--space-2);
+      font-family: var(--font-mono); font-size: 10px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      pointer-events: none;
+    }
+    .ht-status-dot {
+      width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+    }
+    .ht-status-dot--active {
+      background: #2DD4BF; box-shadow: 0 0 6px #2DD4BF;
+      animation: ht-pulse 1.2s ease-in-out infinite;
+    }
+    .ht-status-dot--idle {
+      background: rgba(152,152,176,0.4);
+      animation: ht-blink 1.8s ease-in-out infinite;
+    }
+    @keyframes ht-blink { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
+    .ht-status-text { color: rgba(152,152,176,0.7); }
+    .ht-status-text--active { color: #2DD4BF; }
+
+    /* ── START OVERLAY ───────────────────────────────── */
+    .ht-start {
+      position: absolute; inset: 0; z-index: 10;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: var(--space-5);
+      background: rgba(8,8,16,0.88);
+      backdrop-filter: blur(10px); transition: opacity 0.5s;
+    }
+    .ht-start.hidden { opacity: 0; pointer-events: none; }
+    .ht-start-icon { font-size: 40px; opacity: 0.7; margin-bottom: var(--space-2); }
+    .ht-start h2 {
+      font-family: var(--font-heading); font-size: var(--text-lg);
+      font-weight: 600; color: var(--color-text-primary); text-align: center;
+    }
+    .ht-start p {
+      font-size: var(--text-sm); color: var(--color-text-secondary);
+      text-align: center; max-width: 340px; line-height: 1.6;
+    }
+    .ht-start-err {
+      font-family: var(--font-mono); font-size: 11px;
+      color: #ff6060; display: none; text-align: center; max-width: 340px;
+    }
+    .ht-start-err.visible { display: block; }
+
+    /* ── UI-HIDDEN STATE ─────────────────────────────── */
+    .ht-stage.ui-hidden .ht-overlay-tl,
+    .ht-stage.ui-hidden .ht-toolbar,
+    .ht-stage.ui-hidden .ht-controls,
+    .ht-stage.ui-hidden .ht-status {
+      opacity: 0; pointer-events: none;
+    }
+
+    /* ── INFO SECTION ────────────────────────────────── */
+    .ht-info {
+      padding-block: var(--space-16) var(--space-12);
+      border-top: 1px solid var(--color-border);
+    }
+    .ht-info-inner {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: var(--space-12);
+    }
+    .ht-info-meta {
+      display: flex; align-items: center; gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+    .ht-info-num {
+      font-family: var(--font-mono); font-size: var(--text-xs);
+      color: var(--color-text-muted); letter-spacing: 0.1em;
+    }
+    .ht-info h1 {
+      font-family: var(--font-heading); font-size: var(--text-2xl);
+      font-weight: 700; color: var(--color-text-primary);
+      margin-bottom: var(--space-4); line-height: 1.15;
+    }
+    .ht-info p {
+      color: var(--color-text-secondary); line-height: 1.7;
+      margin-bottom: var(--space-6);
+    }
+    .ht-info-tags { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+    .ht-controls-title {
+      font-family: var(--font-mono); font-size: var(--text-xs);
+      letter-spacing: 0.12em; color: var(--color-text-muted); margin-bottom: var(--space-4);
+    }
+    .ht-control-list { display: flex; flex-direction: column; gap: var(--space-3); }
+    .ht-control {
+      display: grid; grid-template-columns: 90px 1fr; gap: var(--space-3);
+    }
+    .ht-control-key {
+      font-family: var(--font-mono); font-size: var(--text-xs);
+      color: var(--color-text-primary); background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 4px;
+      padding: 2px 8px; display: inline-flex; align-items: center;
+    }
+    .ht-control-desc {
+      font-size: var(--text-sm); color: var(--color-text-secondary);
+    }
+    @media (max-width: 700px) {
+      .ht-info-inner { grid-template-columns: 1fr; gap: var(--space-8); }
+    }
+
+    /* ── FOOTER ──────────────────────────────────────── */
+    .ht-footer {
+      border-top: 1px solid var(--color-border);
+      padding-block: var(--space-8);
+    }
+    .ht-footer-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: var(--space-4);
+    }
+    .ht-footer-logo {
+      display: flex; align-items: center; gap: var(--space-3);
+      font-family: var(--font-heading); font-size: var(--text-sm);
+      font-weight: 700; color: var(--color-text-secondary); text-decoration: none;
+    }
+    .ht-footer-logo img { height: 22px; width: auto; }
+    .ht-footer-copy {
+      font-size: var(--text-xs); color: var(--color-text-muted);
+      font-family: var(--font-mono);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ───────────────────────────────────────────── -->
+<nav class="ht-nav">
+  <div class="container">
+    <div class="ht-nav-inner">
+      <a href="../../" class="ht-nav-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <ul class="ht-nav-links">
+        <li><a href="../../#services">Services</a></li>
+        <li><a href="../../#portfolio">Work</a></li>
+        <li><a href="../../#about">About</a></li>
+        <li><a href="../" class="active">Experiments</a></li>
+      </ul>
+      <a href="../../#contact" class="btn btn-outline" style="font-size:var(--text-sm);">Let's Talk</a>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ── STAGE ─────────────────────────────────────────── -->
+<div class="ht-stage" id="ht-stage">
+  <video id="ht-video" autoplay playsinline muted style="display:none;"></video>
+  <canvas id="ht-gl"></canvas>
+  <canvas id="ht-hud"></canvas>
+
+  <!-- Corner brackets -->
+  <div class="ht-corner ht-corner--tl" id="ht-c-tl"></div>
+  <div class="ht-corner ht-corner--tr" id="ht-c-tr"></div>
+  <div class="ht-corner ht-corner--bl" id="ht-c-bl"></div>
+  <div class="ht-corner ht-corner--br" id="ht-c-br"></div>
+
+  <!-- Overlay TL: live dot + label + theme picker -->
+  <div class="ht-overlay-tl">
+    <div class="ht-live-dot"></div>
+    <span class="ht-exp-label">13 / hand_debug</span>
+    <div class="ht-theme-picker" id="ht-theme-picker">
+      <button class="ht-theme-btn active" data-theme="0" style="background:#6C63FF;" title="Nebula"></button>
+      <button class="ht-theme-btn"        data-theme="1" style="background:#FF6010;" title="Fire"></button>
+      <button class="ht-theme-btn"        data-theme="2" style="background:#00E044;" title="Matrix"></button>
+      <button class="ht-theme-btn"        data-theme="3" style="background:#50B4FF;" title="Ice"></button>
+      <button class="ht-theme-btn"        data-theme="4" style="background:#D232FF;" title="Void"></button>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="ht-toolbar">
+    <button class="ht-tool-btn" id="ht-cam-btn" title="Toggle camera overlay" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.06em;width:auto;padding:0 8px;">CAM</button>
+    <button class="ht-tool-btn" id="ht-hide-btn" title="Hide UI (H)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+    </button>
+    <button class="ht-tool-btn" id="ht-fs-btn" title="Fullscreen (F)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
+        <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Controls panel -->
+  <div class="ht-controls" id="ht-controls">
+    <p class="ht-controls-hdr">// render</p>
+    <div class="ht-slider-row">
+      <span class="ht-slider-label">Glow</span>
+      <input type="range" class="ht-slider" id="s-glow" min="1" max="40" value="18">
+      <span class="ht-slider-val" id="v-glow">18</span>
+    </div>
+    <div class="ht-slider-row">
+      <span class="ht-slider-label">Joint Size</span>
+      <input type="range" class="ht-slider" id="s-joint" min="2" max="20" value="7">
+      <span class="ht-slider-val" id="v-joint">7</span>
+    </div>
+    <div class="ht-slider-row">
+      <span class="ht-slider-label">Opacity</span>
+      <input type="range" class="ht-slider" id="s-opacity" min="10" max="100" value="85">
+      <span class="ht-slider-val" id="v-opacity">85</span>
+    </div>
+    <p class="ht-controls-hdr" style="margin-top:4px;">// background</p>
+    <div class="ht-slider-row">
+      <span class="ht-slider-label">Scanlines</span>
+      <input type="range" class="ht-slider" id="s-scan" min="0" max="100" value="30">
+      <span class="ht-slider-val" id="v-scan">30</span>
+    </div>
+    <p class="ht-controls-hdr" style="margin-top:4px;">// tracking</p>
+    <div class="ht-slider-row">
+      <span class="ht-slider-label">Smooth</span>
+      <input type="range" class="ht-slider" id="s-smooth" min="1" max="9" value="5">
+      <span class="ht-slider-val" id="v-smooth">5</span>
+    </div>
+  </div>
+
+  <!-- Status badge -->
+  <div class="ht-status" id="ht-status">
+    <div class="ht-status-dot ht-status-dot--idle" id="ht-status-dot"></div>
+    <span class="ht-status-text" id="ht-status-text">SEARCHING…</span>
+  </div>
+
+  <!-- Start overlay -->
+  <div class="ht-start" id="ht-start">
+    <div class="ht-start-icon">🤲</div>
+    <h2>Hand Puppet Demo</h2>
+    <p>Raise both hands to puppet a silhouette character. Strings connect your fingertips to the marionette — drop your hands to watch it ragdoll.</p>
+    <button class="btn btn-primary" id="ht-start-btn">Enable Camera</button>
+    <p class="ht-start-err" id="ht-error"></p>
+  </div>
+</div>
+
+
+<!-- ── INFO ──────────────────────────────────────────── -->
+<section class="ht-info">
+  <div class="container">
+    <div class="ht-info-inner">
+      <div>
+        <div class="ht-info-meta">
+          <span class="ht-info-num">13</span>
+          <span class="tag tag-teal">LIVE</span>
+        </div>
+        <h1>Hand Puppet Demo</h1>
+        <p>
+          Raise both hands in front of your webcam. Ten strings — one per fingertip — connect
+          to a backlit silhouette marionette. Thumb and pinky control the shoulders and head,
+          index fingers drive the wrists, middle fingers pull the knees, ring fingers hold the ankles.
+        </p>
+        <p>
+          Drop your hands and the puppet ragdolls under Verlet physics with stick constraints.
+          When hands are tracked a walk cycle blends in automatically. The underlying WebGL2
+          skeleton glow and hex-grid background are still rendering beneath the puppet layer.
+        </p>
+        <div class="ht-info-tags">
+          <span class="tag">MediaPipe Hands</span>
+          <span class="tag">Verlet Physics</span>
+          <span class="tag">WebGL2</span>
+          <span class="tag">Ragdoll</span>
+          <span class="tag">Canvas 2D</span>
+          <span class="tag">Real-time</span>
+        </div>
+      </div>
+      <div>
+        <p class="ht-controls-title">// controls</p>
+        <div class="ht-control-list">
+          <div class="ht-control">
+            <span class="ht-control-key">H</span>
+            <span class="ht-control-desc">Toggle UI visibility</span>
+          </div>
+          <div class="ht-control">
+            <span class="ht-control-key">F</span>
+            <span class="ht-control-desc">Toggle fullscreen</span>
+          </div>
+          <div class="ht-control">
+            <span class="ht-control-key">Glow</span>
+            <span class="ht-control-desc">Bone glow softness — higher = wider spread</span>
+          </div>
+          <div class="ht-control">
+            <span class="ht-control-key">Joint Size</span>
+            <span class="ht-control-desc">Radius of landmark indicators</span>
+          </div>
+          <div class="ht-control">
+            <span class="ht-control-key">Opacity</span>
+            <span class="ht-control-desc">Overall skeleton opacity</span>
+          </div>
+          <div class="ht-control">
+            <span class="ht-control-key">Scanlines</span>
+            <span class="ht-control-desc">Background scanline intensity</span>
+          </div>
+          <div class="ht-control">
+            <span class="ht-control-key">Smooth</span>
+            <span class="ht-control-desc">Landmark lerp — lower = snappier puppet</span>
+          </div>
+          <div class="ht-control">
+            <span class="ht-control-key">CAM</span>
+            <span class="ht-control-desc">Toggle live webcam overlay visibility</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── FOOTER ─────────────────────────────────────────── -->
+<footer class="ht-footer">
+  <div class="container">
+    <div class="ht-footer-inner">
+      <a href="../../" class="ht-footer-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <a href="../" style="font-size:var(--text-sm);color:var(--color-text-muted);text-decoration:none;">&larr; All experiments</a>
+      <span class="ht-footer-copy">&copy; <span id="footer-year"></span> Hexagon Misfit</span>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ══════════════════════════════════════════════════════
+  HAND TRACKING ENGINE
+══════════════════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── CONFIG ──────────────────────────────────────────── */
+  const CFG = {
+    GLOW:       18,    // bone glow spread (higher = softer)
+    JOINT_SIZE: 7,     // landmark circle radius (logical px)
+    OPACITY:    0.85,
+    SCANLINES:  30,
+    SMOOTH:     5,     // landmark lerp speed (1=slow, 9=instant)
+  };
+
+  /* ── THEMES ──────────────────────────────────────────── */
+  const THEMES = [
+    { hex: '#6C63FF', r: 0.424, g: 0.388, b: 1.000 },
+    { hex: '#FF6010', r: 1.000, g: 0.376, b: 0.063 },
+    { hex: '#00E044', r: 0.000, g: 0.878, b: 0.267 },
+    { hex: '#50B4FF', r: 0.314, g: 0.706, b: 1.000 },
+    { hex: '#D232FF', r: 0.824, g: 0.196, b: 1.000 },
+  ];
+  let themeIdx = 0;
+
+  /* ── HAND CONNECTIONS (MediaPipe Hands) ──────────────── */
+  const CONNECTIONS = [
+    [0,1],[1,2],[2,3],[3,4],
+    [5,6],[6,7],[7,8],
+    [9,10],[10,11],[11,12],
+    [13,14],[14,15],[15,16],
+    [17,18],[18,19],[19,20],
+    [0,5],[5,9],[9,13],[13,17],[0,17],
+  ];
+  const TIPS = new Set([4, 8, 12, 16, 20]);
+  const FINGER_NAMES = { 4:'THUMB', 8:'INDEX', 12:'MID', 16:'RING', 20:'PINKY' };
+
+  /* ── STATE ───────────────────────────────────────────── */
+  let handsData = [];       // [{landmarks:[{x,y,z}], label:'Left'/'Right'}]
+  let smoothed  = [];       // same shape, smoothed per-frame
+  let cameraRunning = false;
+
+  /* ── DOM ─────────────────────────────────────────────── */
+  const stage    = document.getElementById('ht-stage');
+  const glCanvas = document.getElementById('ht-gl');
+  const hudCanvas= document.getElementById('ht-hud');
+  const video    = document.getElementById('ht-video');
+
+  /* ── WEBGL2 INIT ─────────────────────────────────────── */
+  const gl = glCanvas.getContext('webgl2', { alpha: false, premultipliedAlpha: false });
+  if (!gl) { alert('WebGL2 not supported in this browser.'); }
+
+  const hud = hudCanvas.getContext('2d');
+
+  let W = 0, H = 0, dpr = 1;
+
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+    const rect = stage.getBoundingClientRect();
+    W = rect.width; H = rect.height;
+    glCanvas.width  = Math.round(W * dpr);
+    glCanvas.height = Math.round(H * dpr);
+    hudCanvas.width  = Math.round(W * dpr);
+    hudCanvas.height = Math.round(H * dpr);
+    gl.viewport(0, 0, glCanvas.width, glCanvas.height);
+  }
+
+  /* ── SHADER COMPILE HELPERS ──────────────────────────── */
+  function compileShader(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS))
+      console.error('Shader error:', gl.getShaderInfoLog(s));
+    return s;
+  }
+
+  function createProgram(vsSrc, fsSrc) {
+    const prog = gl.createProgram();
+    gl.attachShader(prog, compileShader(gl.VERTEX_SHADER, vsSrc));
+    gl.attachShader(prog, compileShader(gl.FRAGMENT_SHADER, fsSrc));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS))
+      console.error('Program link error:', gl.getProgramInfoLog(prog));
+    return prog;
+  }
+
+  /* ── BACKGROUND PROGRAM ──────────────────────────────── */
+  const BG_VERT = `#version 300 es
+in vec2 a_pos;
+void main() { gl_Position = vec4(a_pos, 0.0, 1.0); }`;
+
+  const BG_FRAG = `#version 300 es
+precision highp float;
+uniform vec2  u_res;
+uniform float u_time;
+uniform float u_scan;
+uniform vec3  u_color;
+out vec4 fragColor;
+
+float hash(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+float noise(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i+vec2(1,0)), f.x),
+             mix(hash(i+vec2(0,1)), hash(i+vec2(1,1)), f.x), f.y);
+}
+
+/* Hexagon SDF in flat-top hex cell coords */
+float hexSDF(vec2 p) {
+  p = abs(p);
+  return max(dot(p, normalize(vec2(1.0, 1.732051))), p.x) - 1.0;
+}
+vec2 hexNearest(vec2 p) {
+  vec2 a = mod(p,        vec2(2.0, 1.732051)) - vec2(1.0, 0.866025);
+  vec2 b = mod(p + vec2(1.0, 0.866025), vec2(2.0, 1.732051)) - vec2(1.0, 0.866025);
+  return (dot(a,a) < dot(b,b)) ? a : b;
+}
+
+void main() {
+  vec2 uv  = gl_FragCoord.xy / u_res;          /* 0..1 */
+  float ar = u_res.x / u_res.y;
+  vec2 suv = vec2(uv.x * ar, uv.y);            /* aspect-corrected */
+
+  /* Base dark color */
+  vec3 col = vec3(0.039, 0.039, 0.059);
+
+  /* Hex grid */
+  vec2 hp  = suv * 28.0;
+  vec2 hc  = hexNearest(hp);
+  float hd = hexSDF(hc * (1.0 / 0.90));
+  float hexLine = 1.0 - smoothstep(-0.04, 0.08, hd);
+  col += u_color * hexLine * 0.055;
+
+  /* Scanlines */
+  if (u_scan > 0.0) {
+    float s = pow(sin(uv.y * 420.0 + u_time * 1.1) * 0.5 + 0.5, 5.0);
+    col += vec3(s * (u_scan / 100.0) * 0.09);
+  }
+
+  /* Noise atmosphere */
+  float n = noise(suv * 3.5 + u_time * 0.09);
+  n      += noise(suv * 7.0 - u_time * 0.06) * 0.4;
+  col    += u_color * n * 0.013;
+
+  /* Vignette */
+  vec2 vc = uv * 2.0 - 1.0;
+  col *= clamp(1.0 - dot(vc * 0.42, vc * 0.42), 0.0, 1.0);
+
+  fragColor = vec4(col, 1.0);
+}`;
+
+  /* ── BONE PROGRAM ────────────────────────────────────── */
+  const BONE_VERT = `#version 300 es
+in vec2  a_pos;
+in float a_t;
+uniform vec2 u_res;
+out float v_t;
+void main() {
+  v_t = a_t;
+  vec2 clip = (a_pos / u_res) * 2.0 - 1.0;
+  clip.y = -clip.y;
+  gl_Position = vec4(clip, 0.0, 1.0);
+}`;
+
+  const BONE_FRAG = `#version 300 es
+precision highp float;
+in float v_t;
+uniform vec3  u_color;
+uniform float u_hardness;
+uniform float u_opacity;
+out vec4 fragColor;
+void main() {
+  float glow  = exp(-v_t * v_t * u_hardness);
+  float alpha = glow * u_opacity;
+  fragColor   = vec4(u_color * alpha, alpha);
+}`;
+
+  /* ── JOINT PROGRAM ───────────────────────────────────── */
+  const JOINT_VERT = `#version 300 es
+in vec2  a_pos;
+in vec2  a_uv;
+in float a_mode;  /* 0=joint, 1=fingertip, 2=palm */
+uniform vec2 u_res;
+out vec2  v_uv;
+out float v_mode;
+void main() {
+  v_uv  = a_uv;
+  v_mode = a_mode;
+  vec2 clip = (a_pos / u_res) * 2.0 - 1.0;
+  clip.y = -clip.y;
+  gl_Position = vec4(clip, 0.0, 1.0);
+}`;
+
+  const JOINT_FRAG = `#version 300 es
+precision highp float;
+in vec2  v_uv;
+in float v_mode;
+uniform vec3  u_color;
+uniform float u_opacity;
+uniform float u_time;
+out vec4 fragColor;
+void main() {
+  float r = length(v_uv);
+  if (r > 1.0) discard;
+
+  /* Palm reticle */
+  if (v_mode > 1.5) {
+    float ring    = smoothstep(0.82, 0.86, r) * (1.0 - smoothstep(0.86, 0.95, r));
+    float ph      = fract(u_time * 0.55);
+    float pr      = ph * 0.78 + 0.1;
+    float expRing = smoothstep(pr - 0.03, pr, r) * (1.0 - smoothstep(pr, pr + 0.08, r));
+    expRing      *= (1.0 - ph) * 1.4;
+    float glow    = exp(-r * r * 1.0) * 0.25;
+    /* Crosshair arms: thin bands at x≈0 and y≈0, only outside small inner radius */
+    float armH = smoothstep(0.0, 0.04, 1.0 - abs(v_uv.y)) * step(0.18, abs(v_uv.x)) * (1.0 - r) * 0.5;
+    float armV = smoothstep(0.0, 0.04, 1.0 - abs(v_uv.x)) * step(0.18, abs(v_uv.y)) * (1.0 - r) * 0.5;
+    float alpha = (ring * 0.7 + expRing * 0.8 + glow + armH + armV) * u_opacity * 0.9;
+    fragColor = vec4(u_color * alpha, alpha);
+    return;
+  }
+
+  /* Normal joint / fingertip */
+  float core  = 1.0 - smoothstep(0.25, 0.45, r);
+  float ring  = smoothstep(0.5,  0.56, r) * (1.0 - smoothstep(0.56, 0.80, r));
+  float glow  = exp(-r * r * 2.2);
+
+  /* Fingertip pulse */
+  float pulse = 0.0;
+  if (v_mode > 0.5) {
+    float ph = fract(u_time * 0.85);
+    float pr = ph * 0.48 + 0.5;
+    pulse    = smoothstep(pr - 0.04, pr, r) * (1.0 - smoothstep(pr, pr + 0.14, r));
+    pulse   *= (1.0 - ph) * 1.6;
+  }
+
+  float alpha = (core + ring * 0.65 + glow * 0.32 + pulse * 0.55) * u_opacity;
+  fragColor   = vec4(u_color * alpha, alpha);
+}`;
+
+  /* ── CREATE PROGRAMS ─────────────────────────────────── */
+  const bgProg    = createProgram(BG_VERT,   BG_FRAG);
+  const boneProg  = createProgram(BONE_VERT, BONE_FRAG);
+  const jointProg = createProgram(JOINT_VERT,JOINT_FRAG);
+
+  /* ── UNIFORM LOCATIONS ───────────────────────────────── */
+  const bgUni = {
+    res:   gl.getUniformLocation(bgProg, 'u_res'),
+    time:  gl.getUniformLocation(bgProg, 'u_time'),
+    scan:  gl.getUniformLocation(bgProg, 'u_scan'),
+    color: gl.getUniformLocation(bgProg, 'u_color'),
+  };
+  const boneUni = {
+    res:      gl.getUniformLocation(boneProg, 'u_res'),
+    color:    gl.getUniformLocation(boneProg, 'u_color'),
+    hardness: gl.getUniformLocation(boneProg, 'u_hardness'),
+    opacity:  gl.getUniformLocation(boneProg, 'u_opacity'),
+  };
+  const jointUni = {
+    res:    gl.getUniformLocation(jointProg, 'u_res'),
+    color:  gl.getUniformLocation(jointProg, 'u_color'),
+    opacity:gl.getUniformLocation(jointProg, 'u_opacity'),
+    time:   gl.getUniformLocation(jointProg, 'u_time'),
+  };
+
+  /* ── BACKGROUND GEOMETRY ─────────────────────────────── */
+  const bgVAO = gl.createVertexArray();
+  gl.bindVertexArray(bgVAO);
+  const bgVBO = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, bgVBO);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const bgPosLoc = gl.getAttribLocation(bgProg, 'a_pos');
+  gl.enableVertexAttribArray(bgPosLoc);
+  gl.vertexAttribPointer(bgPosLoc, 2, gl.FLOAT, false, 0, 0);
+  gl.bindVertexArray(null);
+
+  /* ── BONE GEOMETRY (dynamic) ─────────────────────────── */
+  const MAX_BONES  = 21 * 2 + 4;   /* connections × hands + slack */
+  const BONE_VERTS = MAX_BONES * 6;
+  const boneBuf = new Float32Array(BONE_VERTS * 3); /* x,y,t */
+
+  const boneVAO = gl.createVertexArray();
+  gl.bindVertexArray(boneVAO);
+  const boneVBO = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, boneVBO);
+  gl.bufferData(gl.ARRAY_BUFFER, boneBuf, gl.DYNAMIC_DRAW);
+  const bonePosLoc = gl.getAttribLocation(boneProg, 'a_pos');
+  const boneTLoc   = gl.getAttribLocation(boneProg, 'a_t');
+  gl.enableVertexAttribArray(bonePosLoc);
+  gl.vertexAttribPointer(bonePosLoc, 2, gl.FLOAT, false, 12, 0);
+  gl.enableVertexAttribArray(boneTLoc);
+  gl.vertexAttribPointer(boneTLoc, 1, gl.FLOAT, false, 12, 8);
+  gl.bindVertexArray(null);
+
+  /* ── JOINT GEOMETRY (dynamic) ────────────────────────── */
+  const MAX_JOINTS  = 21 * 2 + 4;  /* landmarks × hands + palm reticles */
+  const JOINT_VERTS = MAX_JOINTS * 6;
+  const jointBuf = new Float32Array(JOINT_VERTS * 5); /* x,y,u,v,mode */
+
+  const jointVAO = gl.createVertexArray();
+  gl.bindVertexArray(jointVAO);
+  const jointVBO = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, jointVBO);
+  gl.bufferData(gl.ARRAY_BUFFER, jointBuf, gl.DYNAMIC_DRAW);
+  const jPosLoc  = gl.getAttribLocation(jointProg, 'a_pos');
+  const jUVLoc   = gl.getAttribLocation(jointProg, 'a_uv');
+  const jModeLoc = gl.getAttribLocation(jointProg, 'a_mode');
+  gl.enableVertexAttribArray(jPosLoc);
+  gl.vertexAttribPointer(jPosLoc,  2, gl.FLOAT, false, 20, 0);
+  gl.enableVertexAttribArray(jUVLoc);
+  gl.vertexAttribPointer(jUVLoc,   2, gl.FLOAT, false, 20, 8);
+  gl.enableVertexAttribArray(jModeLoc);
+  gl.vertexAttribPointer(jModeLoc, 1, gl.FLOAT, false, 20, 16);
+  gl.bindVertexArray(null);
+
+  /* ── BUFFER BUILDERS ─────────────────────────────────── */
+  function buildBoneVerts(lms, buf, offset) {
+    const hw = Math.max(4, CFG.GLOW * 0.7) * dpr;
+    let i = offset;
+    for (const [ai, bi] of CONNECTIONS) {
+      const a = lms[ai], b = lms[bi];
+      const ax = a.x * W * dpr, ay = a.y * H * dpr;
+      const bx = b.x * W * dpr, by = b.y * H * dpr;
+      const dx = bx - ax, dy = by - ay;
+      const len = Math.hypot(dx, dy) || 1;
+      const px = -dy / len * hw, py = dx / len * hw;
+      /* 2 triangles: (v0,v1,v2) and (v1,v3,v2) */
+      buf[i++]=ax+px; buf[i++]=ay+py; buf[i++]=-1;
+      buf[i++]=ax-px; buf[i++]=ay-py; buf[i++]= 1;
+      buf[i++]=bx+px; buf[i++]=by+py; buf[i++]=-1;
+      buf[i++]=ax-px; buf[i++]=ay-py; buf[i++]= 1;
+      buf[i++]=bx-px; buf[i++]=by-py; buf[i++]= 1;
+      buf[i++]=bx+px; buf[i++]=by+py; buf[i++]=-1;
+    }
+    return i;
+  }
+
+  function buildJointVerts(lms, buf, offset) {
+    const R  = CFG.JOINT_SIZE * dpr;
+    const Rt = R * 1.65;
+    const Rp = R * 4.2;
+    let i = offset;
+    /* 21 landmark joints */
+    for (let j = 0; j < lms.length; j++) {
+      const lm = lms[j];
+      const cx  = lm.x * W * dpr;
+      const cy  = lm.y * H * dpr;
+      const isTip = TIPS.has(j);
+      const r   = isTip ? Rt : R;
+      /* Depth brightness: z<0 = closer to camera in MediaPipe convention */
+      const mode= isTip ? 1.0 : 0.0;
+      const quads = [[-1,-1],[1,-1],[-1,1],[1,-1],[1,1],[-1,1]];
+      for (const [qu,qv] of quads) {
+        buf[i++]=cx+qu*r; buf[i++]=cy+qv*r;
+        buf[i++]=qu; buf[i++]=qv; buf[i++]=mode;
+      }
+    }
+    /* Palm reticle at landmark 9 (middle knuckle base) */
+    const palm = lms[9];
+    const px   = palm.x * W * dpr, py = palm.y * H * dpr;
+    const pquads = [[-1,-1],[1,-1],[-1,1],[1,-1],[1,1],[-1,1]];
+    for (const [qu,qv] of pquads) {
+      buf[i++]=px+qu*Rp; buf[i++]=py+qv*Rp;
+      buf[i++]=qu; buf[i++]=qv; buf[i++]=2.0;
+    }
+    return i;
+  }
+
+  /* ── PUPPET SYSTEM ──────────────────────────────────── */
+  const PUPPET_GRAVITY    = 0.52;
+  const PUPPET_DAMPING    = 0.97;
+  const PUPPET_ITERATIONS = 7;
+  const STRING_PULL       = 0.20;
+
+  let puppet             = null;
+  let camOverlayAlpha    = 0.22;
+  let camOverlayOn       = true;
+  let firstHandSeen      = false;
+  let instructionsAlpha  = 1.0;
+  let walkSpeed          = 0;
+
+  function makeJoint(x, y) { return { x, y, px: x, py: y }; }
+
+  function initPuppet() {
+    const cx    = W * 0.5;
+    const floor = H - 55;
+
+    /* ── joint positions (standing pose) ── */
+    const HY = floor - 175, NY = floor - 152, SY = floor - 140,
+          EY = floor - 105, WY = floor - 68,
+          HiY= floor - 98,  KY = floor - 52,  AY = floor - 14, FY = floor - 2;
+    const AS = 38, LS = 17;
+
+    const J = {
+      head:      makeJoint(cx,       HY),
+      neck:      makeJoint(cx,       NY),
+      torso:     makeJoint(cx,       (SY + HiY) * 0.5),
+      hips:      makeJoint(cx,       HiY),
+      lShoulder: makeJoint(cx - AS,  SY),
+      lElbow:    makeJoint(cx - AS - 10, EY),
+      lWrist:    makeJoint(cx - AS - 5,  WY),
+      rShoulder: makeJoint(cx + AS,  SY),
+      rElbow:    makeJoint(cx + AS + 10, EY),
+      rWrist:    makeJoint(cx + AS + 5,  WY),
+      lHip:      makeJoint(cx - LS,  HiY),
+      lKnee:     makeJoint(cx - LS,  KY),
+      lAnkle:    makeJoint(cx - LS,  AY),
+      lFoot:     makeJoint(cx - LS - 10, FY),
+      rHip:      makeJoint(cx + LS,  HiY),
+      rKnee:     makeJoint(cx + LS,  KY),
+      rAnkle:    makeJoint(cx + LS,  AY),
+      rFoot:     makeJoint(cx + LS + 10, FY),
+    };
+
+    const constraints = [];
+    function stick(a, b) {
+      const len = Math.hypot(a.x - b.x, a.y - b.y);
+      constraints.push({ a, b, len: Math.max(len, 2) });
+    }
+
+    /* spine */
+    stick(J.head, J.neck); stick(J.neck, J.torso); stick(J.torso, J.hips);
+    /* shoulders / hips cross */
+    stick(J.neck, J.lShoulder); stick(J.neck, J.rShoulder);
+    stick(J.lShoulder, J.rShoulder);
+    stick(J.torso, J.lShoulder); stick(J.torso, J.rShoulder);
+    stick(J.hips, J.lHip); stick(J.hips, J.rHip);
+    stick(J.lHip, J.rHip);
+    /* arms */
+    stick(J.lShoulder, J.lElbow); stick(J.lElbow, J.lWrist);
+    stick(J.rShoulder, J.rElbow); stick(J.rElbow, J.rWrist);
+    /* legs */
+    stick(J.lHip, J.lKnee); stick(J.lKnee, J.lAnkle); stick(J.lAnkle, J.lFoot);
+    stick(J.rHip, J.rKnee); stick(J.rKnee, J.rAnkle); stick(J.rAnkle, J.rFoot);
+    /* pelvis stabilizer */
+    stick(J.hips, J.torso);
+
+    puppet = { joints: J, constraints, strings: [] };
+  }
+
+  function updatePuppet(timestamp) {
+    if (!puppet) return;
+    const J     = puppet.joints;
+    const floor = H - 55;
+    const t     = timestamp * 0.001;
+
+    /* ── identify hands ── */
+    let leftHand = null, rightHand = null;
+    for (const hand of smoothed) {
+      if (hand.label === 'Left')  leftHand  = hand;
+      else                         rightHand = hand;
+    }
+    const handsActive = smoothed.length > 0;
+
+    if (handsActive && !firstHandSeen) {
+      firstHandSeen = true;
+    }
+    if (firstHandSeen) {
+      instructionsAlpha = Math.max(0, instructionsAlpha - 0.025);
+    }
+
+    /* ── walk ramp ── */
+    walkSpeed = handsActive
+      ? Math.min(1, walkSpeed + 0.035)
+      : Math.max(0, walkSpeed - 0.018);
+
+    /* ── verlet integrate ── */
+    for (const j of Object.values(J)) {
+      const vx = (j.x - j.px) * PUPPET_DAMPING;
+      const vy = (j.y - j.py) * PUPPET_DAMPING;
+      j.px = j.x; j.py = j.y;
+      j.x += vx;
+      j.y += vy + PUPPET_GRAVITY;
+    }
+
+    /* ── walking oscillation ── */
+    if (walkSpeed > 0.01) {
+      const ph   = t * 3.8;
+      const amp  = 15 * walkSpeed;
+      const ampA = 10 * walkSpeed;
+      J.lKnee.x  += Math.sin(ph)              * amp  * 0.7;
+      J.lKnee.y  += Math.cos(ph)              * amp  * 0.25;
+      J.rKnee.x  += Math.sin(ph + Math.PI)    * amp  * 0.7;
+      J.rKnee.y  += Math.cos(ph + Math.PI)    * amp  * 0.25;
+      J.lAnkle.x += Math.sin(ph + 0.4)        * ampA * 0.5;
+      J.rAnkle.x += Math.sin(ph + Math.PI + 0.4) * ampA * 0.5;
+      J.lFoot.x  += Math.sin(ph + 0.7)        * ampA * 0.6;
+      J.rFoot.x  += Math.sin(ph + Math.PI + 0.7) * ampA * 0.6;
+      /* subtle arm swing */
+      J.lElbow.x += Math.sin(ph + Math.PI)    * amp  * 0.25;
+      J.rElbow.x += Math.sin(ph)              * amp  * 0.25;
+    }
+
+    /* ── satisfy stick constraints ── */
+    for (let iter = 0; iter < PUPPET_ITERATIONS; iter++) {
+      for (const { a, b, len } of puppet.constraints) {
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const dist = Math.hypot(dx, dy) || 0.001;
+        const corr = (dist - len) / dist * 0.5;
+        a.x += dx * corr; a.y += dy * corr;
+        b.x -= dx * corr; b.y -= dy * corr;
+      }
+    }
+
+    /* ── floor / wall ── */
+    for (const j of Object.values(J)) {
+      if (j.y > floor) { j.y = floor; j.py = j.y + (j.y - j.py) * 0.25; }
+      j.x = Math.max(8, Math.min(W - 8, j.x));
+    }
+
+    /* ── build string mappings ── */
+    /* selfieMode=true: MediaPipe "Left" label = left side of mirrored screen (user's right hand)
+       We map left-screen hand → character's right side, right-screen hand → character's left side */
+    const strings = [];
+
+    if (leftHand) {
+      const lms = leftHand.landmarks;
+      strings.push({ lm: lms[20], joint: J.head,      label: 'pinky→head'   });
+      strings.push({ lm: lms[4],  joint: J.rShoulder, label: 'thumb→rshldr' });
+      strings.push({ lm: lms[8],  joint: J.rWrist,    label: 'idx→rwrist'   });
+      strings.push({ lm: lms[12], joint: J.rKnee,     label: 'mid→rknee'    });
+      strings.push({ lm: lms[16], joint: J.rAnkle,    label: 'ring→rankle'  });
+    }
+    if (rightHand) {
+      const lms = rightHand.landmarks;
+      strings.push({ lm: lms[20], joint: J.head,      label: 'pinky→head'   });
+      strings.push({ lm: lms[4],  joint: J.lShoulder, label: 'thumb→lshldr' });
+      strings.push({ lm: lms[8],  joint: J.lWrist,    label: 'idx→lwrist'   });
+      strings.push({ lm: lms[12], joint: J.lKnee,     label: 'mid→lknee'    });
+      strings.push({ lm: lms[16], joint: J.lAnkle,    label: 'ring→lankle'  });
+    }
+
+    /* ── apply string spring pulls ── */
+    for (const { lm, joint } of strings) {
+      const tx = lm.x * W, ty = lm.y * H;
+      joint.x  += (tx - joint.x)  * STRING_PULL;
+      joint.y  += (ty - joint.y)  * STRING_PULL;
+      joint.px += (tx - joint.px) * STRING_PULL * 0.4;
+      joint.py += (ty - joint.py) * STRING_PULL * 0.4;
+    }
+
+    puppet.strings = strings;
+  }
+
+  /* ── draw a glow string (bezier) ── */
+  function drawString(ctx, x1, y1, x2, y2, color) {
+    const mx  = (x1 + x2) * 0.5;
+    const my  = (y1 + y2) * 0.5 + Math.max(15, (y2 - y1) * 0.18);
+
+    ctx.save();
+    ctx.lineCap = 'round';
+    /* glow halo */
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.quadraticCurveTo(mx, my, x2, y2);
+    ctx.strokeStyle = color + '28';
+    ctx.lineWidth   = 5;
+    ctx.stroke();
+    /* bright core */
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.quadraticCurveTo(mx, my, x2, y2);
+    ctx.strokeStyle = color + 'CC';
+    ctx.lineWidth   = 0.9;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /* ── draw puppet silhouette ── */
+  function drawPuppet(ctx) {
+    if (!puppet) return;
+    const J     = puppet.joints;
+    const theme = THEMES[themeIdx];
+    const rim   = theme.hex;
+
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin= 'round';
+
+    function seg(ax, ay, bx, by, w) {
+      const dx = bx - ax, dy = by - ay;
+      const len = Math.hypot(dx, dy) || 1;
+      const nx = -dy / len * w * 0.5, ny = dx / len * w * 0.5;
+      ctx.beginPath();
+      ctx.moveTo(ax + nx, ay + ny);
+      ctx.lineTo(bx + nx, by + ny);
+      ctx.lineTo(bx - nx, by - ny);
+      ctx.lineTo(ax - nx, ay - ny);
+      ctx.closePath();
+      ctx.shadowColor = rim; ctx.shadowBlur = 16;
+      ctx.fillStyle   = '#000'; ctx.fill();
+      ctx.shadowBlur  = 0;
+      ctx.strokeStyle = rim + '50'; ctx.lineWidth = 1; ctx.stroke();
+    }
+
+    /* torso quad */
+    ctx.beginPath();
+    ctx.moveTo(J.lShoulder.x, J.lShoulder.y);
+    ctx.lineTo(J.rShoulder.x, J.rShoulder.y);
+    ctx.lineTo(J.rHip.x,      J.rHip.y);
+    ctx.lineTo(J.lHip.x,      J.lHip.y);
+    ctx.closePath();
+    ctx.shadowColor = rim; ctx.shadowBlur = 18;
+    ctx.fillStyle   = '#000'; ctx.fill();
+    ctx.shadowBlur  = 0;
+    ctx.strokeStyle = rim + '50'; ctx.lineWidth = 1; ctx.stroke();
+
+    /* arms */
+    seg(J.lShoulder.x, J.lShoulder.y, J.lElbow.x, J.lElbow.y, 11);
+    seg(J.lElbow.x,    J.lElbow.y,    J.lWrist.x,  J.lWrist.y,  8);
+    seg(J.rShoulder.x, J.rShoulder.y, J.rElbow.x, J.rElbow.y, 11);
+    seg(J.rElbow.x,    J.rElbow.y,    J.rWrist.x,  J.rWrist.y,  8);
+
+    /* legs */
+    seg(J.lHip.x,   J.lHip.y,   J.lKnee.x,  J.lKnee.y,  14);
+    seg(J.lKnee.x,  J.lKnee.y,  J.lAnkle.x, J.lAnkle.y, 10);
+    seg(J.lAnkle.x, J.lAnkle.y, J.lFoot.x,  J.lFoot.y,   7);
+    seg(J.rHip.x,   J.rHip.y,   J.rKnee.x,  J.rKnee.y,  14);
+    seg(J.rKnee.x,  J.rKnee.y,  J.rAnkle.x, J.rAnkle.y, 10);
+    seg(J.rAnkle.x, J.rAnkle.y, J.rFoot.x,  J.rFoot.y,   7);
+
+    /* neck */
+    seg(J.neck.x, J.neck.y, J.head.x, J.head.y, 9);
+
+    /* head */
+    ctx.beginPath();
+    ctx.arc(J.head.x, J.head.y, 20, 0, Math.PI * 2);
+    ctx.shadowColor = rim; ctx.shadowBlur = 20;
+    ctx.fillStyle   = '#000'; ctx.fill();
+    ctx.shadowBlur  = 0;
+    ctx.strokeStyle = rim + '60'; ctx.lineWidth = 1.5; ctx.stroke();
+
+    /* hands */
+    for (const jnt of [J.lWrist, J.rWrist]) {
+      ctx.beginPath(); ctx.arc(jnt.x, jnt.y, 7, 0, Math.PI * 2);
+      ctx.shadowColor = rim; ctx.shadowBlur = 10;
+      ctx.fillStyle = '#000'; ctx.fill(); ctx.shadowBlur = 0;
+    }
+
+    /* feet */
+    for (const jnt of [J.lFoot, J.rFoot]) {
+      ctx.beginPath(); ctx.ellipse(jnt.x, jnt.y, 12, 5, 0, 0, Math.PI * 2);
+      ctx.shadowColor = rim; ctx.shadowBlur = 8;
+      ctx.fillStyle = '#000'; ctx.fill(); ctx.shadowBlur = 0;
+    }
+
+    ctx.restore();
+
+    /* strings */
+    if (puppet.strings) {
+      for (const { lm, joint } of puppet.strings) {
+        drawString(ctx, lm.x * W, lm.y * H, joint.x, joint.y, rim);
+      }
+    }
+  }
+
+  /* ── video overlay ── */
+  function drawVideoOverlay(ctx) {
+    if (!camOverlayOn || camOverlayAlpha <= 0) return;
+    if (!video || video.readyState < 2) return;
+    ctx.save();
+    ctx.globalAlpha = camOverlayAlpha;
+    /* mirror to match selfieMode coordinates */
+    ctx.translate(W, 0); ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, W, H);
+    ctx.restore();
+  }
+
+  /* ── instructions overlay ── */
+  function drawInstructions(ctx) {
+    if (instructionsAlpha <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = instructionsAlpha;
+    const cx = W * 0.5, cy = H * 0.38;
+    ctx.font      = `bold 12px 'Space Mono', monospace`;
+    ctx.textAlign = 'center';
+    /* glow pass */
+    ctx.shadowColor = '#80ffff'; ctx.shadowBlur = 16;
+    ctx.fillStyle   = 'rgba(200,255,255,0.85)';
+    ctx.fillText('RAISE YOUR HANDS', cx, cy);
+    ctx.fillText('TO PUPPET THE CHARACTER', cx, cy + 22);
+    ctx.shadowBlur  = 0;
+    ctx.restore();
+  }
+
+  /* ── HUD RENDERING (Canvas 2D) ───────────────────────── */
+  let fps = 60, lastFpsUpdate = 0;
+
+  function renderHUD(time) {
+    hud.clearRect(0, 0, hudCanvas.width, hudCanvas.height);
+    hud.save();
+    hud.scale(dpr, dpr);
+
+    /* video + puppet layers (below HUD text) */
+    drawVideoOverlay(hud);
+    drawPuppet(hud);
+    drawInstructions(hud);
+
+    const theme = THEMES[themeIdx];
+    const mono = '\'Space Mono\', monospace';
+
+    /* FPS — top right */
+    const fpsStr = Math.round(fps).toString().padStart(3, ' ');
+    hud.font = `10px ${mono}`;
+    hud.fillStyle = 'rgba(152,152,176,0.4)';
+    hud.textAlign = 'right';
+    hud.fillText(`FPS ${fpsStr}`, W - 20, 22);
+
+    if (!smoothed.length) {
+      hud.restore();
+      return;
+    }
+
+    /* Per-hand labels */
+    for (const hand of smoothed) {
+      const lms = hand.landmarks;
+
+      /* Hand label near wrist */
+      const wrist = lms[0];
+      const wx = wrist.x * W, wy = wrist.y * H + 26;
+      hud.font = `9px ${mono}`;
+      hud.fillStyle = theme.hex + 'CC';
+      hud.textAlign = 'center';
+      hud.fillText(hand.label.toUpperCase(), wx, wy);
+
+      /* Fingertip labels */
+      for (const [tipIdx, name] of Object.entries(FINGER_NAMES)) {
+        const tip = lms[+tipIdx];
+        const tx  = tip.x * W;
+        const ty  = tip.y * H - CFG.JOINT_SIZE * 1.65 - 6;
+        hud.font = `8px ${mono}`;
+        hud.fillStyle = theme.hex + 'AA';
+        hud.textAlign = 'center';
+        hud.fillText(name, tx, ty);
+      }
+
+      /* Landmark index dots readout strip — small numbers near index finger base */
+      const lm5 = lms[5];
+      const stripX = lm5.x * W + 18, stripY = lm5.y * H - 8;
+      hud.font = `7px ${mono}`;
+      hud.fillStyle = 'rgba(152,152,176,0.28)';
+      hud.textAlign = 'left';
+      hud.fillText(`${lms.length} LM`, stripX, stripY);
+    }
+
+    /* Hand count badge */
+    hud.font = `10px ${mono}`;
+    hud.fillStyle = 'rgba(152,152,176,0.4)';
+    hud.textAlign = 'right';
+    hud.fillText(`HANDS: ${smoothed.length}`, W - 20, 38);
+
+    hud.restore();
+  }
+
+  /* ── MAIN RENDER LOOP ────────────────────────────────── */
+  let lastTime = 0;
+  let boneVerts = 0, jointVerts = 0;
+
+  function tick(timestamp) {
+    requestAnimationFrame(tick);
+
+    /* FPS */
+    const dt = timestamp - lastTime;
+    lastTime = timestamp;
+    fps = fps * 0.92 + (1000 / Math.max(1, dt)) * 0.08;
+
+    const time = timestamp * 0.001;
+
+    /* Smooth landmarks from latest MediaPipe results */
+    smoothLandmarks();
+
+    /* Update puppet physics */
+    updatePuppet(timestamp);
+
+    /* Build GPU buffers */
+    boneVerts  = 0;
+    jointVerts = 0;
+    for (const hand of smoothed) {
+      const lms = hand.landmarks;
+      boneVerts  = buildBoneVerts(lms,  boneBuf,  boneVerts);
+      jointVerts = buildJointVerts(lms, jointBuf, jointVerts);
+    }
+
+    const theme = THEMES[themeIdx];
+    const pr    = glCanvas.width;
+    const ph    = glCanvas.height;
+
+    /* Upload bone buffer */
+    if (boneVerts > 0) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, boneVBO);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, boneBuf.subarray(0, boneVerts));
+    }
+    /* Upload joint buffer */
+    if (jointVerts > 0) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, jointVBO);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, jointBuf.subarray(0, jointVerts));
+    }
+
+    /* ─ 1. Background pass ─ */
+    gl.disable(gl.BLEND);
+    gl.useProgram(bgProg);
+    gl.uniform2f(bgUni.res,   pr, ph);
+    gl.uniform1f(bgUni.time,  time);
+    gl.uniform1f(bgUni.scan,  CFG.SCANLINES);
+    gl.uniform3f(bgUni.color, theme.r, theme.g, theme.b);
+    gl.bindVertexArray(bgVAO);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    if (smoothed.length > 0) {
+      /* ─ 2. Additive blend for skeleton ─ */
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+
+      /* Bones — positions in physical px, so u_res = physical dims */
+      const hardness = Math.max(0.3, (40 - CFG.GLOW) * 0.18 + 0.3);
+      gl.useProgram(boneProg);
+      gl.uniform2f(boneUni.res,      pr,      ph);
+      gl.uniform3f(boneUni.color,    theme.r, theme.g, theme.b);
+      gl.uniform1f(boneUni.hardness, hardness);
+      gl.uniform1f(boneUni.opacity,  CFG.OPACITY * 0.88);
+      gl.bindVertexArray(boneVAO);
+      gl.drawArrays(gl.TRIANGLES, 0, boneVerts / 3);
+
+      /* Joints */
+      gl.useProgram(jointProg);
+      gl.uniform2f(jointUni.res,    pr,      ph);
+      gl.uniform3f(jointUni.color,  theme.r, theme.g, theme.b);
+      gl.uniform1f(jointUni.opacity,CFG.OPACITY);
+      gl.uniform1f(jointUni.time,   time);
+      gl.bindVertexArray(jointVAO);
+      gl.drawArrays(gl.TRIANGLES, 0, jointVerts / 5);
+    }
+
+    gl.bindVertexArray(null);
+
+    /* ─ 3. HUD canvas ─ */
+    renderHUD(time);
+  }
+
+  /* ── LANDMARK SMOOTHING ──────────────────────────────── */
+  function smoothLandmarks() {
+    if (!handsData.length) { smoothed = []; return; }
+
+    const alpha = Math.min(0.99, CFG.SMOOTH / 10);
+
+    /* Grow or shrink smoothed array to match live count */
+    while (smoothed.length < handsData.length) {
+      const src = handsData[smoothed.length];
+      smoothed.push({
+        label: src.label,
+        landmarks: src.landmarks.map(lm => ({ x:lm.x, y:lm.y, z:lm.z })),
+      });
+    }
+    smoothed.length = handsData.length;
+
+    for (let h = 0; h < handsData.length; h++) {
+      const src = handsData[h];
+      const dst = smoothed[h];
+      dst.label = src.label;
+      for (let j = 0; j < src.landmarks.length; j++) {
+        const s = src.landmarks[j], d = dst.landmarks[j];
+        d.x += (s.x - d.x) * alpha;
+        d.y += (s.y - d.y) * alpha;
+        d.z += (s.z - d.z) * alpha;
+      }
+    }
+  }
+
+  /* ── MEDIAPIPE SETUP ─────────────────────────────────── */
+  function startTracking(stream) {
+    video.srcObject = stream;
+
+    const hands = new Hands({
+      locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`,
+    });
+    hands.setOptions({
+      maxNumHands:           2,
+      modelComplexity:       1,
+      minDetectionConfidence:0.7,
+      minTrackingConfidence: 0.5,
+      selfieMode:            true,
+    });
+
+    hands.onResults(results => {
+      const raw = results.multiHandLandmarks  || [];
+      const meta= results.multiHandedness     || [];
+      handsData = raw.map((lms, i) => ({
+        label: meta[i] ? meta[i].label : 'Right',
+        landmarks: lms,
+      }));
+
+      /* Update status */
+      const dot  = document.getElementById('ht-status-dot');
+      const txt  = document.getElementById('ht-status-text');
+      if (handsData.length > 0) {
+        dot.className  = 'ht-status-dot ht-status-dot--active';
+        txt.className  = 'ht-status-text ht-status-text--active';
+        txt.textContent= `TRACKING ${handsData.length} HAND${handsData.length > 1 ? 'S' : ''}`;
+      } else {
+        dot.className  = 'ht-status-dot ht-status-dot--idle';
+        txt.className  = 'ht-status-text';
+        txt.textContent= 'SEARCHING\u2026';
+      }
+    });
+
+    const camera = new Camera(video, {
+      onFrame: async () => { await hands.send({ image: video }); },
+      width: 640, height: 480,
+    });
+    camera.start();
+  }
+
+  /* ── START BUTTON ────────────────────────────────────── */
+  document.getElementById('ht-start-btn').addEventListener('click', async () => {
+    const errEl = document.getElementById('ht-error');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+      });
+      document.getElementById('ht-start').classList.add('hidden');
+      startTracking(stream);
+    } catch (e) {
+      errEl.textContent = 'Camera access denied: ' + e.message;
+      errEl.classList.add('visible');
+    }
+  });
+
+  /* ── THEME PICKER ────────────────────────────────────── */
+  document.getElementById('ht-theme-picker').addEventListener('click', e => {
+    const btn = e.target.closest('.ht-theme-btn');
+    if (!btn) return;
+    themeIdx = +btn.dataset.theme;
+    document.querySelectorAll('.ht-theme-btn').forEach(b =>
+      b.classList.toggle('active', b === btn));
+    applyThemeCSS();
+  });
+
+  function applyThemeCSS() {
+    const t = THEMES[themeIdx];
+    stage.style.setProperty('--ht-accent', t.hex);
+    document.querySelectorAll('.ht-corner').forEach(c => {
+      c.style.borderColor = t.hex + '66';
+    });
+  }
+
+  /* ── SLIDERS ─────────────────────────────────────────── */
+  function wire(id, valId, setter, fmt) {
+    const el  = document.getElementById(id);
+    const val = document.getElementById(valId);
+    el.addEventListener('input', () => {
+      setter(+el.value);
+      val.textContent = fmt ? fmt(+el.value) : el.value;
+    });
+  }
+  wire('s-glow',    'v-glow',    v => { CFG.GLOW       = v; });
+  wire('s-joint',   'v-joint',   v => { CFG.JOINT_SIZE  = v; });
+  wire('s-opacity', 'v-opacity', v => { CFG.OPACITY     = v / 100; }, v => v);
+  wire('s-scan',    'v-scan',    v => { CFG.SCANLINES   = v; });
+  wire('s-smooth',  'v-smooth',  v => { CFG.SMOOTH      = v; });
+
+  /* ── CAM TOGGLE ─────────────────────────────────────── */
+  document.getElementById('ht-cam-btn').addEventListener('click', function() {
+    camOverlayOn = !camOverlayOn;
+    this.style.opacity = camOverlayOn ? '1' : '0.35';
+  });
+
+  /* ── FULLSCREEN / HIDE UI ────────────────────────────── */
+  document.getElementById('ht-fs-btn').addEventListener('click', () => {
+    if (!document.fullscreenElement) stage.requestFullscreen().catch(() => {});
+    else document.exitFullscreen();
+  });
+  document.getElementById('ht-hide-btn').addEventListener('click', () => {
+    stage.classList.toggle('ui-hidden');
+  });
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT') return;
+    if (e.key === 'f' || e.key === 'F') document.getElementById('ht-fs-btn').click();
+    if (e.key === 'h' || e.key === 'H') document.getElementById('ht-hide-btn').click();
+  });
+
+  /* ── RESIZE ──────────────────────────────────────────── */
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => { resize(); initPuppet(); }, 80);
+  });
+
+  /* ── INIT ────────────────────────────────────────────── */
+  resize();
+  initPuppet();
+  applyThemeCSS();
+  document.getElementById('footer-year').textContent = new Date().getFullYear();
+  requestAnimationFrame(tick);
+
+})();
+</script>
+
+</body>
+</html>

@@ -58,9 +58,10 @@
         form.style.display = 'none';
         if (success) success.classList.add('visible');
       } else {
-        throw new Error('Network response was not ok');
+        throw new Error(`Form submission failed: ${res.status} ${res.statusText}`);
       }
-    } catch {
+    } catch (err) {
+      console.error('[contact-form]', err);
       submitBtn.disabled = false;
       submitBtn.textContent = 'Send Message';
       const errEl = form.querySelector('.form-submit-error');

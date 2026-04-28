@@ -16,6 +16,78 @@
 
   <style>
     /* ══════════════════════════════════════════════════════
+       DYNAMIC BACKGROUND LAYER
+    ══════════════════════════════════════════════════════ */
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+    
+    body[data-style="glass"] .bg-layer {
+      opacity: 1;
+    }
+    
+.bg-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  will-change: transform;
+}
+    
+    .bg-glow-1 {
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(168, 85, 247, 0.35) 0%, transparent 70%);
+      top: -150px;
+      left: -100px;
+    }
+    
+    .bg-glow-2 {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(124, 58, 237, 0.25) 0%, transparent 70%);
+      bottom: -100px;
+      right: -50px;
+    }
+    
+    .bg-glow-3 {
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, rgba(79, 70, 229, 0.2) 0%, transparent 70%);
+      top: 40%;
+      left: 30%;
+    }
+    
+    /* Edge Shine Effect */
+    body[data-style="glass"] .sg-micro-cell,
+    body[data-style="glass"] .sg-card {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    body[data-style="glass"] .sg-micro-cell::before,
+    body[data-style="glass"] .sg-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, 
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,0.1) 45%,
+        rgba(255,255,255,0.18) 50%,
+        rgba(255,255,255,0.1) 55%,
+        rgba(255,255,255,0) 100%);
+      transform: translateX(-100%) translateY(-100%);
+      transition: transform 0.6s ease;
+      pointer-events: none;
+      z-index: 1;
+    }
+    
+    /* ══════════════════════════════════════════════════════
        STYLE GALLERY — CSS CUSTOM PROPERTIES (DEFAULT THEME)
     ══════════════════════════════════════════════════════ */
     :root {
@@ -93,6 +165,7 @@
       --sg-text-secondary:  rgba(255, 255, 255, 0.75);
       --sg-text-muted:      rgba(255, 255, 255, 0.45);
       --sg-accent:          #a855f7;
+      --sg-accent-transparent: rgba(168, 85, 247, 0.2);
       --sg-accent2:         #7c3aed;
       --sg-border:          rgba(255, 255, 255, 0.15);
       --sg-border-accent:   rgba(168, 85, 247, 0.4);
@@ -126,6 +199,7 @@
       --sg-text-secondary:  #636E72;
       --sg-text-muted:      #95A5A6;
       --sg-accent:          #6C63FF;
+      --sg-accent-transparent: rgba(108, 99, 255, 0.2);
       --sg-accent2:         #a855f7;
       --sg-border:          transparent;
       --sg-border-accent:   transparent;
@@ -360,7 +434,7 @@
       color: var(--sg-text);
       border-color: var(--sg-accent);
       background: var(--sg-bg-secondary);
-      box-shadow: 0 0 12px rgba(108, 99, 255, 0.2);
+      box-shadow: 0 0 12px var(--sg-accent-transparent, rgba(108, 99, 255, 0.2));
     }
     .sg-switcher-dot {
       width: 10px;
@@ -1448,6 +1522,13 @@
 </head>
 <body data-style="default">
 
+<!-- ── DYNAMIC BACKGROUND LAYER ───────────────────────── -->
+<div class="bg-layer" aria-hidden="true">
+  <div class="bg-glow bg-glow-1" id="bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2" id="bg-glow-2"></div>
+  <div class="bg-glow bg-glow-3" id="bg-glow-3"></div>
+</div>
+
 <!-- ── DECORATIVE OVERLAYS ─────────────────────────────── -->
 <div class="sg-scanlines" aria-hidden="true"></div>
 <div class="sg-glass-bg" aria-hidden="true">
@@ -2130,6 +2211,49 @@
   /* ─── FOOTER YEAR ───────────────────────────────────── */
   var yearEl = document.getElementById('sg-footer-year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  /* ─── MOUSE PARALLAX BACKGROUND GLOWS ───────────────── */
+  var glow1 = document.getElementById('bg-glow-1');
+  var glow2 = document.getElementById('bg-glow-2');
+  var glow3 = document.getElementById('bg-glow-3');
+  
+  var mouseX = 0.5, mouseY = 0.5;
+  var currentX = 0.5, currentY = 0.5;
+  
+  document.addEventListener('mousemove', function(e) {
+    mouseX = e.clientX / window.innerWidth;
+    mouseY = e.clientY / window.innerHeight;
+  });
+  
+  function animateBackground() {
+    // Smooth interpolation for inertia
+    currentX += (mouseX - currentX) * 0.08;
+    currentY += (mouseY - currentY) * 0.08;
+    
+    // Different parallax depths for each glow
+    if (glow1) glow1.style.transform = 'translate(' + ((currentX - 0.5) * 120) + 'px, ' + ((currentY - 0.5) * 120) + 'px)';
+    if (glow2) glow2.style.transform = 'translate(' + ((currentX - 0.5) * -80) + 'px, ' + ((currentY - 0.5) * -80) + 'px)';
+    if (glow3) glow3.style.transform = 'translate(' + ((currentX - 0.5) * 160) + 'px, ' + ((currentY - 0.5) * 160) + 'px)';
+    
+    requestAnimationFrame(animateBackground);
+  }
+  animateBackground();
+
+  /* ─── EDGE SHINE HOVER EFFECT ───────────────────────── */
+  document.addEventListener('mousemove', function(e) {
+    if (currentStyle !== 'glass') return;
+    
+    document.querySelectorAll('.sg-micro-cell, .sg-card').forEach(function(card) {
+      var rect = card.getBoundingClientRect();
+      if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+        var x = (e.clientX - rect.left) / rect.width;
+        var y = (e.clientY - rect.top) / rect.height;
+        card.style.setProperty('--shine-x', x);
+        card.style.setProperty('--shine-y', y);
+        card.style.transform = 'translate(' + ((x - 0.5) * 100) + '%, ' + ((y - 0.5) * 100) + '%)';
+      }
+    });
+  });
 
 })();
 </script>

@@ -355,6 +355,98 @@
       .exp-demo-wrap { height: 340px; }
       .exp-card--featured .exp-demo-wrap { height: clamp(260px, 45vh, 360px); }
     }
+
+    /* ── ASCII FULLSCREEN BUTTON ─────────────────────── */
+    .ascii-fs-btn {
+      position: absolute;
+      top: var(--space-4);
+      right: var(--space-4);
+      width: 28px; height: 28px;
+      border-radius: 5px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(8,8,16,0.65);
+      backdrop-filter: blur(8px);
+      color: rgba(200,200,220,0.6);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s, color 0.2s;
+      padding: 0;
+      z-index: 3;
+    }
+    .ascii-fs-btn:hover { border-color: rgba(255,255,255,0.3); color: rgba(240,240,255,0.9); }
+    .ascii-fs-btn svg { width: 13px; height: 13px; }
+
+    /* ── ASCII FPS COUNTER ───────────────────────────── */
+    .ascii-fps {
+      position: absolute;
+      top: var(--space-4);
+      left: var(--space-4);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.08em;
+      color: rgba(152,152,176,0.35);
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    /* ── ASCII CONTROLS BAR ──────────────────────────── */
+    .ascii-controls {
+      position: absolute;
+      bottom: var(--space-5);
+      right: var(--space-5);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+      z-index: 2;
+    }
+    /* un-absolute the theme picker when nested inside ascii-controls */
+    .ascii-controls .exp-theme-picker {
+      position: static;
+    }
+    .ascii-preset-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .ascii-picker-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      color: rgba(152,152,176,0.4);
+      text-transform: uppercase;
+      margin-right: 2px;
+      pointer-events: none;
+    }
+    .ascii-preset-btn {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.05em;
+      padding: 3px 6px;
+      border-radius: 3px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(8,8,16,0.55);
+      color: rgba(200,200,220,0.5);
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+    .ascii-preset-btn:hover  { border-color: rgba(255,255,255,0.28); color: rgba(240,240,255,0.85); }
+    .ascii-preset-btn.active { border-color: rgba(255,255,255,0.55); color: #fff; background: rgba(255,255,255,0.07); }
+
+    /* fullscreen expansion */
+    #ascii-wrap:fullscreen,
+    #ascii-wrap:-webkit-full-screen {
+      width: 100vw !important;
+      height: 100vh !important;
+      border-radius: 0 !important;
+    }
+    #ascii-wrap:fullscreen canvas,
+    #ascii-wrap:-webkit-full-screen canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
   </style>
 </head>
 <body>
@@ -399,17 +491,29 @@
       <article class="exp-card exp-card--featured">
         <div class="exp-demo-wrap" id="ascii-wrap">
           <canvas id="ascii-canvas" aria-label="ASCII art particle system responding to mouse movement"></canvas>
-          <div class="exp-demo-corner">
-            <div class="exp-demo-dot exp-demo-dot--live"></div>
-          </div>
+          <div class="ascii-fps" id="ascii-fps"></div>
+          <button class="ascii-fs-btn" id="ascii-fs-btn" title="Fullscreen">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>
+          </button>
           <p class="exp-demo-hint" id="ascii-hint">move your cursor to begin</p>
 
-          <div class="exp-theme-picker">
-            <button class="exp-theme-btn active" data-theme="0" title="Nebula" aria-label="Nebula theme"></button>
-            <button class="exp-theme-btn"        data-theme="1" title="Fire"   aria-label="Fire theme"></button>
-            <button class="exp-theme-btn"        data-theme="2" title="Matrix" aria-label="Matrix theme"></button>
-            <button class="exp-theme-btn"        data-theme="3" title="Ice"    aria-label="Ice theme"></button>
-            <button class="exp-theme-btn"        data-theme="4" title="Void"   aria-label="Void theme"></button>
+          <div class="ascii-controls">
+            <div class="ascii-preset-row">
+              <span class="ascii-picker-label">chars</span>
+              <button class="ascii-preset-btn active" data-preset="0">dense</button>
+              <button class="ascii-preset-btn" data-preset="1">sparks</button>
+              <button class="ascii-preset-btn" data-preset="2">waves</button>
+              <button class="ascii-preset-btn" data-preset="3">alpha</button>
+              <button class="ascii-preset-btn" data-preset="4">01</button>
+              <button class="ascii-preset-btn" data-preset="5">blocks</button>
+            </div>
+            <div class="exp-theme-picker">
+              <button class="exp-theme-btn active" data-theme="0" title="Nebula" aria-label="Nebula theme"></button>
+              <button class="exp-theme-btn"        data-theme="1" title="Fire"   aria-label="Fire theme"></button>
+              <button class="exp-theme-btn"        data-theme="2" title="Matrix" aria-label="Matrix theme"></button>
+              <button class="exp-theme-btn"        data-theme="3" title="Ice"    aria-label="Ice theme"></button>
+              <button class="exp-theme-btn"        data-theme="4" title="Void"   aria-label="Void theme"></button>
+            </div>
           </div>
         </div>
 
@@ -428,6 +532,94 @@
             <span class="tag">ASCII Art</span>
             <span class="tag">Mouse Interaction</span>
             <span class="tag">Flow Field</span>
+          </div>
+        </div>
+      </article>
+
+
+      <!-- ════ EXPERIMENT 13 — TOGGLE MICRO (NEWEST) ════ -->
+      <article class="exp-card">
+        <a href="toggle-micro/" class="exp-geo-preview" aria-label="View Toggle Micro experiment" style="background:#060610;overflow:hidden;">
+          <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;gap:20px;">
+            <!-- Lava toggle mini -->
+            <div style="display:flex;flex-direction:column;gap:6px;align-items:center;">
+              <div style="width:48px;height:26px;border-radius:13px;background:#1A0500;position:relative;overflow:hidden;">
+                <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 120% at 20% 50%,#FF4500,#FF8C00,#8B1A00);opacity:0.9;"></div>
+                <div style="position:absolute;width:20px;height:20px;border-radius:50%;top:3px;left:3px;background:radial-gradient(circle at 35% 35%,#FFF3AA,#FF6B00,#8B1A00);box-shadow:0 0 8px rgba(255,100,0,0.9);"></div>
+              </div>
+              <div style="width:48px;height:26px;border-radius:13px;background:#050514;border:1px solid rgba(108,99,255,0.3);position:relative;">
+                <div style="position:absolute;width:20px;height:20px;border-radius:50%;top:3px;right:3px;background:radial-gradient(circle at 35% 35%,#A0E8FF,#00BFFF,#0040AA);box-shadow:0 0 8px rgba(0,191,255,0.7);"></div>
+              </div>
+              <div style="width:48px;height:26px;border-radius:13px;background:#0D0010;border:1px solid rgba(218,112,214,0.2);position:relative;overflow:hidden;">
+                <div style="position:absolute;width:20px;height:20px;border-radius:50%;top:3px;left:3px;background:linear-gradient(135deg,#FF69B4,#DA70D6);"></div>
+                <div style="position:absolute;width:12px;height:12px;border-radius:50%;top:7px;right:5px;background:linear-gradient(135deg,#FF69B4,#DA70D6);opacity:0.5;"></div>
+              </div>
+              <div style="width:48px;height:26px;border-radius:13px;background:#020208;border:1px solid rgba(123,47,255,0.2);position:relative;overflow:hidden;">
+                <div style="position:absolute;width:20px;height:20px;border-radius:50%;top:3px;left:3px;background:#000;box-shadow:0 0 0 2px rgba(123,47,255,0.9),0 0 10px rgba(123,47,255,0.6);"></div>
+                <div style="position:absolute;width:12px;height:12px;border-radius:50%;top:7px;right:5px;background:radial-gradient(circle at 35% 35%,#888,#444,#1A1A1A);"></div>
+              </div>
+              <div style="width:48px;height:26px;border-radius:13px;background:#001A10;border:1.5px solid rgba(0,224,68,0.5);position:relative;overflow:hidden;">
+                <div style="position:absolute;width:20px;height:20px;border-radius:50%;top:3px;right:3px;background:radial-gradient(circle at 35% 35%,#80FFEE,#00CED1,#003340);box-shadow:0 0 8px rgba(0,206,209,0.7);border-radius:6px;"></div>
+              </div>
+            </div>
+          </div>
+          <div class="exp-demo-corner">
+            <div class="exp-demo-dot exp-demo-dot--live"></div>
+          </div>
+          <div class="exp-geo-cta"><span>View Experiment &rarr;</span></div>
+        </a>
+        <div class="exp-card-body">
+          <div class="exp-card-meta">
+            <span class="section-label" style="margin-bottom: 0;">New</span>
+            <span class="tag tag-teal">LIVE</span>
+          </div>
+          <h2 class="exp-card-title">Toggle Micro</h2>
+          <p class="exp-card-desc">
+            Five toggle switches, five distinct microanimations — lava flow via SVG displacement, a 3D coin flip, metaball blob merging, a gravitational orbital arc, and simultaneous shape morphing.
+          </p>
+          <div class="exp-card-tags">
+            <span class="tag">Microanimation</span>
+            <span class="tag">SVG Filter</span>
+            <span class="tag">CSS 3D</span>
+            <span class="tag">Orbital Physics</span>
+          </div>
+        </div>
+      </article>
+
+
+      <!-- ════ EXPERIMENT 13 — WEBCAM OCR (NEWEST) ════ -->
+      <article class="exp-card">
+        <a href="webcam-ocr/" class="exp-geo-preview" aria-label="View Webcam OCR experiment" style="background:#07070f;overflow:hidden;">
+          <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;">
+            <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style="opacity:0.65;">
+              <rect x="4" y="14" width="30" height="20" rx="3" stroke="#6C63FF" stroke-width="1.4" fill="none"/>
+              <circle cx="19" cy="24" r="5" stroke="#6C63FF" stroke-width="1.2" fill="none"/>
+              <line x1="38" y1="18" x2="52" y2="18" stroke="#2DD4BF" stroke-width="1.3" stroke-linecap="round"/>
+              <line x1="38" y1="24" x2="52" y2="24" stroke="#2DD4BF" stroke-width="1.3" stroke-linecap="round" opacity="0.7"/>
+              <line x1="38" y1="30" x2="48" y2="30" stroke="#2DD4BF" stroke-width="1.3" stroke-linecap="round" opacity="0.4"/>
+              <line x1="4"  y1="40" x2="52" y2="40" stroke="rgba(190,200,230,0.25)" stroke-width="1"/>
+              <line x1="4"  y1="46" x2="44" y2="46" stroke="rgba(190,200,230,0.18)" stroke-width="1"/>
+            </svg>
+          </div>
+          <div class="exp-demo-corner">
+            <div class="exp-demo-dot exp-demo-dot--live"></div>
+          </div>
+          <div class="exp-geo-cta"><span>View Experiment &rarr;</span></div>
+        </a>
+        <div class="exp-card-body">
+          <div class="exp-card-meta">
+            <span class="section-label" style="margin-bottom: 0;">New</span>
+            <span class="tag tag-teal">LIVE</span>
+          </div>
+          <h2 class="exp-card-title">Webcam OCR</h2>
+          <p class="exp-card-desc">
+            Live webcam feed scanned for text in real time using on-device Tesseract.js (WebAssembly). Detected words are logged with timestamps and confidence scores. Flip the feed horizontally, tune confidence threshold, and download the session as CSV.
+          </p>
+          <div class="exp-card-tags">
+            <span class="tag">getUserMedia</span>
+            <span class="tag">Tesseract.js</span>
+            <span class="tag">OCR</span>
+            <span class="tag">CSV Export</span>
           </div>
         </div>
       </article>
@@ -533,6 +725,59 @@
             <span class="tag">ASCII Art</span>
             <span class="tag">Ripple Physics</span>
             <span class="tag">Monospace Grid</span>
+          </div>
+        </div>
+      </article>
+
+
+      <!-- ════ EXPERIMENT 13 — HAND TRACKING DEBUG ════ -->
+      <article class="exp-card">
+        <a href="hand-tracking/" class="exp-geo-preview" aria-label="View Hand Tracking Debug experiment" style="background:#060610;overflow:hidden;">
+          <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;">
+            <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style="opacity:0.75;">
+              <!-- Palm -->
+              <circle cx="28" cy="34" r="8" stroke="#6C63FF" stroke-width="1.2" fill="none" opacity="0.5"/>
+              <!-- Thumb -->
+              <line x1="20" y1="30" x2="13" y2="22" stroke="#6C63FF" stroke-width="1.2" stroke-linecap="round"/>
+              <circle cx="13" cy="22" r="2.2" fill="#6C63FF" opacity="0.9"/>
+              <!-- Index -->
+              <line x1="22" y1="26" x2="19" y2="12" stroke="#6C63FF" stroke-width="1.2" stroke-linecap="round"/>
+              <circle cx="19" cy="12" r="2.2" fill="#6C63FF" opacity="0.9"/>
+              <!-- Middle -->
+              <line x1="27" y1="25" x2="27" y2="10" stroke="#6C63FF" stroke-width="1.2" stroke-linecap="round"/>
+              <circle cx="27" cy="10" r="2.2" fill="#6C63FF" opacity="0.9"/>
+              <!-- Ring -->
+              <line x1="32" y1="26" x2="35" y2="12" stroke="#6C63FF" stroke-width="1.2" stroke-linecap="round"/>
+              <circle cx="35" cy="12" r="2.2" fill="#6C63FF" opacity="0.9"/>
+              <!-- Pinky -->
+              <line x1="36" y1="29" x2="42" y2="20" stroke="#6C63FF" stroke-width="1.2" stroke-linecap="round"/>
+              <circle cx="42" cy="20" r="2.2" fill="#6C63FF" opacity="0.9"/>
+              <!-- Wrist joint -->
+              <circle cx="28" cy="44" r="2" stroke="#6C63FF" stroke-width="1" fill="none" opacity="0.4"/>
+              <!-- Radar ring -->
+              <circle cx="28" cy="34" r="14" stroke="#6C63FF" stroke-width="0.6" fill="none" opacity="0.25" stroke-dasharray="3 4"/>
+            </svg>
+            <span style="font-family:'Space Mono',monospace;font-size:9px;color:#6C63FF;opacity:0.6;letter-spacing:0.1em;">21 LANDMARKS</span>
+          </div>
+          <div class="exp-demo-corner">
+            <div class="exp-demo-dot exp-demo-dot--live"></div>
+          </div>
+          <div class="exp-geo-cta"><span>View Experiment &rarr;</span></div>
+        </a>
+        <div class="exp-card-body">
+          <div class="exp-card-meta">
+            <span class="section-label" style="margin-bottom: 0;">New</span>
+            <span class="tag tag-teal">LIVE</span>
+          </div>
+          <h2 class="exp-card-title">Hand Tracking Debug</h2>
+          <p class="exp-card-desc">
+            MediaPipe Hands tracks 21 landmarks per hand in real time. A WebGL2 renderer draws the full skeleton with glow-blended bone quads, SDF joint circles, depth cues, and an animated sci-fi HUD overlay.
+          </p>
+          <div class="exp-card-tags">
+            <span class="tag">MediaPipe</span>
+            <span class="tag">WebGL2</span>
+            <span class="tag">GLSL Shaders</span>
+            <span class="tag">getUserMedia</span>
           </div>
         </div>
       </article>
@@ -838,85 +1083,95 @@
 
   /* ─── CONFIG ─────────────────────────────────────── */
   const CFG = {
-    maxParticles:        500,
-    spawnRate:           10,
-    spawnIdle:           1,
-    gravity:             0.018,
-    drag:                0.985,
-    turbStrength:        0.06,
-    turbScale:           0.004,
-    trailDecay:          0.88,  // brightness retained per frame
-    particleRadius:      [28, 60],
-    CELL_W:              7,
-    CELL_H:              13,
+    maxParticles:         350,
+    spawnRate:            10,
+    spawnIdle:            1,
+    gravity:              0.018,
+    drag:                 0.985,
+    turbStrength:         0.06,
+    turbScale:            0.004,
+    trailDecay:           0.83,
+    particleRadius:       [20, 44],
+    CELL_W:               9,
+    CELL_H:               17,
     BRIGHTNESS_THRESHOLD: 0.022,
-    GLOW_BLUR:           10,
+    GLOW_BLUR:            10,
   };
 
-  /* ─── ASCII RAMP: index 0 = brightest, last = dimmest ── */
-  const CHAR_ARR = '█▓▒░#@&%$✦*+~-:.,·'.split('');
-  const CHAR_MAX = CHAR_ARR.length - 1;
+  /* ─── CHAR PRESETS ────────────────────────────────── */
+  const PRESETS = [
+    { name: 'dense',  chars: '█▓▒░#@&%$✦*+~-:.,·' },
+    { name: 'sparks', chars: '✦✧✩☆*+·⋅  ' },
+    { name: 'waves',  chars: '~-_.:,·⋅   ' },
+    { name: 'alpha',  chars: 'HEXAGONMISFIT·-. ' },
+    { name: '01',     chars: '1100·   ' },
+    { name: 'blocks', chars: '██▓▓▒▒░░▪   ' },
+  ];
+  let activePreset = 0;
+  let CHAR_ARR = PRESETS[0].chars.split('');
+  let CHAR_MAX = CHAR_ARR.length - 1;
 
-  /* ─── COLOR THEMES ────────────────────────────────────── */
-  /* Each stop: t = hue position (0 = cool/old/slow → 1 = hot/young/fast) */
+  let fpsSmooth     = 60;
+  let lastFrameTime = 0;
+
+  /* ─── COLOR THEMES ────────────────────────────────── */
   const THEMES = [
     {
       name: 'Nebula',
       glow: 'rgba(120,60,220,0.6)',
       stops: [
-        { t: 1.0, r: 240, g: 230, b: 255 },
+        { t: 1.0, r: 210, g: 170, b: 255 },  // vivid lavender (no near-white)
         { t: 0.7, r: 140, g:  80, b: 255 },
         { t: 0.4, r:  60, g: 180, b: 240 },
-        { t: 0.1, r: 180, g: 160, b: 255 },
-        { t: 0.0, r:  30, g:  20, b:  60 },
+        { t: 0.1, r:  90, g:  70, b: 170 },
+        { t: 0.0, r:  18, g:  12, b:  48 },
       ],
     },
     {
       name: 'Fire',
       glow: 'rgba(255,120,20,0.6)',
       stops: [
-        { t: 1.0, r: 255, g: 250, b: 200 },
-        { t: 0.7, r: 255, g: 180, b:  40 },
-        { t: 0.4, r: 255, g:  80, b:  20 },
-        { t: 0.1, r: 180, g:  20, b:  30 },
-        { t: 0.0, r:  40, g:  10, b:  15 },
+        { t: 1.0, r: 255, g: 240, b:  90 },  // vivid yellow
+        { t: 0.7, r: 255, g: 155, b:  28 },
+        { t: 0.4, r: 240, g:  55, b:  12 },
+        { t: 0.1, r: 145, g:  18, b:  22 },
+        { t: 0.0, r:  32, g:   7, b:  10 },
       ],
     },
     {
       name: 'Matrix',
       glow: 'rgba(0,240,100,0.6)',
       stops: [
-        { t: 1.0, r: 220, g: 255, b: 220 },
-        { t: 0.7, r: 100, g: 255, b: 150 },
-        { t: 0.4, r:  20, g: 200, b:  60 },
-        { t: 0.1, r:  10, g: 120, b:  40 },
-        { t: 0.0, r:   5, g:  30, b:  10 },
+        { t: 1.0, r: 155, g: 255, b: 120 },  // vivid green
+        { t: 0.7, r:  70, g: 225, b:  90 },
+        { t: 0.4, r:  18, g: 175, b:  50 },
+        { t: 0.1, r:   8, g:  95, b:  30 },
+        { t: 0.0, r:   3, g:  22, b:   7 },
       ],
     },
     {
       name: 'Ice',
       glow: 'rgba(80,180,255,0.6)',
       stops: [
-        { t: 1.0, r: 255, g: 255, b: 255 },
-        { t: 0.7, r: 160, g: 220, b: 255 },
-        { t: 0.4, r:  40, g: 140, b: 240 },
-        { t: 0.1, r:  20, g:  60, b: 160 },
-        { t: 0.0, r:   5, g:  15, b:  50 },
+        { t: 1.0, r: 155, g: 215, b: 255 },  // vivid sky (not white)
+        { t: 0.7, r:  70, g: 160, b: 255 },
+        { t: 0.4, r:  25, g: 100, b: 215 },
+        { t: 0.1, r:  12, g:  45, b: 135 },
+        { t: 0.0, r:   3, g:  10, b:  42 },
       ],
     },
     {
       name: 'Void',
       glow: 'rgba(220,40,200,0.6)',
       stops: [
-        { t: 1.0, r: 255, g: 240, b: 255 },
-        { t: 0.7, r: 255, g:  60, b: 220 },
-        { t: 0.4, r: 160, g:  40, b: 255 },
-        { t: 0.1, r:  80, g:  20, b: 140 },
-        { t: 0.0, r:  15, g:   5, b:  35 },
+        { t: 1.0, r: 255, g: 130, b: 255 },  // vivid magenta
+        { t: 0.7, r: 225, g:  45, b: 205 },
+        { t: 0.4, r: 145, g:  28, b: 225 },
+        { t: 0.1, r:  65, g:  12, b: 115 },
+        { t: 0.0, r:  10, g:   3, b:  28 },
       ],
     },
   ];
-
   let activeTheme = 0;
 
   function lerpColor(stops, t) {
@@ -935,12 +1190,12 @@
     };
   }
 
-  /* ─── OPT 2: Pre-baked gaussian LUT ──────────────────── */
+  /* ─── Pre-baked gaussian LUT ──────────────────────── */
   const LUT_N   = 256;
   const EXP_LUT = new Float32Array(LUT_N + 1);
   for (let i = 0; i <= LUT_N; i++) EXP_LUT[i] = Math.exp(-(i / LUT_N) * 3.5);
 
-  /* ─── COLOR LUT: 32 pre-built fill strings, rebuilt on theme switch ── */
+  /* ─── COLOR LUT: 32 pre-built fill strings ────────── */
   const LUT_SIZE = 32;
   let COLOR_LUT  = new Array(LUT_SIZE);
   let GLOW_COLOR = '';
@@ -951,16 +1206,15 @@
     for (let i = 0; i < LUT_SIZE; i++) {
       const hue   = i / (LUT_SIZE - 1);
       const c     = lerpColor(theme.stops, hue);
-      const alpha = (0.25 + hue * 0.75).toFixed(3);
+      const alpha = (0.28 + hue * 0.72).toFixed(3);
       COLOR_LUT[i] = `rgba(${c.r},${c.g},${c.b},${alpha})`;
     }
   }
   buildColorLUT();
 
-  /* Flat bucket arrays — one per LUT slot, reused every frame */
   const BUCKETS = Array.from({ length: LUT_SIZE }, () => []);
 
-  /* ─── TURBULENCE ─────────────────────────────────── */
+  /* ─── TURBULENCE ──────────────────────────────────── */
   function turbulence(x, y, t) {
     const a = Math.sin(x * CFG.turbScale + t * 0.7) *
               Math.cos(y * CFG.turbScale * 1.3 + t * 0.5);
@@ -997,7 +1251,6 @@
       this.age++;
     }
 
-    /* CPU gaussian splat — writes brightness + weighted hue per cell */
     splat(grid, hueGrid, cols, rows) {
       const life = this.life;
       if (life <= 0) return;
@@ -1005,7 +1258,6 @@
       const { CELL_W, CELL_H, trailDecay } = CFG;
       const scale = life * (1 - trailDecay);
 
-      /* Hue: fast young particles = 1.0 (hot), slow old = 0.0 (cool) */
       const speed = Math.hypot(this.vx, this.vy);
       const hue   = Math.min(1, life * 0.6 + Math.min(speed * 0.07, 0.4));
 
@@ -1034,30 +1286,29 @@
           const idx = row * cols + col;
           const cur = grid[idx] + contrib;
           grid[idx]    = cur > 1 ? 1 : cur;
-          hueGrid[idx] += contrib * hue; // weighted hue — divided by brightness at render
+          hueGrid[idx] += contrib * hue;
         }
       }
     }
   }
 
   /* ─── SETUP ───────────────────────────────────────── */
-  const canvas = document.getElementById('ascii-canvas');
-  /* OPT 5: willReadFrequently keeps backing store CPU-side */
-  const ctx    = canvas.getContext('2d', { willReadFrequently: true });
-  const wrap   = document.getElementById('ascii-wrap');
-  const hint   = document.getElementById('ascii-hint');
-  const cursor = document.getElementById('exp-cursor');
+  const canvas  = document.getElementById('ascii-canvas');
+  const ctx     = canvas.getContext('2d', { willReadFrequently: true });
+  const wrap    = document.getElementById('ascii-wrap');
+  const hint    = document.getElementById('ascii-hint');
+  const cursor  = document.getElementById('exp-cursor');
+  const fpsEl   = document.getElementById('ascii-fps');
 
-  let particles    = [];
-  let mouse        = { x: -999, y: -999, vx: 0, vy: 0, inside: false, pressed: false, justReleased: false };
-  let prevMouse    = { x: -999, y: -999 };
-  let frame        = 0;
-  let hintHidden   = false;
+  let particles   = [];
+  let mouse       = { x: -999, y: -999, vx: 0, vy: 0, inside: false, pressed: false, justReleased: false };
+  let prevMouse   = { x: -999, y: -999 };
+  let frame       = 0;
+  let hintHidden  = false;
 
-  /* Brightness + hue grids — both Float32Arrays, live on CPU */
   let cols = 0, rows = 0;
-  let grid    = new Float32Array(0); // brightness 0–1
-  let hueGrid = new Float32Array(0); // weighted hue accumulator (divide by grid to normalise)
+  let grid    = new Float32Array(0);
+  let hueGrid = new Float32Array(0);
 
   function resize() {
     const dpr = window.devicePixelRatio || 1;
@@ -1072,14 +1323,13 @@
     const newCols = Math.ceil(w / CFG.CELL_W);
     const newRows = Math.ceil(h / CFG.CELL_H);
     if (newCols !== cols || newRows !== rows) {
-      cols = newCols;
-      rows = newRows;
+      cols = newCols; rows = newRows;
       grid    = new Float32Array(cols * rows);
       hueGrid = new Float32Array(cols * rows);
     }
 
-    /* Set text state once here — persists on context, no need to repeat in loop */
-    ctx.font         = `11px 'Space Mono', monospace`;
+    const fontSize = Math.max(8, CFG.CELL_H - 2);
+    ctx.font         = `${fontSize}px 'Space Mono', monospace`;
     ctx.textBaseline = 'middle';
     ctx.textAlign    = 'left';
   }
@@ -1088,26 +1338,15 @@
   resize();
 
   /* ─── MOUSE TRACKING ──────────────────────────────── */
-  wrap.addEventListener('mouseenter', () => {
-    mouse.inside = true;
-    cursor.classList.add('inside');
-  });
-
-  wrap.addEventListener('mouseleave', () => {
-    mouse.inside = false;
-    cursor.classList.remove('inside');
-  });
+  wrap.addEventListener('mouseenter', () => { mouse.inside = true;  cursor.classList.add('inside'); });
+  wrap.addEventListener('mouseleave', () => { mouse.inside = false; cursor.classList.remove('inside'); });
 
   wrap.addEventListener('mousemove', (e) => {
     const rect = wrap.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    mouse.vx = x - prevMouse.x;
-    mouse.vy = y - prevMouse.y;
-    prevMouse.x = mouse.x;
-    prevMouse.y = mouse.y;
-    mouse.x = x;
-    mouse.y = y;
+    const x = e.clientX - rect.left, y = e.clientY - rect.top;
+    mouse.vx = x - prevMouse.x; mouse.vy = y - prevMouse.y;
+    prevMouse.x = mouse.x; prevMouse.y = mouse.y;
+    mouse.x = x; mouse.y = y;
     if (!hintHidden) { hintHidden = true; hint.classList.add('hidden'); }
     cursor.style.left = e.clientX + 'px';
     cursor.style.top  = e.clientY + 'px';
@@ -1115,62 +1354,41 @@
 
   wrap.addEventListener('touchmove', (e) => {
     e.preventDefault();
-    const rect  = wrap.getBoundingClientRect();
-    const touch = e.touches[0];
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
-    mouse.vx = x - prevMouse.x;
-    mouse.vy = y - prevMouse.y;
-    prevMouse.x = mouse.x;
-    prevMouse.y = mouse.y;
-    mouse.x = x;
-    mouse.y = y;
-    mouse.inside = true;
+    const rect = wrap.getBoundingClientRect(), touch = e.touches[0];
+    const x = touch.clientX - rect.left, y = touch.clientY - rect.top;
+    mouse.vx = x - prevMouse.x; mouse.vy = y - prevMouse.y;
+    prevMouse.x = mouse.x; prevMouse.y = mouse.y;
+    mouse.x = x; mouse.y = y; mouse.inside = true;
     if (!hintHidden) { hintHidden = true; hint.classList.add('hidden'); }
   }, { passive: false });
 
-  wrap.addEventListener('touchend', () => {
-    mouse.inside       = false;
-    mouse.pressed      = false;
-    mouse.justReleased = true;
-  });
-
-  /* ─── PRESS / RELEASE ─────────────────────────────── */
-  wrap.addEventListener('mousedown', () => {
-    mouse.pressed      = true;
-    mouse.justReleased = false;
-    cursor.style.transform = 'translate(-50%,-50%) scale(1.8)';
-  });
-
-  wrap.addEventListener('mouseup', () => {
-    mouse.pressed      = false;
-    mouse.justReleased = true;
-    cursor.style.transform = 'translate(-50%,-50%) scale(1)';
-  });
-
+  wrap.addEventListener('touchend',  () => { mouse.inside = false; mouse.pressed = false; mouse.justReleased = true; });
+  wrap.addEventListener('mousedown', () => { mouse.pressed = true;  mouse.justReleased = false; cursor.style.transform = 'translate(-50%,-50%) scale(1.8)'; });
+  wrap.addEventListener('mouseup',   () => { mouse.pressed = false; mouse.justReleased = true;  cursor.style.transform = 'translate(-50%,-50%) scale(1)'; });
   wrap.addEventListener('touchstart', (e) => {
-    const rect  = wrap.getBoundingClientRect();
-    const touch = e.touches[0];
-    mouse.x      = touch.clientX - rect.left;
-    mouse.y      = touch.clientY - rect.top;
-    mouse.inside = true;
-    mouse.pressed      = true;
-    mouse.justReleased = false;
+    const rect = wrap.getBoundingClientRect(), touch = e.touches[0];
+    mouse.x = touch.clientX - rect.left; mouse.y = touch.clientY - rect.top;
+    mouse.inside = true; mouse.pressed = true; mouse.justReleased = false;
   }, { passive: true });
 
   /* ─── SPAWN ───────────────────────────────────────── */
   function spawn(count) {
     if (mouse.x < 0) return;
-    const cap = CFG.maxParticles - particles.length;
-    const n   = Math.min(count, cap);
-    for (let i = 0; i < n; i++) {
-      particles.push(new Particle(mouse.x, mouse.y, mouse.vx, mouse.vy));
-    }
+    const n = Math.min(count, CFG.maxParticles - particles.length);
+    for (let i = 0; i < n; i++) particles.push(new Particle(mouse.x, mouse.y, mouse.vx, mouse.vy));
   }
 
   /* ─── RENDER LOOP ─────────────────────────────────── */
-  function loop() {
+  function loop(now) {
     requestAnimationFrame(loop);
+
+    /* FPS tracking */
+    if (lastFrameTime) {
+      const dt = now - lastFrameTime;
+      fpsSmooth = fpsSmooth * 0.95 + (1000 / (dt || 16)) * 0.05;
+      if (fpsEl && frame % 30 === 0) fpsEl.textContent = Math.round(fpsSmooth) + ' fps';
+    }
+    lastFrameTime = now;
 
     const t = frame * 0.016;
     const W = wrap.clientWidth;
@@ -1178,52 +1396,44 @@
 
     /* Spawn */
     if (mouse.inside) {
-      const speed   = Math.hypot(mouse.vx, mouse.vy);
-      const dynamic = Math.round(Math.min(CFG.spawnRate, speed * 0.9 + 1));
-      spawn(dynamic);
+      spawn(Math.round(Math.min(CFG.spawnRate, Math.hypot(mouse.vx, mouse.vy) * 0.9 + 1)));
     } else if (frame % 4 === 0 && particles.length < 40) {
       if (mouse.x < 0) { mouse.x = W / 2; mouse.y = H / 2; }
       spawn(CFG.spawnIdle);
     }
 
-    /* ── Decay both grids — ratio stays constant so hue weighted avg is preserved ── */
+    /* Decay grids */
     const decay = CFG.trailDecay;
     for (let i = 0, len = grid.length; i < len; i++) {
       grid[i]    *= decay;
       hueGrid[i] *= decay;
     }
 
-    /* ── Update particles + attract/repel + splat ─────────────── */
+    /* Update + attract/repel + splat */
     const mx = mouse.x, my = mouse.y;
-    const doAttract  = mouse.pressed && mx >= 0;
-    const doRepel    = mouse.justReleased && mx >= 0;
-
+    const doAttract = mouse.pressed && mx >= 0;
+    const doRepel   = mouse.justReleased && mx >= 0;
     const alive = [];
+
     for (let i = 0; i < particles.length; i++) {
       const p = particles[i];
       p.update(t);
 
       if (doAttract) {
-        /* Pull every particle toward the cursor — strength falls off with distance */
-        const dx   = mx - p.x;
-        const dy   = my - p.y;
+        const dx = mx - p.x, dy = my - p.y;
         const dist = Math.hypot(dx, dy) || 1;
-        const str  = 0.9 / (1 + dist * 0.005); // weaker at range, stronger up close
+        const str  = 0.9 / (1 + dist * 0.005);
         p.vx += (dx / dist) * str;
         p.vy += (dy / dist) * str;
       }
 
       if (doRepel) {
-        /* One-frame outward impulse on release */
-        const dx      = p.x - mx;
-        const dy      = p.y - my;
-        const dist    = Math.hypot(dx, dy) || 1;
-        const maxDist = 320;
-        if (dist < maxDist) {
-          const falloff = (1 - dist / maxDist) * (1 - dist / maxDist); // quadratic taper
-          const impulse = 14 * falloff;
-          p.vx += (dx / dist) * impulse;
-          p.vy += (dy / dist) * impulse;
+        const dx = p.x - mx, dy = p.y - my;
+        const dist = Math.hypot(dx, dy) || 1;
+        if (dist < 320) {
+          const fo = (1 - dist / 320) * (1 - dist / 320);
+          p.vx += (dx / dist) * 14 * fo;
+          p.vy += (dy / dist) * 14 * fo;
         }
       }
 
@@ -1233,11 +1443,9 @@
       }
     }
     particles = alive;
-
-    /* Consume the justReleased flag — only active for one frame */
     if (mouse.justReleased) mouse.justReleased = false;
 
-    /* ── PASS 2: render ASCII chars — per-cell hue + glow, batched by LUT slot ── */
+    /* Render ASCII chars */
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, W, H);
 
@@ -1252,8 +1460,6 @@
       for (let col = 0; col < cols; col++) {
         const brightness = grid[off + col];
         if (brightness < BRIGHTNESS_THRESHOLD) continue;
-
-        /* Weighted average hue for this cell: hot center, cool edges */
         const hue     = brightness > 0.001 ? Math.min(1, hueGrid[off + col] / brightness) : 0;
         const charIdx = Math.round((1 - brightness) * CHAR_MAX);
         const lutIdx  = Math.min(LUT_SIZE - 1, (hue * LUT_SIZE) | 0);
@@ -1261,12 +1467,11 @@
       }
     }
 
-    /* Glow pass: set shadow once, draw all buckets, clear */
     ctx.shadowBlur  = CFG.GLOW_BLUR;
     ctx.shadowColor = GLOW_COLOR;
     for (let b = 0; b < LUT_SIZE; b++) {
       const bucket = BUCKETS[b];
-      if (bucket.length === 0) continue;
+      if (!bucket.length) continue;
       ctx.fillStyle = COLOR_LUT[b];
       for (let i = 0, len = bucket.length; i < len; i += 3) {
         ctx.fillText(bucket[i], bucket[i + 1], bucket[i + 2]);
@@ -1277,7 +1482,17 @@
     frame++;
   }
 
-  loop();
+  requestAnimationFrame(loop);
+
+  /* ─── PRESET SWITCHER ─────────────────────────────── */
+  document.querySelectorAll('.ascii-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activePreset = parseInt(btn.dataset.preset, 10);
+      CHAR_ARR = PRESETS[activePreset].chars.split('');
+      CHAR_MAX = CHAR_ARR.length - 1;
+      document.querySelectorAll('.ascii-preset-btn').forEach(b => b.classList.toggle('active', b === btn));
+    });
+  });
 
   /* ─── THEME SWITCHER ─────────────────────────────── */
   document.querySelectorAll('.exp-theme-btn').forEach(btn => {
@@ -1287,6 +1502,19 @@
       document.querySelectorAll('.exp-theme-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
     });
+  });
+
+  /* ─── FULLSCREEN ──────────────────────────────────── */
+  const fsBtn = document.getElementById('ascii-fs-btn');
+  const enterFS = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>`;
+  const exitFS  = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 2v4H2M14 6h-4V2M10 14v-4h4M2 10h4v4"/></svg>`;
+  fsBtn.addEventListener('click', () => {
+    if (!document.fullscreenElement) wrap.requestFullscreen().catch(() => {});
+    else document.exitFullscreen();
+  });
+  document.addEventListener('fullscreenchange', () => {
+    fsBtn.innerHTML = document.fullscreenElement ? exitFS : enterFS;
+    setTimeout(resize, 80);
   });
 
   /* ─── FOOTER YEAR ─────────────────────────────────── */

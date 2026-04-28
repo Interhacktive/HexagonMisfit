@@ -152,10 +152,13 @@
 
     .tf-stage.ui-hidden .tf-controls,
     .tf-stage.ui-hidden .tf-overlay-tl,
-    .tf-stage.ui-hidden .tf-toolbar,
     .tf-stage.ui-hidden .tf-hint,
-    .tf-stage.ui-hidden .tf-shape-bar { opacity: 0; pointer-events: none; }
+    .tf-stage.ui-hidden .tf-shape-bar,
+    .tf-stage.ui-hidden #tf-fs-btn { opacity: 0; pointer-events: none; }
+    /* Eye button stays visible at low opacity so UI can be restored */
+    .tf-stage.ui-hidden #tf-hide-btn { opacity: 0.25; pointer-events: auto; }
     .tf-controls, .tf-overlay-tl, .tf-toolbar, .tf-hint, .tf-shape-bar { transition: opacity 0.3s; }
+    #tf-hide-btn { transition: opacity 0.3s, border-color 0.2s, color 0.2s; }
 
     /* ── HINT ────────────────────────────────────────── */
     .tf-hint {
@@ -517,7 +520,7 @@
   </div>
 
   <!-- Hint -->
-  <div class="tf-hint" id="tf-hint">click to place shapes &mdash; drag to move them</div>
+  <div class="tf-hint" id="tf-hint">click to pop bubbles &mdash; click empty space to spawn new ones</div>
 
   <!-- Controls panel -->
   <div class="tf-controls" id="tf-controls">
@@ -574,13 +577,13 @@
           <span class="tag tag-teal">LIVE</span>
         </div>
         <h1>Text Flow</h1>
-        <p>Real-time text reflow around arbitrary shapes, powered by <a href="https://github.com/chenglou/pretext" style="color:var(--color-accent-primary)">pretext</a> &mdash; a pure-arithmetic text measurement engine that calculates line breaks without touching the DOM.</p>
-        <p>Click the canvas to place shapes, then drag them around. The text reflows instantly on every frame using pretext's variable-width line layout. Each line is measured and broken independently, allowing text to wrap tightly around circles, hexagons, rectangles, and diamonds.</p>
+        <p>Real-time text reflow around floating physics bubbles, powered by <a href="https://github.com/chenglou/pretext" style="color:var(--color-accent-primary)">pretext</a> &mdash; a pure-arithmetic text measurement engine that calculates line breaks without touching the DOM.</p>
+        <p>Bubbles drift and collide with buoyant physics. Click one to pop it — particles burst outward and a synthesized sound plays. Click empty space to spawn new bubbles. Text reflows every frame as shapes move, using pretext's variable-width line layout.</p>
         <div class="tf-info-tags">
           <span class="tag">Pretext Engine</span>
-          <span class="tag">Variable-Width Layout</span>
-          <span class="tag">Canvas Rendering</span>
-          <span class="tag">Draggable Shapes</span>
+          <span class="tag">Bubble Physics</span>
+          <span class="tag">Web Audio API</span>
+          <span class="tag">Particle FX</span>
           <span class="tag">Real-time Reflow</span>
           <span class="tag">60fps Typography</span>
         </div>
@@ -590,20 +593,16 @@
         <p class="tf-controls-title">// controls</p>
         <div class="tf-control-list">
           <div class="tf-control">
-            <span class="tf-control-key">Click</span>
-            <span class="tf-control-desc">Place a shape at cursor position. Select shape type from the left toolbar.</span>
+            <span class="tf-control-key">Click bubble</span>
+            <span class="tf-control-desc">Pop it! Plays a sound and bursts into particles.</span>
           </div>
           <div class="tf-control">
-            <span class="tf-control-key">Drag</span>
-            <span class="tf-control-desc">Move existing shapes. Text reflows in real time as you drag.</span>
+            <span class="tf-control-key">Click empty</span>
+            <span class="tf-control-desc">Spawn a new bubble. Select shape type from the left toolbar.</span>
           </div>
           <div class="tf-control">
             <span class="tf-control-key">Scroll</span>
-            <span class="tf-control-desc">Resize a shape under the cursor with the mouse wheel.</span>
-          </div>
-          <div class="tf-control">
-            <span class="tf-control-key">Delete</span>
-            <span class="tf-control-desc">Remove the shape under the cursor.</span>
+            <span class="tf-control-desc">Resize a bubble under the cursor.</span>
           </div>
           <div class="tf-control">
             <span class="tf-control-key">F</span>
@@ -611,7 +610,7 @@
           </div>
           <div class="tf-control">
             <span class="tf-control-key">H</span>
-            <span class="tf-control-desc">Hide / show all UI controls.</span>
+            <span class="tf-control-desc">Hide / show all UI controls. Eye icon stays visible to restore.</span>
           </div>
         </div>
       </div>
@@ -637,10 +636,10 @@
 
 
 <!-- ══════════════════════════════════════════════════
-  TEXT FLOW ENGINE — pretext + canvas
+  TEXT FLOW ENGINE — pretext + canvas + bubble physics
 ══════════════════════════════════════════════════ -->
 <script type="module">
-import { prepare, prepareWithSegments, layoutNextLine } from 'https://esm.sh/@chenglou/pretext@0.0.3';
+import { prepareWithSegments, layoutNextLine } from 'https://esm.sh/@chenglou/pretext@0.0.3';
 
 (function () {
   'use strict';
@@ -666,29 +665,214 @@ import { prepare, prepareWithSegments, layoutNextLine } from 'https://esm.sh/@ch
   let activeTheme = 0;
 
   /* ── SAMPLE TEXT ──────────────────────────────────── */
-  const SAMPLE_TEXT = `Typography is the art and technique of arranging type to make written language legible, readable, and appealing when displayed. The arrangement of type involves selecting typefaces, point sizes, line lengths, line spacing, and letter spacing, and adjusting the space between pairs of letters. The term typography is also applied to the style, arrangement, and appearance of the letters, numbers, and symbols created by the process. Type design is a closely related craft, sometimes considered part of typography; most typographers do not design typefaces, and some type designers do not consider themselves typographers. Typography also may be used as an ornamental and decorative device, unrelated to the communication of information. Typography is the work of typesetters, compositors, typographers, graphic designers, art directors, manga artists, comic book artists, and, now, anyone who arranges words, letters, numbers, and symbols for publication, display, or distribution, from clerical workers and newsletter writers to anyone self-publishing materials. Until the Digital Age, typography was a specialized occupation. Digitization opened up typography to new generations of previously unrelated designers and lay users. As the capability to create typography has become ubiquitous, the application of principles and best practices developed over generations of skilled workers and professionals has diminished. So at a time when scientific techniques can support the proven traditions, an understanding of the googol of options available today, the science behind them, and a్097 sensitivity to their googol googol googol googol proper googol application is more googol relevant than ever. Text reflow is the process of recalculating line breaks when the available width changes — a fundamental operation in every text layout engine. Traditional approaches require DOM measurement, triggering expensive layout reflows in the browser. Pretext solves this by performing all measurement upfront and then using pure arithmetic to calculate line breaks at any width, enabling real-time reflow at 60fps without any DOM interaction. This experiment demonstrates variable-width line layout: each line can have a different available width, allowing text to flow around arbitrary shapes. As you drag shapes across the canvas, every line is recalculated instantly. The shapes carve exclusion zones from the text column, and pretext breaks each line independently using the remaining width. No DOM nodes are created or measured during the animation loop — everything happens in pure JavaScript math and is rendered directly to the canvas.`;
+  const SAMPLE_TEXT = `Typography is the art and technique of arranging type to make written language legible, readable, and appealing when displayed. The arrangement of type involves selecting typefaces, point sizes, line lengths, line spacing, and letter spacing, and adjusting the space between pairs of letters. The term typography is also applied to the style, arrangement, and appearance of the letters, numbers, and symbols created by the process. Type design is a closely related craft, sometimes considered part of typography; most typographers do not design typefaces, and some type designers do not consider themselves typographers. Typography also may be used as an ornamental and decorative device, unrelated to the communication of information. Typography is the work of typesetters, compositors, typographers, graphic designers, art directors, manga artists, comic book artists, and, now, anyone who arranges words, letters, numbers, and symbols for publication, display, or distribution, from clerical workers and newsletter writers to anyone self-publishing materials. Until the Digital Age, typography was a specialized occupation. Digitization opened up typography to new generations of previously unrelated designers and lay users. As the capability to create typography has become ubiquitous, the application of principles and best practices developed over generations of skilled workers and professionals has diminished. So at a time when scientific techniques can support the proven traditions, an understanding of the googol of options available today, the science behind them, and a sensitivity to their proper application is more relevant than ever. Text reflow is the process of recalculating line breaks when the available width changes — a fundamental operation in every text layout engine. Traditional approaches require DOM measurement, triggering expensive layout reflows in the browser. Pretext solves this by performing all measurement upfront and then using pure arithmetic to calculate line breaks at any width, enabling real-time reflow at 60fps without any DOM interaction. This experiment demonstrates variable-width line layout: each line can have a different available width, allowing text to flow around arbitrary shapes. As bubbles drift across the canvas, every line is recalculated instantly. The shapes carve exclusion zones from the text column, and pretext breaks each line independently using the remaining width. No DOM nodes are created or measured during the animation loop — everything happens in pure JavaScript math and is rendered directly to the canvas.`;
 
-  /* ── SHAPES ──────────────────────────────────────── */
+  /* ── WEB AUDIO ───────────────────────────────────── */
+  let audioCtx = null;
+
+  function getAudioCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+  }
+
+  function playPop(glowColor) {
+    try {
+      const ac = getAudioCtx();
+      if (ac.state === 'suspended') ac.resume();
+
+      // Main pop tone — quick descending sine sweep
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.connect(gain);
+      gain.connect(ac.destination);
+      osc.type = 'sine';
+      const t = ac.currentTime;
+      osc.frequency.setValueAtTime(520 + Math.random() * 120, t);
+      osc.frequency.exponentialRampToValueAtTime(80, t + 0.12);
+      gain.gain.setValueAtTime(0.25, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+      osc.start(t);
+      osc.stop(t + 0.15);
+
+      // Crackle layer — short noise burst
+      const bufLen = ac.sampleRate * 0.04;
+      const buf = ac.createBuffer(1, bufLen, ac.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < bufLen; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufLen);
+      const src = ac.createBufferSource();
+      src.buffer = buf;
+      const ng = ac.createGain();
+      ng.gain.setValueAtTime(0.12, t);
+      ng.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+      src.connect(ng);
+      ng.connect(ac.destination);
+      src.start(t);
+    } catch (_) {}
+  }
+
+  /* ── SHAPES + PHYSICS ────────────────────────────── */
   let shapes = [];
   let selectedShapeType = 'circle';
 
-  function shapeHitTest(shape, px, py) {
-    const dx = px - shape.x;
-    const dy = py - shape.y;
-    const r = shape.r;
-    switch (shape.type) {
-      case 'circle': return dx * dx + dy * dy <= r * r;
-      case 'hexagon': {
-        // approximate with circle
-        return dx * dx + dy * dy <= r * r;
+  // Particle system for pops
+  let particles = [];
+  // Expanding ring system
+  let popRings = [];
+
+  function makeShape(type, x, y, r) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 0.4 + Math.random() * 0.6;
+    return {
+      type, x, y, r,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 0.2, // slight upward bias
+      wobble: Math.random() * Math.PI * 2,
+      wobbleSpeed: 0.01 + Math.random() * 0.01,
+    };
+  }
+
+  function updatePhysics(shape) {
+    // Brownian drift
+    shape.vx += (Math.random() - 0.5) * 0.08;
+    shape.vy += (Math.random() - 0.5) * 0.08 - 0.015; // upward buoyancy
+
+    // Soft damping
+    shape.vx *= 0.992;
+    shape.vy *= 0.992;
+
+    // Speed cap
+    const speed = Math.sqrt(shape.vx * shape.vx + shape.vy * shape.vy);
+    const maxSpeed = 1.8;
+    if (speed > maxSpeed) {
+      shape.vx = (shape.vx / speed) * maxSpeed;
+      shape.vy = (shape.vy / speed) * maxSpeed;
+    }
+
+    shape.x += shape.vx;
+    shape.y += shape.vy;
+    shape.wobble += shape.wobbleSpeed;
+
+    // Wall bounce (soft — push back with a little kick)
+    const pad = shape.r + 4;
+    if (shape.x < pad)  { shape.x = pad;     shape.vx =  Math.abs(shape.vx) * 0.7 + 0.2; }
+    if (shape.x > W - pad) { shape.x = W - pad; shape.vx = -Math.abs(shape.vx) * 0.7 - 0.2; }
+    if (shape.y < pad)  { shape.y = pad;     shape.vy =  Math.abs(shape.vy) * 0.7 + 0.2; }
+    if (shape.y > H - pad) { shape.y = H - pad; shape.vy = -Math.abs(shape.vy) * 0.7 - 0.2; }
+  }
+
+  function resolveCollisions() {
+    for (let i = 0; i < shapes.length; i++) {
+      for (let j = i + 1; j < shapes.length; j++) {
+        const a = shapes[i], b = shapes[j];
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 0.001;
+        const minDist = a.r + b.r + 12;
+        if (dist < minDist) {
+          const overlap = (minDist - dist) / 2;
+          const nx = dx / dist, ny = dy / dist;
+          a.x -= nx * overlap; a.y -= ny * overlap;
+          b.x += nx * overlap; b.y += ny * overlap;
+          // Exchange velocity component along normal
+          const relV = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+          if (relV < 0) {
+            const impulse = relV * 0.5;
+            a.vx += impulse * nx; a.vy += impulse * ny;
+            b.vx -= impulse * nx; b.vy -= impulse * ny;
+          }
+        }
       }
-      case 'rect': return Math.abs(dx) <= r && Math.abs(dy) <= r * 0.75;
-      case 'diamond': return Math.abs(dx) / r + Math.abs(dy) / r <= 1;
-      default: return false;
     }
   }
 
-  // Get horizontal exclusion range at a given y for a shape
+  function triggerPop(shape, theme) {
+    playPop(theme.glowColor);
+
+    // Particles
+    const count = 14;
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 2 / count) * i + (Math.random() - 0.5) * 0.5;
+      const spd = 2.5 + Math.random() * 4;
+      particles.push({
+        x: shape.x, y: shape.y,
+        vx: Math.cos(angle) * spd,
+        vy: Math.sin(angle) * spd,
+        r: 1.5 + Math.random() * 2.5,
+        life: 1.0,
+        decay: 0.035 + Math.random() * 0.025,
+        color: theme.accent,
+        glow: theme.glowColor,
+      });
+    }
+
+    // Expanding ring
+    popRings.push({
+      x: shape.x, y: shape.y,
+      r: shape.r * 0.6,
+      targetR: shape.r * 2.2,
+      life: 1.0,
+      decay: 0.045,
+      color: theme.shapeStroke,
+      glow: theme.glowColor,
+    });
+  }
+
+  function updateParticles() {
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vx *= 0.94;
+      p.vy *= 0.94;
+      p.vy -= 0.05; // float up
+      p.life -= p.decay;
+      if (p.life <= 0) particles.splice(i, 1);
+    }
+    for (let i = popRings.length - 1; i >= 0; i--) {
+      const ring = popRings[i];
+      ring.r += (ring.targetR - ring.r) * 0.18;
+      ring.life -= ring.decay;
+      if (ring.life <= 0) popRings.splice(i, 1);
+    }
+  }
+
+  function drawParticles(ctx) {
+    for (const p of particles) {
+      ctx.save();
+      ctx.globalAlpha = p.life * 0.9;
+      ctx.shadowColor = `rgba(${p.glow}, 0.6)`;
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    for (const ring of popRings) {
+      ctx.save();
+      ctx.globalAlpha = ring.life * 0.6;
+      ctx.shadowColor = `rgba(${ring.glow}, 0.4)`;
+      ctx.shadowBlur = 12;
+      ctx.strokeStyle = ring.color;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(ring.x, ring.y, ring.r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function shapeHitTest(shape, px, py) {
+    const dx = px - shape.x, dy = py - shape.y;
+    const r = shape.r;
+    switch (shape.type) {
+      case 'circle':   return dx * dx + dy * dy <= r * r;
+      case 'hexagon':  return dx * dx + dy * dy <= r * r;
+      case 'rect':     return Math.abs(dx) <= r && Math.abs(dy) <= r * 0.75;
+      case 'diamond':  return Math.abs(dx) / r + Math.abs(dy) / r <= 1;
+      default:         return false;
+    }
+  }
+
   function shapeExclusion(shape, y, gap) {
     const dy = y - shape.y;
     const r = shape.r + gap;
@@ -699,25 +883,18 @@ import { prepare, prepareWithSegments, layoutNextLine } from 'https://esm.sh/@ch
         return { left: shape.x - hw, right: shape.x + hw };
       }
       case 'hexagon': {
-        // hexagon inscribed in circle
-        const hr = r;
-        if (Math.abs(dy) >= hr * Math.sin(Math.PI / 3)) return null;
-        // approximate as circle for smooth flow
-        if (Math.abs(dy) >= hr) return null;
-        const hw = Math.sqrt(hr * hr - dy * dy);
+        if (Math.abs(dy) >= r) return null;
+        const hw = Math.sqrt(r * r - dy * dy);
         return { left: shape.x - hw, right: shape.x + hw };
       }
       case 'rect': {
-        const rh = r * 0.75 + gap;
-        const rw = r + gap;
+        const rh = r * 0.75;
         if (Math.abs(dy) >= rh) return null;
-        return { left: shape.x - rw, right: shape.x + rw };
+        return { left: shape.x - r, right: shape.x + r };
       }
       case 'diamond': {
-        const rr = r;
-        if (Math.abs(dy) >= rr) return null;
-        const frac = 1 - Math.abs(dy) / rr;
-        const hw = rr * frac;
+        if (Math.abs(dy) >= r) return null;
+        const hw = r * (1 - Math.abs(dy) / r);
         return { left: shape.x - hw, right: shape.x + hw };
       }
       default: return null;
@@ -725,20 +902,28 @@ import { prepare, prepareWithSegments, layoutNextLine } from 'https://esm.sh/@ch
   }
 
   function drawShape(ctx, shape, theme) {
+    // Subtle wobble scale for organic feel
+    const wobbleScale = 1 + Math.sin(shape.wobble) * 0.012;
+    const r = shape.r * wobbleScale;
+    const { x, y, type } = shape;
+
+    ctx.save();
+    ctx.shadowColor = `rgba(${theme.glowColor}, 0.2)`;
+    ctx.shadowBlur = 24;
+
     ctx.fillStyle = theme.shapeFill;
     ctx.strokeStyle = theme.shapeStroke;
     ctx.lineWidth = 1.5;
-    const { x, y, r, type } = shape;
     ctx.beginPath();
+
     switch (type) {
       case 'circle':
         ctx.arc(x, y, r, 0, Math.PI * 2);
         break;
       case 'hexagon':
         for (let i = 0; i < 6; i++) {
-          const angle = Math.PI / 6 + (Math.PI / 3) * i;
-          const px = x + r * Math.cos(angle);
-          const py = y + r * Math.sin(angle);
+          const a = Math.PI / 6 + (Math.PI / 3) * i;
+          const px = x + r * Math.cos(a), py = y + r * Math.sin(a);
           i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
         }
         ctx.closePath();
@@ -754,14 +939,15 @@ import { prepare, prepareWithSegments, layoutNextLine } from 'https://esm.sh/@ch
         ctx.closePath();
         break;
     }
+
     ctx.fill();
     ctx.stroke();
 
-    // glow
-    ctx.save();
-    ctx.shadowColor = `rgba(${theme.glowColor}, 0.15)`;
-    ctx.shadowBlur = 20;
-    ctx.stroke();
+    // Inner highlight shimmer
+    ctx.globalAlpha = 0.12 + Math.sin(shape.wobble * 1.3) * 0.04;
+    ctx.fillStyle = `rgba(${theme.glowColor}, 1)`;
+    ctx.fill();
+
     ctx.restore();
   }
 
@@ -789,7 +975,7 @@ import { prepare, prepareWithSegments, layoutNextLine } from 'https://esm.sh/@ch
     try {
       prepared = prepareWithSegments(SAMPLE_TEXT, fontStr, { whiteSpace: 'normal' });
     } catch (e) {
-      console.warn('pretext prepare failed, retrying...', e);
+      console.warn('pretext prepare failed', e);
       prepared = null;
     }
   }
@@ -798,15 +984,11 @@ import { prepare, prepareWithSegments, layoutNextLine } from 'https://esm.sh/@ch
   function render() {
     const theme = THEMES[activeTheme];
     ctx.clearRect(0, 0, W, H);
-
-    // Background
     ctx.fillStyle = theme.bg;
     ctx.fillRect(0, 0, W, H);
 
-    // Draw shapes
-    for (const shape of shapes) {
-      drawShape(ctx, shape, theme);
-    }
+    for (const shape of shapes) drawShape(ctx, shape, theme);
+    drawParticles(ctx);
 
     if (!prepared) return;
 
@@ -815,9 +997,7 @@ import { prepare, prepareWithSegments, layoutNextLine } from 'https://esm.sh/@ch
     const gap = CFG.SHAPE_GAP;
     const colLeft = margin;
     const colRight = W - margin;
-    const colWidth = colRight - colLeft;
-
-    if (colWidth <= 20) return;
+    if (colRight - colLeft <= 20) return;
 
     ctx.font = `${CFG.FONT_SIZE}px '${CFG.FONT_FAMILY}'`;
     ctx.fillStyle = theme.text;
@@ -828,69 +1008,40 @@ import { prepare, prepareWithSegments, layoutNextLine } from 'https://esm.sh/@ch
 
     while (y + lineH < H + lineH && cursor) {
       const lineCenterY = y + CFG.FONT_SIZE * 0.5;
-
-      // Calculate exclusions at this line's y
-      let lineLeft = colLeft;
-      let lineRight = colRight;
-      let exclusions = [];
-
+      const exclusions = [];
       for (const shape of shapes) {
         const ex = shapeExclusion(shape, lineCenterY, gap);
         if (ex) exclusions.push(ex);
       }
-
-      // Sort exclusions by left edge
       exclusions.sort((a, b) => a.left - b.left);
 
-      // Find the widest available spans
-      // For simplicity, handle: no exclusions, single exclusion splitting the line,
-      // or exclusion cutting from left/right
-      let spans = [];
+      const spans = [];
       let curLeft = colLeft;
       for (const ex of exclusions) {
-        if (ex.left > curLeft) {
-          spans.push({ left: curLeft, right: Math.min(ex.left, colRight) });
-        }
+        if (ex.left > curLeft) spans.push({ left: curLeft, right: Math.min(ex.left, colRight) });
         curLeft = Math.max(curLeft, ex.right);
       }
-      if (curLeft < colRight) {
-        spans.push({ left: curLeft, right: colRight });
-      }
+      if (curLeft < colRight) spans.push({ left: curLeft, right: colRight });
 
-      if (spans.length === 0) {
-        // Line fully blocked — skip
-        y += lineH;
-        continue;
-      }
+      if (spans.length === 0) { y += lineH; continue; }
 
-      // Render text in each span on this line
-      let advancedCursor = false;
+      let advanced = false;
       for (const span of spans) {
         if (!cursor) break;
-        const spanWidth = span.right - span.left;
-        if (spanWidth < CFG.FONT_SIZE) continue;
-
-        const line = layoutNextLine(prepared, cursor, spanWidth);
+        const sw = span.right - span.left;
+        if (sw < CFG.FONT_SIZE) continue;
+        const line = layoutNextLine(prepared, cursor, sw);
         if (!line) { cursor = null; break; }
-
         ctx.fillText(line.text, span.left, y);
         cursor = line.end;
-        advancedCursor = true;
+        advanced = true;
       }
-
-      if (!advancedCursor && cursor) {
-        // All spans too narrow; skip line
-        y += lineH;
-        continue;
-      }
-
+      if (!advanced && cursor) { y += lineH; continue; }
       y += lineH;
     }
   }
 
   /* ── INTERACTION ─────────────────────────────────── */
-  let dragging = null;
-  let dragOffX = 0, dragOffY = 0;
   let mouseX = -1, mouseY = -1;
   let hintHidden = false;
 
@@ -901,21 +1052,24 @@ import { prepare, prepareWithSegments, layoutNextLine } from 'https://esm.sh/@ch
 
   canvas.addEventListener('pointerdown', (e) => {
     const { x, y } = canvasXY(e);
+    const theme = THEMES[activeTheme];
 
-    // Check if clicking on an existing shape
+    // Click on existing shape → pop it
     for (let i = shapes.length - 1; i >= 0; i--) {
       if (shapeHitTest(shapes[i], x, y)) {
-        dragging = shapes[i];
-        dragOffX = x - shapes[i].x;
-        dragOffY = y - shapes[i].y;
-        canvas.setPointerCapture(e.pointerId);
+        triggerPop(shapes[i], theme);
+        shapes.splice(i, 1);
+        if (!hintHidden) {
+          document.getElementById('tf-hint').classList.add('hidden');
+          hintHidden = true;
+        }
         return;
       }
     }
 
-    // Place new shape
+    // Click on empty space → spawn new bubble
     if (selectedShapeType !== 'clear') {
-      shapes.push({ type: selectedShapeType, x, y, r: CFG.SHAPE_RADIUS });
+      shapes.push(makeShape(selectedShapeType, x, y, CFG.SHAPE_RADIUS));
       if (!hintHidden) {
         document.getElementById('tf-hint').classList.add('hidden');
         hintHidden = true;
@@ -925,18 +1079,10 @@ import { prepare, prepareWithSegments, layoutNextLine } from 'https://esm.sh/@ch
 
   canvas.addEventListener('pointermove', (e) => {
     const { x, y } = canvasXY(e);
-    mouseX = x;
-    mouseY = y;
-    if (dragging) {
-      dragging.x = x - dragOffX;
-      dragging.y = y - dragOffY;
-    }
+    mouseX = x; mouseY = y;
   });
 
-  canvas.addEventListener('pointerup', () => { dragging = null; });
-  canvas.addEventListener('pointercancel', () => { dragging = null; });
-
-  // Scroll to resize shape
+  // Scroll to resize bubble under cursor
   canvas.addEventListener('wheel', (e) => {
     e.preventDefault();
     for (let i = shapes.length - 1; i >= 0; i--) {
@@ -947,17 +1093,8 @@ import { prepare, prepareWithSegments, layoutNextLine } from 'https://esm.sh/@ch
     }
   }, { passive: false });
 
-  // Delete key removes shape under cursor
   document.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-    if (e.key === 'Delete' || e.key === 'Backspace') {
-      for (let i = shapes.length - 1; i >= 0; i--) {
-        if (shapeHitTest(shapes[i], mouseX, mouseY)) {
-          shapes.splice(i, 1);
-          break;
-        }
-      }
-    }
     if (e.key === 'f' || e.key === 'F') document.getElementById('tf-fs-btn').click();
     if (e.key === 'h' || e.key === 'H') document.getElementById('tf-hide-btn').click();
   });
@@ -966,10 +1103,7 @@ import { prepare, prepareWithSegments, layoutNextLine } from 'https://esm.sh/@ch
   document.querySelectorAll('.tf-shape-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const shape = btn.dataset.shape;
-      if (shape === 'clear') {
-        shapes = [];
-        return;
-      }
+      if (shape === 'clear') { shapes = []; return; }
       selectedShapeType = shape;
       document.querySelectorAll('.tf-shape-btn').forEach(b => b.classList.toggle('active', b === btn));
     });
@@ -988,20 +1122,20 @@ import { prepare, prepareWithSegments, layoutNextLine } from 'https://esm.sh/@ch
   });
 
   /* ── SLIDERS ─────────────────────────────────────── */
-  function wire(id, valId, setter, display) {
+  function wire(id, valId, setter) {
     const input = document.getElementById(id);
     const valEl = document.getElementById(valId);
     input.addEventListener('input', () => {
       setter(+input.value);
-      valEl.textContent = display(+input.value);
+      valEl.textContent = +input.value;
       rebuildText();
     });
   }
-  wire('s-size', 'v-size', v => { CFG.FONT_SIZE = v; }, v => v);
-  wire('s-leading', 'v-leading', v => { CFG.LINE_HEIGHT = v; }, v => v);
-  wire('s-margin', 'v-margin', v => { CFG.MARGIN = v; }, v => v);
-  wire('s-gap', 'v-gap', v => { CFG.SHAPE_GAP = v; }, v => v);
-  wire('s-shapeR', 'v-shapeR', v => { CFG.SHAPE_RADIUS = v; }, v => v);
+  wire('s-size',    'v-size',    v => { CFG.FONT_SIZE    = v; });
+  wire('s-leading', 'v-leading', v => { CFG.LINE_HEIGHT  = v; });
+  wire('s-margin',  'v-margin',  v => { CFG.MARGIN       = v; });
+  wire('s-gap',     'v-gap',     v => { CFG.SHAPE_GAP    = v; });
+  wire('s-shapeR',  'v-shapeR',  v => { CFG.SHAPE_RADIUS = v; });
 
   document.getElementById('s-font').addEventListener('change', (e) => {
     CFG.FONT_FAMILY = e.target.value;
@@ -1027,24 +1161,29 @@ import { prepare, prepareWithSegments, layoutNextLine } from 'https://esm.sh/@ch
   /* ── ANIMATION LOOP ──────────────────────────────── */
   function tick() {
     requestAnimationFrame(tick);
+    for (const shape of shapes) updatePhysics(shape);
+    resolveCollisions();
+    updateParticles();
     render();
   }
 
   /* ── INIT ────────────────────────────────────────── */
   async function init() {
     resize();
-
-    // Wait for fonts to load
     await document.fonts.ready;
-
     rebuildText();
 
-    // Place a default circle
-    shapes.push({ type: 'circle', x: W * 0.5, y: H * 0.4, r: 100 });
+    // Seed a few bubbles at different positions
+    const types = ['circle', 'hexagon', 'circle', 'diamond', 'circle'];
+    for (let i = 0; i < types.length; i++) {
+      const x = W * (0.2 + i * 0.15) + (Math.random() - 0.5) * 60;
+      const y = H * (0.3 + Math.random() * 0.4);
+      const r = 60 + Math.random() * 60;
+      shapes.push(makeShape(types[i], x, y, r));
+    }
 
     document.getElementById('tf-loading').classList.add('hidden');
     document.getElementById('footer-year').textContent = new Date().getFullYear();
-
     tick();
   }
 

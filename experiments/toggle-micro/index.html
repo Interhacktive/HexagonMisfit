@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Toggle Micro — Hexagon Misfit Experiments</title>
+  <meta name="description" content="Five toggle switches with distinct physics-based microanimations. Lava flow, 3D flip, metaball merge, black hole orbit, and shape morphing." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../css/reset.css" />
+  <link rel="stylesheet" href="../../css/tokens.css" />
+  <link rel="stylesheet" href="../../css/layout.css" />
+  <link rel="stylesheet" href="../../css/components.css" />
+  <link rel="stylesheet" href="../../css/animations.css" />
+
+  <style>
+    /* ══════════════════════════════════════════════════════
+       NAV
+    ══════════════════════════════════════════════════════ */
+    .exp-nav { position:sticky;top:0;z-index:100;padding-block:var(--space-5);background:rgba(10,10,15,0.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--color-border); }
+    .exp-nav-inner { display:flex;align-items:center;justify-content:space-between; }
+    .exp-nav-logo { display:flex;align-items:center;gap:var(--space-3);font-family:var(--font-heading);font-size:var(--text-sm);font-weight:700;color:var(--color-text-primary);text-decoration:none; }
+    .exp-nav-logo img { height:28px;width:auto; }
+    .exp-nav-links { display:flex;align-items:center;gap:var(--space-8);list-style:none;flex-wrap:wrap; }
+    .exp-nav-links a { font-family:var(--font-heading);font-size:var(--text-sm);font-weight:500;color:var(--color-text-secondary);text-decoration:none;transition:color var(--duration-fast); }
+    .exp-nav-links a:hover,.exp-nav-links a.active { color:var(--color-text-primary); }
+    .exp-nav-links a.active { color:var(--color-accent-primary); }
+
+    /* ══════════════════════════════════════════════════════
+       FOOTER
+    ══════════════════════════════════════════════════════ */
+    .exp-footer { border-top:1px solid var(--color-border);padding-block:var(--space-8); }
+    .exp-footer-inner { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--space-4); }
+    .exp-footer-logo { display:flex;align-items:center;gap:var(--space-3);font-family:var(--font-heading);font-size:var(--text-sm);font-weight:700;color:var(--color-text-secondary);text-decoration:none; }
+    .exp-footer-logo img { height:22px;width:auto; }
+    .exp-footer-copy { font-size:var(--text-xs);color:var(--color-text-muted);font-family:var(--font-mono); }
+    .exp-footer-links { display:flex;gap:var(--space-6); }
+    .exp-footer-links a { font-size:var(--text-sm);color:var(--color-text-muted);text-decoration:none;transition:color var(--duration-fast); }
+    .exp-footer-links a:hover { color:var(--color-text-primary); }
+
+    /* ══════════════════════════════════════════════════════
+       AMBIENT GLOW
+    ══════════════════════════════════════════════════════ */
+    .ambient-glow {
+      position: fixed;
+      bottom: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 900px;
+      height: 600px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: -1;
+      filter: blur(120px);
+      opacity: 0.12;
+      transition: background 1.4s ease, opacity 0.6s ease;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       SHOWCASE GRID
+    ══════════════════════════════════════════════════════ */
+    .showcase-grid {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      padding-bottom: var(--space-32);
+    }
+
+    .toggle-card {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: rgba(12,12,20,0.9);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      transition: border-color 0.4s ease;
+    }
+    .toggle-card:hover { border-color: var(--color-border-accent); }
+
+    .toggle-preview {
+      min-height: 320px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #060610;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.5s ease;
+    }
+
+    /* per-toggle hover glow on preview */
+    .card-lava:hover .toggle-preview      { background: #0A0200; }
+    .card-3d:hover .toggle-preview        { background: #030510; }
+    .card-meta:hover .toggle-preview      { background: #080010; }
+    .card-blackhole:hover .toggle-preview { background: #03000E; }
+    .card-morph:hover .toggle-preview     { background: #001007; }
+
+    .toggle-info {
+      padding: var(--space-10) var(--space-8);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      border-left: 1px solid var(--color-border);
+    }
+
+    .toggle-number {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      letter-spacing: 0.12em;
+      margin-bottom: var(--space-3);
+    }
+
+    .toggle-name {
+      font-family: var(--font-heading);
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-4);
+      line-height: 1.1;
+    }
+
+    .toggle-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      line-height: var(--leading-normal);
+    }
+
+    .toggle-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-top: auto;
+      padding-top: var(--space-6);
+    }
+
+    /* state display */
+    .state-display {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-2);
+      margin-left: var(--space-6);
+      user-select: none;
+    }
+    .state-text {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.2em;
+      color: var(--color-text-muted);
+      transition: color 0.3s, opacity 0.3s;
+    }
+    .state-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--color-text-muted);
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    .is-on .state-text { color: #fff; }
+
+    /* toggle wrap (click target) */
+    .t-wrap {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .t-wrap:active { transform: scale(0.97); }
+
+    /* shared track */
+    .t-track {
+      position: relative;
+      width: 140px;
+      height: 72px;
+      border-radius: 36px;
+      overflow: hidden;
+    }
+
+    /* shared knob base */
+    .t-knob {
+      position: absolute;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      top: 8px;
+      left: 8px;
+      z-index: 2;
+      transition: left 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .t-wrap.is-on .t-knob {
+      left: 76px;
+    }
+
+    @media (max-width: 768px) {
+      .toggle-card { grid-template-columns: 1fr; }
+      .toggle-info { border-left: none; border-top: 1px solid var(--color-border); }
+      .toggle-preview { min-height: 260px; }
+    }
+
+    /* ══════════════════════════════════════════════════════
+       TOGGLE 1 — LAVA
+    ══════════════════════════════════════════════════════ */
+    .t-lava-track {
+      background: #1A0500;
+    }
+
+    .lava-bg {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(ellipse 80% 120% at 20% 50%, #FF4500 0%, #FF8C00 40%, #8B1A00 80%);
+      filter: url(#lava-filter);
+      transition: background 0.8s ease;
+    }
+    .t-lava-wrap.is-on .lava-bg {
+      background: radial-gradient(ellipse 80% 120% at 80% 50%, #FFD700 0%, #FF4500 40%, #1A0500 80%);
+    }
+
+    .lava-knob {
+      background: radial-gradient(circle at 35% 35%, #FFF3AA, #FF6B00, #8B1A00);
+      box-shadow: 0 0 16px rgba(255,100,0,0.9), 0 0 32px rgba(255,50,0,0.5), inset 0 1px 0 rgba(255,243,170,0.4);
+      animation: lava-pulse 2s ease-in-out infinite;
+      transition: left 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .t-lava-wrap.is-on .lava-knob {
+      box-shadow: 0 0 24px rgba(255,215,0,0.9), 0 0 48px rgba(255,100,0,0.5), inset 0 1px 0 rgba(255,243,170,0.5);
+    }
+    @keyframes lava-pulse {
+      0%,100% { box-shadow: 0 0 16px rgba(255,100,0,0.9), 0 0 32px rgba(255,50,0,0.5); }
+      50%      { box-shadow: 0 0 22px rgba(255,130,0,1),   0 0 44px rgba(255,80,0,0.7); }
+    }
+
+    .lava-bubble {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #FFD700, #FF4500);
+      pointer-events: none;
+      opacity: 0;
+    }
+    @keyframes bubble-rise {
+      0%   { opacity: 0.85; transform: scale(0.6) translateY(0); }
+      100% { opacity: 0;    transform: scale(1.3) translateY(-32px); }
+    }
+
+    .is-on .state-dot { background: #FF8C00; box-shadow: 0 0 8px rgba(255,140,0,0.8); }
+
+    /* ══════════════════════════════════════════════════════
+       TOGGLE 2 — 3D FLIP
+    ══════════════════════════════════════════════════════ */
+    .t-3d-track {
+      background: #050514;
+      border: 1px solid rgba(108,99,255,0.25);
+      perspective: 400px;
+      overflow: visible; /* allow knob to overflow for 3d effect */
+    }
+
+    .depth-line {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      height: 1px;
+      background: rgba(108,99,255,0.15);
+      transform-origin: center center;
+      pointer-events: none;
+    }
+    .depth-line:nth-child(1) { width: 120px; transform: translate(-50%,-50%) rotate(14deg); }
+    .depth-line:nth-child(2) { width: 120px; transform: translate(-50%,-50%) rotate(-14deg); }
+    .depth-line:nth-child(3) { width: 80px; transform: translate(-50%,-50%) rotate(0deg); opacity:0.08; }
+
+    .t-3d-knob {
+      background: radial-gradient(circle at 35% 35%, #A0E8FF, #00BFFF, #0040AA);
+      box-shadow: 0 0 18px rgba(0,191,255,0.7), 0 0 36px rgba(0,191,255,0.3), inset 0 1px 0 rgba(255,255,255,0.3);
+      transform-style: preserve-3d;
+      transition: left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .t-3d-knob .face-front,
+    .t-3d-knob .face-back {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .t-3d-knob .face-back {
+      transform: rotateY(180deg);
+      background: radial-gradient(circle at 35% 35%, #FFD700, #FF8C00, #AA4400);
+    }
+
+    .flip-anim { animation: do-flip 0.55s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+    @keyframes do-flip {
+      0%   { transform: rotateY(0deg); }
+      50%  { transform: rotateY(180deg); }
+      100% { transform: rotateY(360deg); }
+    }
+
+    .blur-trail {
+      position: absolute;
+      top: 8px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: rgba(0,191,255,0.2);
+      filter: blur(10px);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 1;
+    }
+    .flipping .blur-trail { opacity: 1; }
+
+    .card-3d .is-on .state-dot { background: #00BFFF; box-shadow: 0 0 8px rgba(0,191,255,0.8); }
+
+    /* ══════════════════════════════════════════════════════
+       TOGGLE 3 — METABALL
+    ══════════════════════════════════════════════════════ */
+    .t-meta-track {
+      background: #0D0010;
+      overflow: visible;
+      border: 1px solid rgba(218,112,214,0.2);
+    }
+
+    .meta-container {
+      position: absolute;
+      inset: 0;
+      filter: url(#goo-filter);
+      overflow: visible;
+      border-radius: inherit;
+    }
+
+    .meta-blob {
+      position: absolute;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #FF69B4, #DA70D6);
+    }
+    .knob-blob {
+      width: 56px;
+      height: 56px;
+      top: 8px;
+      left: 8px;
+      transition: left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 0 0 3px rgba(255,105,180,0.3);
+    }
+    .anchor-blob {
+      width: 28px;
+      height: 28px;
+      top: 22px;
+      right: 16px;
+      transform: scale(0.3);
+      opacity: 0.6;
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
+    }
+    .mid-blob {
+      width: 20px;
+      height: 20px;
+      top: 26px;
+      left: 50%;
+      transform: translateX(-50%) scale(0);
+      opacity: 0;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+
+    .t-meta-wrap.is-on .knob-blob  { left: 76px; }
+    .t-meta-wrap.is-on .anchor-blob { transform: scale(1); opacity: 1; }
+    .t-meta-wrap.is-on .mid-blob {
+      transform: translateX(-50%) scale(1);
+      opacity: 1;
+    }
+
+    .card-meta .is-on .state-dot { background: #FF69B4; box-shadow: 0 0 8px rgba(255,105,180,0.8); }
+
+    /* ══════════════════════════════════════════════════════
+       TOGGLE 4 — BLACK HOLE
+    ══════════════════════════════════════════════════════ */
+    .t-bh-track {
+      background: #020208;
+      border: 1px solid rgba(123,47,255,0.2);
+      overflow: visible;
+    }
+
+    #star-canvas {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+    }
+
+    .bh-hole {
+      position: absolute;
+      left: 8px;
+      top: 8px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #000 45%, #0A0020 100%);
+      box-shadow: 0 0 0 2px rgba(123,47,255,0.9), 0 0 18px rgba(123,47,255,0.7), 0 0 40px rgba(123,47,255,0.35);
+      z-index: 1;
+      animation: hole-pulse 3s ease-in-out infinite;
+    }
+    @keyframes hole-pulse {
+      0%,100% { box-shadow: 0 0 0 2px rgba(123,47,255,0.9), 0 0 18px rgba(123,47,255,0.7), 0 0 40px rgba(123,47,255,0.35); }
+      50%      { box-shadow: 0 0 0 3px rgba(150,80,255,1),   0 0 26px rgba(123,47,255,0.9), 0 0 55px rgba(123,47,255,0.5); }
+    }
+
+    .bh-knob {
+      background: radial-gradient(circle at 35% 35%, #999, #555, #1A1A1A);
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.15);
+      /* position managed entirely by JS */
+      left: 8px;
+      z-index: 3;
+      transition: box-shadow 0.3s;
+    }
+    .t-bh-wrap.is-on .bh-knob {
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.15), 0 0 10px rgba(123,47,255,0.4);
+    }
+
+    .card-blackhole .is-on .state-dot { background: #7B2FFF; box-shadow: 0 0 8px rgba(123,47,255,0.9); }
+
+    /* ══════════════════════════════════════════════════════
+       TOGGLE 5 — MORPH
+    ══════════════════════════════════════════════════════ */
+    .t-morph-track {
+      border-radius: 36px;
+      background: #001A10;
+      border: 1.5px solid rgba(0,224,68,0.5);
+      transition: border-radius 0.5s cubic-bezier(0.34,1.56,0.64,1), border-color 0.4s, background 0.4s;
+      overflow: visible;
+    }
+    .t-morph-wrap.is-on .t-morph-track {
+      border-radius: 12px;
+      border-color: rgba(0,206,209,0.6);
+      background: #001520;
+    }
+
+    .morph-knob {
+      background: radial-gradient(circle at 35% 35%, #80FFB3, #00E044, #004D1A);
+      border-radius: 50%;
+      box-shadow: 0 0 18px rgba(0,224,68,0.7), 0 0 36px rgba(0,224,68,0.3);
+      transition: left 0.5s cubic-bezier(0.34,1.56,0.64,1),
+                  border-radius 0.5s cubic-bezier(0.34,1.56,0.64,1),
+                  background 0.4s, box-shadow 0.4s;
+    }
+    .t-morph-wrap.is-on .morph-knob {
+      border-radius: 14px;
+      background: radial-gradient(circle at 35% 35%, #80FFEE, #00CED1, #003340);
+      box-shadow: 0 0 18px rgba(0,206,209,0.8), 0 0 36px rgba(0,206,209,0.4);
+    }
+
+    .morph-particle {
+      position: absolute;
+      pointer-events: none;
+      opacity: 0;
+      border-radius: 3px;
+    }
+    @keyframes morph-particle-anim {
+      0%   { opacity: 0.9; transform: translate(0,0) scale(1) rotate(0deg); }
+      100% { opacity: 0; transform: translate(var(--px), var(--py)) scale(0.3) rotate(var(--pr)); }
+    }
+
+    .card-morph .is-on .state-dot { background: #00E044; box-shadow: 0 0 8px rgba(0,224,68,0.8); }
+
+    /* ══════════════════════════════════════════════════════
+       PREVIEW ACCENTS
+    ══════════════════════════════════════════════════════ */
+    .preview-label {
+      position: absolute;
+      bottom: var(--space-4);
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      color: rgba(152,152,176,0.35);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    /* hero breadcrumb */
+    .back-link {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      text-decoration: none;
+      letter-spacing: 0.08em;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--color-text-secondary); }
+  </style>
+</head>
+<body>
+
+<!-- ─── HIDDEN SVG FILTERS ──────────────────────────── -->
+<svg width="0" height="0" style="position:absolute;pointer-events:none;overflow:hidden;" aria-hidden="true">
+  <defs>
+    <!-- Lava displacement -->
+    <filter id="lava-filter" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="turbulence" baseFrequency="0.04 0.08" numOctaves="3" seed="7" result="noise">
+        <animate attributeName="seed" values="7;14;21;7" dur="10s" repeatCount="indefinite"/>
+        <animate attributeName="baseFrequency" values="0.04 0.08;0.06 0.1;0.04 0.08" dur="5s" repeatCount="indefinite"/>
+      </feTurbulence>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="12" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+
+    <!-- Metaball goo -->
+    <filter id="goo-filter" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur"/>
+      <feColorMatrix in="blur" mode="matrix"
+        values="1 0 0 0 0
+                0 1 0 0 0
+                0 0 1 0 0
+                0 0 0 22 -9"
+        result="goo"/>
+      <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
+    </filter>
+  </defs>
+</svg>
+
+<!-- ─── AMBIENT GLOW ────────────────────────────────── -->
+<div class="ambient-glow" id="ambient-glow" style="background: #FF4500;"></div>
+
+<!-- ─── NAV ─────────────────────────────────────────── -->
+<nav class="exp-nav" role="navigation" aria-label="Main navigation">
+  <div class="container">
+    <div class="exp-nav-inner">
+      <a href="../../" class="exp-nav-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <ul class="exp-nav-links" role="list">
+        <li><a href="../../#services">Services</a></li>
+        <li><a href="../../#work">Work</a></li>
+        <li><a href="../../#about">About</a></li>
+        <li><a href="../" class="active">Experiments</a></li>
+      </ul>
+      <a href="../../#contact" class="btn btn-outline">Let's Talk</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ─── HERO ─────────────────────────────────────────── -->
+<section style="padding-block: var(--space-12) var(--space-6);">
+  <div class="container">
+    <div style="margin-bottom: var(--space-4);">
+      <a href="../" class="back-link">← Experiments</a>
+    </div>
+    <h1 style="font-family:var(--font-heading);font-size:var(--text-xl);font-weight:600;color:var(--color-text-primary);margin-bottom:var(--space-4);">Toggle Micro</h1>
+    <p style="font-size:var(--text-base);color:var(--color-text-secondary);max-width:520px;line-height:var(--leading-normal);">
+      Five toggle switches. Five distinct physics-based microanimations. Click each one — watch lava flow, blobs merge, boulders orbit.
+    </p>
+  </div>
+</section>
+
+<!-- ─── SHOWCASE GRID ────────────────────────────────── -->
+<section style="padding-top: 0;">
+  <div class="container">
+    <div class="showcase-grid">
+
+      <!-- ════ TOGGLE 1 — LAVA ════ -->
+      <article class="toggle-card card-lava">
+        <div class="toggle-preview" id="preview-lava">
+          <div class="t-wrap t-lava-wrap" id="toggle-lava" role="switch" aria-checked="false" tabindex="0" aria-label="Lava toggle">
+            <div class="t-track t-lava-track" id="lava-track">
+              <div class="lava-bg" id="lava-bg"></div>
+              <!-- bubbles spawned by JS -->
+              <div class="t-knob lava-knob" id="lava-knob"></div>
+            </div>
+            <div class="state-display">
+              <div class="state-dot"></div>
+              <span class="state-text">OFF</span>
+            </div>
+          </div>
+          <span class="preview-label">click to ignite</span>
+        </div>
+        <div class="toggle-info">
+          <div class="toggle-number">01</div>
+          <h2 class="toggle-name">Lava</h2>
+          <p class="toggle-desc">Molten rock physics via SVG turbulence displacement. The feTurbulence filter animates its seed, creating organic distortion across the gradient as it shifts from cold to molten on toggle.</p>
+          <div class="toggle-tags">
+            <span class="tag">SVG Filter</span>
+            <span class="tag">feTurbulence</span>
+            <span class="tag">Displacement Map</span>
+            <span class="tag">CSS Gradient</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- ════ TOGGLE 2 — 3D FLIP ════ -->
+      <article class="toggle-card card-3d">
+        <div class="toggle-preview" id="preview-3d">
+          <div class="t-wrap t-3d-wrap" id="toggle-3d" role="switch" aria-checked="false" tabindex="0" aria-label="3D flip toggle">
+            <div class="t-track t-3d-track" id="track-3d" style="overflow:visible;">
+              <div class="depth-line"></div>
+              <div class="depth-line"></div>
+              <div class="depth-line"></div>
+              <div class="blur-trail" id="blur-trail"></div>
+              <div class="t-knob t-3d-knob" id="knob-3d">
+                <div class="face-front">✦</div>
+                <div class="face-back">★</div>
+              </div>
+            </div>
+            <div class="state-display">
+              <div class="state-dot"></div>
+              <span class="state-text">OFF</span>
+            </div>
+          </div>
+          <span class="preview-label">click to flip</span>
+        </div>
+        <div class="toggle-info">
+          <div class="toggle-number">02</div>
+          <h2 class="toggle-name">3D Flip</h2>
+          <p class="toggle-desc">The knob rotates 360° on its Y axis with preserve-3d, revealing a back face mid-flip. A motion blur trail appears during the rotation. The track has vanishing-point depth lines for added spatial context.</p>
+          <div class="toggle-tags">
+            <span class="tag">CSS 3D Transform</span>
+            <span class="tag">preserve-3d</span>
+            <span class="tag">Backface</span>
+            <span class="tag">Motion Blur</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- ════ TOGGLE 3 — METABALL ════ -->
+      <article class="toggle-card card-meta">
+        <div class="toggle-preview" id="preview-meta">
+          <div class="t-wrap t-meta-wrap" id="toggle-meta" role="switch" aria-checked="false" tabindex="0" aria-label="Metaball toggle">
+            <div class="t-track t-meta-track" id="track-meta" style="overflow:visible;">
+              <div class="meta-container">
+                <div class="meta-blob mid-blob" id="mid-blob"></div>
+                <div class="meta-blob anchor-blob" id="anchor-blob"></div>
+                <div class="meta-blob knob-blob" id="knob-blob"></div>
+              </div>
+            </div>
+            <div class="state-display">
+              <div class="state-dot"></div>
+              <span class="state-text">OFF</span>
+            </div>
+          </div>
+          <span class="preview-label">click to merge</span>
+        </div>
+        <div class="toggle-info">
+          <div class="toggle-number">03</div>
+          <h2 class="toggle-name">Metaball</h2>
+          <p class="toggle-desc">SVG goo filter — feGaussianBlur followed by feColorMatrix threshold — creates organic blob merging. As the knob slides toward the anchor blob, surface tension pulls them together into a single liquid form.</p>
+          <div class="toggle-tags">
+            <span class="tag">SVG Goo Filter</span>
+            <span class="tag">feGaussianBlur</span>
+            <span class="tag">feColorMatrix</span>
+            <span class="tag">Metaball</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- ════ TOGGLE 4 — BLACK HOLE ════ -->
+      <article class="toggle-card card-blackhole">
+        <div class="toggle-preview" id="preview-bh">
+          <div class="t-wrap t-bh-wrap" id="toggle-bh" role="switch" aria-checked="false" tabindex="0" aria-label="Black hole toggle">
+            <div class="t-track t-bh-track" id="track-bh" style="overflow:visible;">
+              <canvas id="star-canvas" width="140" height="72"></canvas>
+              <div class="bh-hole" id="bh-hole"></div>
+              <div class="t-knob bh-knob" id="bh-knob"></div>
+            </div>
+            <div class="state-display">
+              <div class="state-dot"></div>
+              <span class="state-text">OFF</span>
+            </div>
+          </div>
+          <span class="preview-label">click to escape</span>
+        </div>
+        <div class="toggle-info">
+          <div class="toggle-number">04</div>
+          <h2 class="toggle-name">Black Hole</h2>
+          <p class="toggle-desc">The boulder doesn't slide — it orbits. A JS rAF loop drives a parametric arc where Y offset follows Math.sin(t·π), simulating a gravitational slingshot. Stars twinkle behind the accretion disk glow.</p>
+          <div class="toggle-tags">
+            <span class="tag">Canvas 2D</span>
+            <span class="tag">rAF Loop</span>
+            <span class="tag">Parametric Arc</span>
+            <span class="tag">Orbital Physics</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- ════ TOGGLE 5 — MORPH ════ -->
+      <article class="toggle-card card-morph">
+        <div class="toggle-preview" id="preview-morph">
+          <div class="t-wrap t-morph-wrap" id="toggle-morph" role="switch" aria-checked="false" tabindex="0" aria-label="Morph toggle">
+            <div class="t-track t-morph-track" id="track-morph" style="overflow:visible;">
+              <div class="t-knob morph-knob" id="morph-knob"></div>
+            </div>
+            <div class="state-display">
+              <div class="state-dot"></div>
+              <span class="state-text">OFF</span>
+            </div>
+          </div>
+          <span class="preview-label">click to transform</span>
+        </div>
+        <div class="toggle-info">
+          <div class="toggle-number">05</div>
+          <h2 class="toggle-name">Morph</h2>
+          <p class="toggle-desc">Both track and knob shape-shift simultaneously. The track's border-radius transitions from pill to rounded rectangle while the knob morphs from circle to rounded square, each with a spring-bounce easing. Geometric particles scatter on toggle.</p>
+          <div class="toggle-tags">
+            <span class="tag">border-radius</span>
+            <span class="tag">CSS Transition</span>
+            <span class="tag">Spring Easing</span>
+            <span class="tag">DOM Particles</span>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ───────────────────────────────────────── -->
+<footer class="exp-footer">
+  <div class="container">
+    <div class="exp-footer-inner">
+      <a href="../../" class="exp-footer-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <span class="exp-footer-copy">Toggle Micro — Experiments</span>
+      <div class="exp-footer-links">
+        <a href="../">All Experiments</a>
+        <a href="../../#contact">Contact</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   TOGGLE MICRO — main script
+   ══════════════════════════════════════════════════════ */
+
+const ambientGlow = document.getElementById('ambient-glow');
+const GLOW_COLORS = {
+  lava:      '#FF4500',
+  '3d':      '#00BFFF',
+  meta:      '#DA70D6',
+  blackhole: '#7B2FFF',
+  morph:     '#00E044'
+};
+
+function setAmbient(key) {
+  ambientGlow.style.background = GLOW_COLORS[key] || '#6C63FF';
+  ambientGlow.style.opacity = '0.14';
+}
+
+/* ── Helper: update state label ── */
+function setStateDisplay(wrap, on) {
+  const dot = wrap.querySelector('.state-dot');
+  const txt = wrap.querySelector('.state-text');
+  txt.style.opacity = '0';
+  setTimeout(() => {
+    txt.textContent = on ? 'ON' : 'OFF';
+    txt.style.opacity = '1';
+  }, 120);
+  wrap.setAttribute('aria-checked', on ? 'true' : 'false');
+}
+
+/* ══════════════════════════════════════════════════════════
+   1. LAVA TOGGLE
+   ══════════════════════════════════════════════════════ */
+(function() {
+  const wrap = document.getElementById('toggle-lava');
+  const track = document.getElementById('lava-track');
+  let isOn = false;
+  let busy = false;
+
+  function spawnSplash() {
+    const knobRect = track.getBoundingClientRect();
+    const trackRect = track.getBoundingClientRect();
+    const knobLeft = isOn ? 76 : 8;
+    const cx = knobLeft + 28; // knob center x within track
+    const cy = 36;            // knob center y within track
+
+    const colors = ['#FF4500','#FF8C00','#FFD700','#FF2200','#FFAA00'];
+    for (let i = 0; i < 8; i++) {
+      const el = document.createElement('div');
+      el.className = 'lava-bubble';
+      const size = 6 + Math.random() * 10;
+      el.style.cssText = `
+        width:${size}px; height:${size}px;
+        left:${cx - size/2 + (Math.random()-0.5)*20}px;
+        top:${cy - size/2}px;
+        background: radial-gradient(circle at 30% 30%, #FFD700, ${colors[Math.floor(Math.random()*colors.length)]});
+      `;
+      track.appendChild(el);
+
+      const angle = (Math.random() * 280 - 140) * Math.PI / 180;
+      const dist = 18 + Math.random() * 22;
+      el.animate([
+        { opacity: 0.9, transform: `translate(0,0) scale(0.7)` },
+        { opacity: 0,   transform: `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist - 24}px) scale(1.4)` }
+      ], { duration: 420 + Math.random()*200, easing: 'ease-out', fill: 'forwards' })
+        .onfinish = () => el.remove();
+    }
+  }
+
+  function toggle() {
+    if (busy) return;
+    busy = true;
+    isOn = !isOn;
+    wrap.classList.toggle('is-on', isOn);
+    setStateDisplay(wrap, isOn);
+    setAmbient('lava');
+    spawnSplash();
+    setTimeout(() => { busy = false; }, 500);
+  }
+
+  wrap.addEventListener('click', toggle);
+  wrap.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }});
+})();
+
+/* ══════════════════════════════════════════════════════════
+   2. 3D FLIP TOGGLE
+   ══════════════════════════════════════════════════════ */
+(function() {
+  const wrap   = document.getElementById('toggle-3d');
+  const knob   = document.getElementById('knob-3d');
+  const trail  = document.getElementById('blur-trail');
+  let isOn  = false;
+  let busy  = false;
+
+  function toggle() {
+    if (busy) return;
+    busy = true;
+    isOn = !isOn;
+
+    /* slide the knob */
+    knob.style.left = isOn ? '76px' : '8px';
+
+    /* show blur trail at current position before slide */
+    trail.style.left = isOn ? '8px' : '76px';
+
+    /* flip animation */
+    knob.classList.remove('flip-anim');
+    void knob.offsetWidth; // reflow
+    knob.classList.add('flip-anim');
+
+    wrap.classList.toggle('is-on', isOn);
+    setStateDisplay(wrap, isOn);
+    setAmbient('3d');
+
+    /* trail visibility */
+    trail.style.opacity = '1';
+    setTimeout(() => { trail.style.opacity = '0'; }, 400);
+
+    knob.addEventListener('animationend', () => {
+      knob.classList.remove('flip-anim');
+      busy = false;
+    }, { once: true });
+  }
+
+  /* hover tilt on track */
+  const track3d = document.getElementById('track-3d');
+  track3d.addEventListener('mousemove', e => {
+    const r = track3d.getBoundingClientRect();
+    const mx = (e.clientX - r.left) / r.width - 0.5;
+    const my = (e.clientY - r.top) / r.height - 0.5;
+    track3d.style.transform = `perspective(600px) rotateY(${mx*10}deg) rotateX(${-my*6}deg)`;
+  });
+  track3d.addEventListener('mouseleave', () => {
+    track3d.style.transform = '';
+  });
+
+  wrap.addEventListener('click', toggle);
+  wrap.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }});
+})();
+
+/* ══════════════════════════════════════════════════════════
+   3. METABALL TOGGLE
+   ══════════════════════════════════════════════════════ */
+(function() {
+  const wrap = document.getElementById('toggle-meta');
+  const knobBlob = document.getElementById('knob-blob');
+  const midBlob  = document.getElementById('mid-blob');
+  let isOn = false;
+  let busy = false;
+
+  function toggle() {
+    if (busy) return;
+    busy = true;
+    isOn = !isOn;
+    wrap.classList.toggle('is-on', isOn);
+    setStateDisplay(wrap, isOn);
+    setAmbient('meta');
+
+    /* mid-blob drip: briefly appear then shrink */
+    midBlob.style.transform = 'translateX(-50%) scale(0.9)';
+    midBlob.style.opacity = '1';
+    setTimeout(() => {
+      midBlob.style.transform = isOn ? 'translateX(-50%) scale(0)' : 'translateX(-50%) scale(0)';
+      midBlob.style.opacity = '0';
+    }, 280);
+
+    setTimeout(() => { busy = false; }, 550);
+  }
+
+  wrap.addEventListener('click', toggle);
+  wrap.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }});
+})();
+
+/* ══════════════════════════════════════════════════════════
+   4. BLACK HOLE TOGGLE
+   ══════════════════════════════════════════════════════ */
+(function() {
+  const wrap  = document.getElementById('toggle-bh');
+  const knob  = document.getElementById('bh-knob');
+  const canvas = document.getElementById('star-canvas');
+  const ctx   = canvas.getContext('2d');
+  let isOn    = false;
+  let busy    = false;
+  let rafId   = null;
+
+  /* star field */
+  const STARS = Array.from({ length: 32 }, () => ({
+    x: Math.random() * 140,
+    y: Math.random() * 72,
+    r: 0.5 + Math.random() * 1,
+    phase: Math.random() * Math.PI * 2,
+    speed: 0.4 + Math.random() * 0.8
+  }));
+
+  function drawStars(t) {
+    ctx.clearRect(0, 0, 140, 72);
+    STARS.forEach(s => {
+      const alpha = 0.3 + 0.5 * Math.abs(Math.sin(s.phase + t * s.speed * 0.001));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(180,160,255,${alpha})`;
+      ctx.fill();
+    });
+    rafId = requestAnimationFrame(drawStars);
+  }
+  drawStars(0);
+
+  /* orbital arc animation */
+  function animateOrbit(toOn) {
+    const startX = toOn ? 8  : 76;
+    const endX   = toOn ? 76 : 8;
+    const startY = 8;
+    const amp    = toOn ? -22 : 22; // arc height (up when escaping, down when pulled in)
+    let startTime = null;
+    const DURATION = 700;
+
+    function step(ts) {
+      if (!startTime) startTime = ts;
+      let t = Math.min((ts - startTime) / DURATION, 1);
+      /* ease in-out cubic */
+      const ease = t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+
+      const x = startX + (endX - startX) * ease;
+      const y = startY + amp * Math.sin(ease * Math.PI);
+
+      knob.style.left = x + 'px';
+      knob.style.top  = y + 'px';
+
+      if (t < 1) {
+        requestAnimationFrame(step);
+      } else {
+        knob.style.top = '8px'; /* snap back to resting Y */
+        busy = false;
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  function toggle() {
+    if (busy) return;
+    busy = true;
+    isOn = !isOn;
+    wrap.classList.toggle('is-on', isOn);
+    setStateDisplay(wrap, isOn);
+    setAmbient('blackhole');
+    animateOrbit(isOn);
+  }
+
+  wrap.addEventListener('click', toggle);
+  wrap.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }});
+})();
+
+/* ══════════════════════════════════════════════════════════
+   5. MORPH TOGGLE
+   ══════════════════════════════════════════════════════ */
+(function() {
+  const wrap  = document.getElementById('toggle-morph');
+  const track = document.getElementById('track-morph');
+  const knob  = document.getElementById('morph-knob');
+  let isOn = false;
+  let busy = false;
+
+  const COLORS_OFF = ['#00E044','#00C840','#80FFB3','#004D20'];
+  const COLORS_ON  = ['#00CED1','#00A8AA','#80FFEE','#003340'];
+  const SHAPES     = ['square','triangle','diamond','circle'];
+
+  function spawnParticles() {
+    const knobLeft = isOn ? 76 : 8;
+    const cx = knobLeft + 28;
+    const cy = 44;
+
+    const colors = isOn ? COLORS_ON : COLORS_OFF;
+
+    for (let i = 0; i < 7; i++) {
+      const el = document.createElement('div');
+      el.className = 'morph-particle';
+      const size = 4 + Math.random() * 7;
+      const angle = (Math.random() * 360) * Math.PI / 180;
+      const dist = 20 + Math.random() * 28;
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist;
+      const rot = (Math.random() - 0.5) * 360;
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const isRound = Math.random() > 0.5;
+
+      el.style.cssText = `
+        position:absolute;
+        width:${size}px; height:${size}px;
+        left:${cx - size/2}px; top:${cy - size/2}px;
+        background:${color};
+        border-radius:${isRound ? '50%' : Math.floor(Math.random()*4)+'px'};
+        --px:${dx}px; --py:${dy}px; --pr:${rot}deg;
+        opacity:0;
+      `;
+
+      /* position relative to track */
+      track.style.position = 'relative';
+      track.appendChild(el);
+
+      el.animate([
+        { opacity: 1, transform: 'translate(0,0) scale(1) rotate(0deg)' },
+        { opacity: 0, transform: `translate(${dx}px, ${dy}px) scale(0.2) rotate(${rot}deg)` }
+      ], { duration: 380 + Math.random() * 200, easing: 'ease-out', fill: 'forwards' })
+        .onfinish = () => el.remove();
+    }
+  }
+
+  function toggle() {
+    if (busy) return;
+    busy = true;
+    isOn = !isOn;
+    wrap.classList.toggle('is-on', isOn);
+    setStateDisplay(wrap, isOn);
+    setAmbient('morph');
+    spawnParticles();
+    setTimeout(() => { busy = false; }, 560);
+  }
+
+  wrap.addEventListener('click', toggle);
+  wrap.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }});
+})();
+
+</script>
+</body>
+</html>

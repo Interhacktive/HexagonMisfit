@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Webcam OCR — Hexagon Misfit Experiments</title>
+  <meta name="description" content="Live webcam feed scanned for text in real time using on-device OCR. Detected words are logged with timestamps and confidence scores — download as CSV." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Space+Grotesk:wght@500;700&family=Space+Mono:wght@400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../css/reset.css" />
+  <link rel="stylesheet" href="../../css/tokens.css" />
+  <link rel="stylesheet" href="../../css/layout.css" />
+  <link rel="stylesheet" href="../../css/components.css" />
+  <link rel="stylesheet" href="../../css/animations.css" />
+
+  <style>
+    /* ── NAV ─────────────────────────────────────────── */
+    .wocr-nav { position:sticky; top:0; z-index:100; padding-block:var(--space-5); background:rgba(10,10,15,0.92); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border-bottom:1px solid var(--color-border); }
+    .wocr-nav-inner { display:flex; align-items:center; justify-content:space-between; }
+    .wocr-nav-logo { display:flex; align-items:center; gap:var(--space-3); font-family:var(--font-heading); font-size:var(--text-sm); font-weight:700; color:var(--color-text-primary); text-decoration:none; }
+    .wocr-nav-logo img { height:28px; width:auto; }
+    .wocr-back { display:inline-flex; align-items:center; gap:var(--space-2); font-family:var(--font-mono); font-size:var(--text-xs); letter-spacing:0.08em; color:var(--color-text-muted); text-decoration:none; transition:color 0.15s; }
+    .wocr-back:hover { color:var(--color-text-primary); }
+    .wocr-back svg { width:12px; height:12px; }
+
+    /* ── DEMO AREA ────────────────────────────────────── */
+    .wocr-demo { position:relative; width:100%; height:clamp(420px,68vh,740px); background:#000; overflow:hidden; display:flex; }
+    .wocr-demo:fullscreen, .wocr-demo:-webkit-full-screen { height:100vh; }
+
+    /* ── SPLIT ────────────────────────────────────────── */
+    .wocr-split { display:flex; width:100%; height:100%; }
+
+    /* ── CAMERA SIDE ──────────────────────────────────── */
+    .wocr-cam-side { flex:1 1 60%; position:relative; overflow:hidden; min-width:0; }
+    #wocr-canvas { display:block; width:100%; height:100%; }
+
+    /* ── SCAN FLASH ───────────────────────────────────── */
+    .wocr-scan-flash { position:absolute; inset:0; pointer-events:none; border:2px solid transparent; transition:border-color 0.08s, box-shadow 0.08s; }
+    .wocr-scan-flash.active { border-color:rgba(45,212,191,0.55); box-shadow:inset 0 0 28px rgba(45,212,191,0.06); }
+
+    /* ── LOG SIDE ─────────────────────────────────────── */
+    .wocr-log-side { flex:0 0 268px; display:flex; flex-direction:column; border-left:1px solid rgba(255,255,255,0.06); background:rgba(6,6,14,0.97); }
+    .wocr-log-header { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.05); flex-shrink:0; }
+    .wocr-log-title { font-family:var(--font-mono); font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:rgba(152,152,176,0.55); }
+    .wocr-log-actions { display:flex; gap:5px; }
+    .wocr-log-btn { font-family:var(--font-mono); font-size:9px; letter-spacing:0.08em; padding:3px 8px; border-radius:var(--radius-full); border:1px solid rgba(255,255,255,0.13); background:rgba(10,10,15,0.5); color:rgba(152,152,176,0.65); cursor:pointer; transition:border-color 0.2s, color 0.2s; }
+    .wocr-log-btn:hover { border-color:rgba(255,255,255,0.28); color:var(--color-text-primary); }
+    .wocr-log-btn.accent { border-color:rgba(108,99,255,0.35); color:rgba(108,99,255,0.75); }
+    .wocr-log-btn.accent:hover { border-color:rgba(108,99,255,0.75); color:rgba(140,135,255,1); }
+    .wocr-log-list { flex:1; overflow-y:auto; padding:6px 0; }
+    .wocr-log-list::-webkit-scrollbar { width:3px; }
+    .wocr-log-list::-webkit-scrollbar-track { background:transparent; }
+    .wocr-log-list::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.07); border-radius:2px; }
+    .wocr-log-footer { display:flex; align-items:center; justify-content:space-between; padding:7px 12px; border-top:1px solid rgba(255,255,255,0.05); flex-shrink:0; }
+    .wocr-log-footer span { font-family:var(--font-mono); font-size:8px; letter-spacing:0.1em; color:rgba(152,152,176,0.35); }
+    #wocr-status.scanning { color:rgba(45,212,191,0.65); }
+
+    /* ── LOG ENTRIES ──────────────────────────────────── */
+    .wocr-entry { display:flex; align-items:baseline; gap:5px; padding:5px 12px; }
+    .wocr-entry:hover { background:rgba(255,255,255,0.022); }
+    .wocr-entry-word { font-family:var(--font-mono); font-size:var(--text-sm); color:var(--color-text-primary); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .wocr-entry-conf { font-family:var(--font-mono); font-size:8px; padding:1px 5px; border-radius:3px; flex-shrink:0; }
+    .wocr-entry-conf.high { background:rgba(45,212,191,0.1); color:rgba(45,212,191,0.75); border:1px solid rgba(45,212,191,0.18); }
+    .wocr-entry-conf.mid  { background:rgba(255,195,40,0.08); color:rgba(255,195,40,0.7); border:1px solid rgba(255,195,40,0.16); }
+    .wocr-entry-conf.low  { background:rgba(255,110,40,0.08); color:rgba(255,110,40,0.65); border:1px solid rgba(255,110,40,0.14); }
+    .wocr-entry-time { font-family:var(--font-mono); font-size:8px; color:rgba(152,152,176,0.3); flex-shrink:0; }
+    .wocr-entry-new { animation:wocr-enter 0.3s ease-out; }
+    @keyframes wocr-enter { from { opacity:0; transform:translateX(5px); } to { opacity:1; transform:none; } }
+
+    /* ── START OVERLAY ────────────────────────────────── */
+    .wocr-start-overlay { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:var(--space-5); background:rgba(0,0,0,0.88); backdrop-filter:blur(8px); z-index:20; transition:opacity 0.5s; }
+    .wocr-start-overlay.hidden { opacity:0; pointer-events:none; }
+    .wocr-start-icon { width:56px; height:56px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.14); display:flex; align-items:center; justify-content:center; color:rgba(240,240,245,0.4); }
+    .wocr-start-icon svg { width:26px; height:26px; }
+    .wocr-start-title { font-family:var(--font-heading); font-size:var(--text-xl); font-weight:700; color:var(--color-text-primary); text-align:center; }
+    .wocr-start-sub { font-family:var(--font-mono); font-size:var(--text-xs); letter-spacing:0.1em; color:var(--color-text-muted); text-align:center; max-width:34ch; line-height:1.65; }
+    .wocr-start-btn { margin-top:var(--space-2); padding:0.6rem 1.8rem; font-family:var(--font-mono); font-size:var(--text-xs); letter-spacing:0.12em; text-transform:uppercase; color:var(--color-text-primary); background:transparent; border:1px solid rgba(255,255,255,0.25); border-radius:var(--radius-full); cursor:pointer; transition:border-color 0.2s, background 0.2s; }
+    .wocr-start-btn:hover { border-color:rgba(108,99,255,0.7); background:rgba(108,99,255,0.12); }
+    .wocr-start-btn:disabled { opacity:0.5; cursor:not-allowed; }
+    .wocr-error-msg { display:none; font-family:var(--font-mono); font-size:var(--text-xs); letter-spacing:0.08em; color:rgba(255,80,80,0.8); text-align:center; max-width:38ch; line-height:1.6; }
+    .wocr-error-msg.visible { display:block; }
+
+    /* ── TOOLBAR ──────────────────────────────────────── */
+    .wocr-toolbar { position:absolute; top:var(--space-5); right:var(--space-5); display:flex; gap:6px; z-index:12; }
+    .wocr-tool-btn { width:30px; height:30px; border-radius:6px; border:1px solid rgba(255,255,255,0.12); background:rgba(8,8,16,0.7); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); color:rgba(200,200,220,0.6); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:border-color 0.2s, color 0.2s, background 0.2s; padding:0; }
+    .wocr-tool-btn:hover { border-color:rgba(255,255,255,0.3); color:rgba(240,240,255,0.9); }
+    .wocr-tool-btn.active { border-color:rgba(108,99,255,0.6); background:rgba(108,99,255,0.14); color:rgba(130,125,255,0.95); }
+    .wocr-tool-btn svg { width:14px; height:14px; }
+
+    /* ── TOP-LEFT INDICATOR ───────────────────────────── */
+    .wocr-overlay-tl { position:absolute; top:var(--space-5); left:var(--space-5); display:flex; align-items:center; gap:var(--space-3); pointer-events:none; z-index:5; }
+    .wocr-live-dot { width:8px; height:8px; border-radius:50%; background:var(--color-accent-secondary); box-shadow:0 0 8px rgba(45,212,191,0.7); animation:wocr-pulse 2s ease-in-out infinite; }
+    @keyframes wocr-pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .wocr-exp-label { font-family:var(--font-mono); font-size:var(--text-xs); letter-spacing:0.1em; color:rgba(152,152,176,0.5); }
+
+    /* ── CONTROLS PANEL ───────────────────────────────── */
+    .wocr-controls { position:absolute; bottom:var(--space-5); left:var(--space-5); display:flex; flex-direction:column; gap:9px; z-index:5; background:rgba(8,8,16,0.78); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border:1px solid rgba(255,255,255,0.07); border-radius:10px; padding:10px 12px; }
+    .wocr-ctrl-row { display:flex; align-items:center; gap:8px; }
+    .wocr-ctrl-label { font-family:var(--font-mono); font-size:8px; letter-spacing:0.1em; text-transform:uppercase; color:rgba(152,152,176,0.48); width:62px; flex-shrink:0; }
+    .wocr-ctrl-val { font-family:var(--font-mono); font-size:8px; color:rgba(200,200,220,0.65); width:28px; text-align:right; flex-shrink:0; }
+    .wocr-slider { -webkit-appearance:none; appearance:none; width:80px; height:2px; background:rgba(255,255,255,0.1); border-radius:1px; outline:none; cursor:pointer; }
+    .wocr-slider::-webkit-slider-thumb { -webkit-appearance:none; width:10px; height:10px; border-radius:50%; background:rgba(108,99,255,0.9); cursor:pointer; border:none; box-shadow:0 0 6px rgba(108,99,255,0.5); }
+    .wocr-slider::-moz-range-thumb { width:10px; height:10px; border-radius:50%; background:rgba(108,99,255,0.9); cursor:pointer; border:none; }
+
+    /* ── HIDEABLE UI ──────────────────────────────────── */
+    .wocr-demo.ui-hidden .wocr-toolbar,
+    .wocr-demo.ui-hidden .wocr-overlay-tl,
+    .wocr-demo.ui-hidden .wocr-controls { opacity:0; pointer-events:none; }
+    .wocr-toolbar, .wocr-overlay-tl, .wocr-controls { transition:opacity 0.3s; }
+
+    /* ── INFO ─────────────────────────────────────────── */
+    .wocr-info { padding-block:var(--space-12); border-bottom:1px solid var(--color-border); }
+    .wocr-info-inner { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-12); }
+    @media(max-width:720px) { .wocr-info-inner { grid-template-columns:1fr; } }
+    .wocr-info-meta { display:flex; align-items:center; gap:var(--space-4); margin-bottom:var(--space-4); }
+    .wocr-info-num { font-family:var(--font-mono); font-size:var(--text-xs); letter-spacing:0.12em; color:var(--color-text-muted); }
+    .wocr-info h1 { font-family:var(--font-heading); font-size:clamp(var(--text-2xl),4vw,var(--text-4xl)); font-weight:700; color:var(--color-text-primary); margin-bottom:var(--space-5); }
+    .wocr-info p { font-size:var(--text-sm); color:var(--color-text-secondary); line-height:var(--leading-relaxed); margin-bottom:var(--space-5); }
+    .wocr-info-tags { display:flex; flex-wrap:wrap; gap:var(--space-2); margin-top:var(--space-6); }
+    .wocr-controls-title { font-family:var(--font-mono); font-size:var(--text-xs); letter-spacing:0.12em; text-transform:uppercase; color:var(--color-text-muted); margin-bottom:var(--space-5); }
+    .wocr-control-list { display:flex; flex-direction:column; gap:var(--space-4); }
+    .wocr-control { display:flex; gap:var(--space-4); }
+    .wocr-control-key { font-family:var(--font-mono); font-size:var(--text-xs); color:var(--color-text-primary); min-width:10ch; flex-shrink:0; }
+    .wocr-control-desc { font-size:var(--text-xs); color:var(--color-text-muted); line-height:var(--leading-relaxed); }
+
+    /* ── FOOTER ───────────────────────────────────────── */
+    .wocr-footer { padding-block:var(--space-8); }
+    .wocr-footer-inner { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:var(--space-5); }
+    .wocr-footer-logo { display:flex; align-items:center; gap:var(--space-3); font-family:var(--font-heading); font-size:var(--text-sm); font-weight:700; color:var(--color-text-muted); text-decoration:none; transition:color 0.15s; }
+    .wocr-footer-logo:hover { color:var(--color-text-primary); }
+    .wocr-footer-logo img { height:24px; width:auto; }
+    .wocr-footer-copy { font-family:var(--font-mono); font-size:var(--text-xs); color:var(--color-text-muted); letter-spacing:0.08em; }
+
+    /* ── RESPONSIVE ───────────────────────────────────── */
+    @media(max-width:600px) {
+      .wocr-demo { height:auto; min-height:560px; }
+      .wocr-split { flex-direction:column; }
+      .wocr-cam-side { flex:0 0 300px; }
+      .wocr-log-side { flex:0 0 220px; border-left:none; border-top:1px solid rgba(255,255,255,0.06); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ───────────────────────────────────────────── -->
+<nav class="wocr-nav">
+  <div class="container">
+    <div class="wocr-nav-inner">
+      <a href="../../" class="wocr-nav-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <a href="../" class="wocr-back">
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 1L3 6l5 5"/></svg>
+        All Experiments
+      </a>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ── DEMO AREA ──────────────────────────────────────── -->
+<div class="wocr-demo" id="wocr-wrap">
+
+  <!-- Start overlay -->
+  <div class="wocr-start-overlay" id="wocr-overlay">
+    <div class="wocr-start-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="5" width="20" height="14" rx="2"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+    </div>
+    <h2 class="wocr-start-title">Webcam OCR</h2>
+    <p class="wocr-start-sub">Camera access required. Point at any text — words are detected and logged automatically.</p>
+    <button class="wocr-start-btn" id="wocr-start-btn">Start Camera</button>
+    <p class="wocr-error-msg" id="wocr-error-msg">Camera access denied or unavailable.<br>Check browser permissions and try again.</p>
+  </div>
+
+  <!-- Split pane -->
+  <div class="wocr-split">
+
+    <!-- Camera side -->
+    <div class="wocr-cam-side" id="wocr-cam-side">
+      <canvas id="wocr-canvas"></canvas>
+      <div class="wocr-scan-flash" id="wocr-scan-flash"></div>
+    </div>
+
+    <!-- Word log side -->
+    <div class="wocr-log-side">
+      <div class="wocr-log-header">
+        <span class="wocr-log-title">// word log</span>
+        <div class="wocr-log-actions">
+          <button class="wocr-log-btn" id="wocr-clear-btn">clear</button>
+          <button class="wocr-log-btn accent" id="wocr-csv-btn">&#x2193; csv</button>
+        </div>
+      </div>
+      <div class="wocr-log-list" id="wocr-log-list"></div>
+      <div class="wocr-log-footer">
+        <span id="wocr-word-count">0 words</span>
+        <span id="wocr-status">idle</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top-left indicator -->
+  <div class="wocr-overlay-tl">
+    <div class="wocr-live-dot"></div>
+    <span class="wocr-exp-label">// webcam ocr</span>
+  </div>
+
+  <!-- Toolbar (top-right) -->
+  <div class="wocr-toolbar">
+    <button class="wocr-tool-btn" id="wocr-flip-btn" title="Flip horizontal">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="7" y1="1" x2="7" y2="13"/>
+        <polyline points="3,4 1,7 3,10"/>
+        <polyline points="11,4 13,7 11,10"/>
+      </svg>
+    </button>
+    <button class="wocr-tool-btn" id="wocr-hide-btn" title="Hide UI (H)">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+        <path d="M1 7s2.5-4 6-4 6 4 6 4-2.5 4-6 4-6-4-6-4z"/>
+        <circle cx="7" cy="7" r="1.5"/>
+      </svg>
+    </button>
+    <button class="wocr-tool-btn" id="wocr-fs-btn" title="Fullscreen">
+      <svg id="wocr-fs-icon" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+        <path d="M1 5V1h4M9 1h4v4M13 9v4H9M5 13H1V9"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Controls (bottom-left, over camera) -->
+  <div class="wocr-controls">
+    <div class="wocr-ctrl-row">
+      <span class="wocr-ctrl-label">confidence</span>
+      <input type="range" id="wocr-conf" class="wocr-slider" min="20" max="90" value="60" />
+      <span class="wocr-ctrl-val" id="wocr-conf-val">60%</span>
+    </div>
+    <div class="wocr-ctrl-row">
+      <span class="wocr-ctrl-label">interval</span>
+      <input type="range" id="wocr-interval" class="wocr-slider" min="1" max="10" value="3" step="1" />
+      <span class="wocr-ctrl-val" id="wocr-interval-val">1.5s</span>
+    </div>
+  </div>
+
+</div><!-- /wocr-demo -->
+
+
+<!-- ── INFO ───────────────────────────────────────────── -->
+<section class="wocr-info">
+  <div class="container">
+    <div class="wocr-info-inner">
+      <div>
+        <div class="wocr-info-meta">
+          <span class="wocr-info-num">13</span>
+          <span class="tag tag-teal">LIVE</span>
+        </div>
+        <h1>Webcam OCR</h1>
+        <p>Live webcam feed scanned for characters in real time using Tesseract.js — an OCR engine running entirely in the browser via WebAssembly. No server, no API key. Just point the camera at text and watch the word log populate.</p>
+        <p>Each recognized word is filtered by a confidence threshold and deduplicated within a 4-second window so the log stays signal, not noise. Flip the feed to read mirrored text. Download the full session as a timestamped CSV.</p>
+        <div class="wocr-info-tags">
+          <span class="tag">Canvas 2D</span>
+          <span class="tag">getUserMedia</span>
+          <span class="tag">Tesseract.js</span>
+          <span class="tag">OCR</span>
+          <span class="tag">WebAssembly</span>
+          <span class="tag">CSV Export</span>
+        </div>
+      </div>
+      <div>
+        <p class="wocr-controls-title">// controls</p>
+        <div class="wocr-control-list">
+          <div class="wocr-control"><span class="wocr-control-key">flip</span><span class="wocr-control-desc">Mirror the camera feed horizontally — useful for reading text reflected in a mirror or reversed text on glass.</span></div>
+          <div class="wocr-control"><span class="wocr-control-key">confidence</span><span class="wocr-control-desc">Minimum OCR confidence to log a word (20–90%). Higher = fewer false positives. Lower = catches more uncertain reads.</span></div>
+          <div class="wocr-control"><span class="wocr-control-key">interval</span><span class="wocr-control-desc">Time between OCR scans (0.5s–5s). Longer intervals reduce CPU load; shorter intervals react faster to changing text.</span></div>
+          <div class="wocr-control"><span class="wocr-control-key">&#x2193; csv</span><span class="wocr-control-desc">Download the full word log as a CSV file with word, timestamp, and confidence columns.</span></div>
+          <div class="wocr-control"><span class="wocr-control-key">H</span><span class="wocr-control-desc">Hide all UI overlays — leaves only the camera feed and word log visible. Press H again to restore.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── FOOTER ─────────────────────────────────────────── -->
+<footer class="wocr-footer">
+  <div class="container">
+    <div class="wocr-footer-inner">
+      <a href="../../" class="wocr-footer-logo">
+        <img src="../../assets/images/logo/hm-logo2.png" alt="Hexagon Misfit" />
+        Hexagon Misfit
+      </a>
+      <a href="../" class="wocr-back">
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 1L3 6l5 5"/></svg>
+        All Experiments
+      </a>
+      <span class="wocr-footer-copy">&copy; <span id="footer-year"></span> Hexagon Misfit</span>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ── TESSERACT.JS v5 ─────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+<!-- ═══════════════════════════════════════════════════════
+  WEBCAM OCR ENGINE
+═══════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ─── ELEMENTS ───────────────────────────────────────── */
+  const wrap       = document.getElementById('wocr-wrap');
+  const canvas     = document.getElementById('wocr-canvas');
+  const camSide    = document.getElementById('wocr-cam-side');
+  const ctx        = canvas.getContext('2d', { alpha: false });
+  const overlay    = document.getElementById('wocr-overlay');
+  const startBtn   = document.getElementById('wocr-start-btn');
+  const errorMsg   = document.getElementById('wocr-error-msg');
+  const scanFlash  = document.getElementById('wocr-scan-flash');
+  const logList    = document.getElementById('wocr-log-list');
+  const wordCount  = document.getElementById('wocr-word-count');
+  const statusEl   = document.getElementById('wocr-status');
+  const flipBtn    = document.getElementById('wocr-flip-btn');
+  const hideBtn    = document.getElementById('wocr-hide-btn');
+  const fsBtn      = document.getElementById('wocr-fs-btn');
+  const fsIcon     = document.getElementById('wocr-fs-icon');
+  const clearBtn   = document.getElementById('wocr-clear-btn');
+  const csvBtn     = document.getElementById('wocr-csv-btn');
+  const confSlider = document.getElementById('wocr-conf');
+  const confVal    = document.getElementById('wocr-conf-val');
+  const intSlider  = document.getElementById('wocr-interval');
+  const intVal     = document.getElementById('wocr-interval-val');
+
+  document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+  /* ─── STATE ──────────────────────────────────────────── */
+  let running     = false;
+  let flipped     = false;
+  let ocrBusy     = false;
+  let lastOcrTime = 0;
+  let stream      = null;
+  let ocrWorker   = null;
+  let log         = [];        // { word, timestamp, conf }
+  const dedupMap  = new Map(); // word → last-logged ms
+  let intervalMs  = 1500;
+  let confThresh  = 60;
+  let flashTimer  = null;
+
+  /* ─── OFFSCREEN CANVAS (OCR input — downsampled) ─────── */
+  const offscreen = document.createElement('canvas');
+  offscreen.width  = 480;
+  offscreen.height = 270;
+  const offCtx = offscreen.getContext('2d', { willReadFrequently: true });
+  offCtx.imageSmoothingEnabled = true;
+  offCtx.imageSmoothingQuality = 'medium';
+
+  /* ─── VIDEO ELEMENT ──────────────────────────────────── */
+  const video = document.createElement('video');
+  video.playsInline = true;
+  video.muted       = true;
+  video.autoplay    = true;
+
+  /* ─── RESIZE ─────────────────────────────────────────── */
+  function resize() {
+    const dpr = window.devicePixelRatio || 1;
+    const w   = camSide.clientWidth;
+    const h   = camSide.clientHeight;
+    canvas.width        = Math.round(w * dpr);
+    canvas.height       = Math.round(h * dpr);
+    canvas.style.width  = w + 'px';
+    canvas.style.height = h + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  /* ─── RENDER LOOP ────────────────────────────────────── */
+  function loop() {
+    if (!running) return;
+    requestAnimationFrame(loop);
+
+    if (video.readyState < 2) return;
+
+    const W = camSide.clientWidth;
+    const H = camSide.clientHeight;
+
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, W, H);
+
+    /* draw video — optionally mirrored */
+    if (flipped) {
+      ctx.save();
+      ctx.translate(W, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0, W, H);
+      ctx.restore();
+    } else {
+      ctx.drawImage(video, 0, 0, W, H);
+    }
+
+    /* throttled OCR — only fires when worker is free */
+    const now = performance.now();
+    if (!ocrBusy && ocrWorker && now - lastOcrTime >= intervalMs) {
+      lastOcrTime = now;
+      ocrBusy = true;
+      doOcr();
+    }
+  }
+
+  /* ─── OCR ────────────────────────────────────────────── */
+  async function doOcr() {
+    setStatus('scanning');
+    pulseFlash();
+
+    /* draw to small offscreen canvas (same flip as main) */
+    offCtx.fillStyle = '#000';
+    offCtx.fillRect(0, 0, 480, 270);
+    if (flipped) {
+      offCtx.save();
+      offCtx.translate(480, 0);
+      offCtx.scale(-1, 1);
+      offCtx.drawImage(video, 0, 0, 480, 270);
+      offCtx.restore();
+    } else {
+      offCtx.drawImage(video, 0, 0, 480, 270);
+    }
+
+    try {
+      const { data: { words } } = await ocrWorker.recognize(offscreen);
+      processWords(words);
+    } catch (_) {
+      /* absorb errors — next tick will retry */
+    } finally {
+      ocrBusy = false;
+      setStatus('idle');
+    }
+  }
+
+  /* ─── WORD PROCESSING ────────────────────────────────── */
+  function processWords(words) {
+    if (!words || !words.length) return;
+
+    const now = Date.now();
+    const ts  = new Date().toLocaleTimeString('en-US', { hour12: false });
+    let added = false;
+
+    for (const w of words) {
+      if (w.confidence < confThresh) continue;
+
+      /* strip punctuation, keep letters/digits/apostrophes/hyphens */
+      const text = w.text.replace(/[^a-zA-Z0-9'\-]/g, '').trim();
+      if (text.length < 2) continue;
+
+      /* 4-second dedup window per word (case-insensitive) */
+      const key      = text.toLowerCase();
+      const lastSeen = dedupMap.get(key) || 0;
+      if (now - lastSeen < 4000) continue;
+
+      dedupMap.set(key, now);
+      const entry = { word: text, timestamp: ts, conf: Math.round(w.confidence) };
+      log.unshift(entry);
+      if (log.length > 500) log.pop();
+
+      prependEntry(entry, true);
+      added = true;
+    }
+
+    if (added) {
+      wordCount.textContent = log.length + (log.length === 1 ? ' word' : ' words');
+    }
+  }
+
+  /* ─── DOM ENTRY ──────────────────────────────────────── */
+  function prependEntry(entry, animate) {
+    const confClass = entry.conf >= 80 ? 'high' : entry.conf >= 60 ? 'mid' : 'low';
+    const el = document.createElement('div');
+    el.className = animate ? 'wocr-entry wocr-entry-new' : 'wocr-entry';
+    el.innerHTML =
+      '<span class="wocr-entry-word">' + esc(entry.word) + '</span>' +
+      '<span class="wocr-entry-conf ' + confClass + '">' + entry.conf + '%</span>' +
+      '<span class="wocr-entry-time">' + esc(entry.timestamp) + '</span>';
+    logList.insertBefore(el, logList.firstChild);
+    /* cap DOM entries at 200 to stay performant */
+    if (logList.children.length > 200) logList.removeChild(logList.lastChild);
+  }
+
+  function esc(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  /* ─── SCAN FLASH ─────────────────────────────────────── */
+  function pulseFlash() {
+    scanFlash.classList.add('active');
+    clearTimeout(flashTimer);
+    flashTimer = setTimeout(() => scanFlash.classList.remove('active'), 110);
+  }
+
+  /* ─── STATUS ─────────────────────────────────────────── */
+  function setStatus(state) {
+    statusEl.textContent = state;
+    statusEl.classList.toggle('scanning', state === 'scanning');
+  }
+
+  /* ─── SLIDERS ────────────────────────────────────────── */
+  confSlider.addEventListener('input', () => {
+    confThresh = +confSlider.value;
+    confVal.textContent = confThresh + '%';
+  });
+
+  intSlider.addEventListener('input', () => {
+    intervalMs = +intSlider.value * 500;
+    intVal.textContent = (intervalMs / 1000).toFixed(1) + 's';
+  });
+
+  /* ─── FLIP ───────────────────────────────────────────── */
+  flipBtn.addEventListener('click', () => {
+    flipped = !flipped;
+    flipBtn.classList.toggle('active', flipped);
+  });
+
+  /* ─── HIDE UI ────────────────────────────────────────── */
+  function toggleHide() { wrap.classList.toggle('ui-hidden'); }
+  hideBtn.addEventListener('click', toggleHide);
+  document.addEventListener('keydown', (e) => {
+    if (!running) return;
+    if ((e.key === 'h' || e.key === 'H') && !e.ctrlKey && !e.metaKey) toggleHide();
+  });
+
+  /* ─── FULLSCREEN ─────────────────────────────────────── */
+  fsBtn.addEventListener('click', () => {
+    if (!document.fullscreenElement) wrap.requestFullscreen().catch(() => {});
+    else document.exitFullscreen();
+  });
+  document.addEventListener('fullscreenchange', () => {
+    const inFs = !!document.fullscreenElement;
+    fsIcon.innerHTML = inFs
+      ? '<path d="M5 1H1v4M9 1h4v4M13 9v4H9M5 13H1V9"/><line x1="3" y1="3" x2="6" y2="6"/><line x1="11" y1="3" x2="8" y2="6"/><line x1="11" y1="11" x2="8" y2="8"/><line x1="3" y1="11" x2="6" y2="8"/>'
+      : '<path d="M1 5V1h4M9 1h4v4M13 9v4H9M5 13H1V9"/>';
+    setTimeout(resize, 60);
+  });
+
+  /* ─── CLEAR ──────────────────────────────────────────── */
+  clearBtn.addEventListener('click', () => {
+    log = [];
+    dedupMap.clear();
+    logList.innerHTML = '';
+    wordCount.textContent = '0 words';
+  });
+
+  /* ─── CSV EXPORT ─────────────────────────────────────── */
+  csvBtn.addEventListener('click', () => {
+    if (!log.length) return;
+    const rows = [['word', 'timestamp', 'confidence']];
+    for (const e of log) rows.push([e.word, e.timestamp, e.conf]);
+    const csv  = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = Object.assign(document.createElement('a'), { href: url, download: 'word-log-' + Date.now() + '.csv' });
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  });
+
+  /* ─── START CAMERA ───────────────────────────────────── */
+  startBtn.addEventListener('click', async () => {
+    startBtn.disabled = true;
+    errorMsg.classList.remove('visible');
+
+    try {
+      /* 1. Load Tesseract worker */
+      startBtn.textContent = 'loading ocr…';
+      ocrWorker = await Tesseract.createWorker('eng', 1, { logger: () => {} });
+      await ocrWorker.setParameters({ tessedit_pageseg_mode: '11' }); /* SPARSE_TEXT */
+
+      /* 2. Request camera */
+      startBtn.textContent = 'connecting…';
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      });
+      video.srcObject = stream;
+      await video.play();
+
+      /* 3. Start */
+      overlay.classList.add('hidden');
+      running = true;
+      resize();
+      requestAnimationFrame(loop);
+
+    } catch (err) {
+      startBtn.disabled   = false;
+      startBtn.textContent = 'try again';
+      errorMsg.classList.add('visible');
+      if (ocrWorker) { ocrWorker.terminate(); ocrWorker = null; }
+      if (stream)    { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    }
+  });
+
+})();
+</script>
+
+</body>
+</html>
