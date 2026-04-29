@@ -574,7 +574,7 @@
     </div>
     <div class="fp-slider-row">
       <span class="fp-slider-label">z scale</span>
-      <input type="range" class="fp-slider" id="s-scaleZ" min="10" max="300" value="100" step="5">
+      <input type="range" class="fp-slider" id="s-scaleZ" min="10" max="300" value="200" step="5">
       <span class="fp-slider-val" id="v-scaleZ">1.00</span>
     </div>
     <div style="display:flex;gap:6px;margin-top:4px;">
@@ -674,8 +674,8 @@
     SPEED: 0.30,
     SCALE_X: 1.0,
     SCALE_Y: 1.0,
-    SCALE_Z: 1.0,
-    INVERT_X: false,
+    SCALE_Z: 2.0,
+    INVERT_X: true,
     INVERT_Y: false,
     INVERT_Z: false,
   };
@@ -707,7 +707,7 @@
   // Each scene is an array of layers. Each layer has:
   //   depth: 0 (background) to 1 (foreground) — parallax multiplier
   //   draw(ctx, W, H, offX, offY, time): render function
-  let activeScene = 0;
+  let activeScene = 3;
   let scenes = [];
 
   function seededRand(seed) {
@@ -1499,6 +1499,21 @@
   wireInvert('inv-x', 'INVERT_X');
   wireInvert('inv-y', 'INVERT_Y');
   wireInvert('inv-z', 'INVERT_Z');
+
+  // Sync initial UI state to defaults
+  (function initUI() {
+    // Inv X active by default
+    const invX = document.getElementById('inv-x');
+    invX.style.borderColor = 'rgba(108,99,255,0.7)';
+    invX.style.color = '#fff';
+    invX.style.background = 'rgba(108,99,255,0.2)';
+    // Cube scene active by default
+    document.querySelectorAll('.fp-scene-btn').forEach(b =>
+      b.classList.toggle('active', +b.dataset.scene === 3)
+    );
+    // Z scale display
+    document.getElementById('v-scaleZ').textContent = '2.00';
+  })();
 
   /* ── FULLSCREEN / HIDE ───────────────────────────── */
   document.getElementById('fp-fs-btn').addEventListener('click', () => {

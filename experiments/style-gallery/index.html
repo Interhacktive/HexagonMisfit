@@ -562,20 +562,38 @@
       box-shadow: 0 0 30px var(--sg-accent), 0 0 60px var(--sg-accent);
     }
 
-    /* ── 3. Morph Click Cycle ── */
+    /* ── 3. Morph ── */
     .sg-anim-morph {
       width: 64px;
       height: 64px;
       background: var(--sg-accent2);
-      border-radius: var(--sg-radius-sm);
+      border-radius: 50%;
+      /* full-rect clip keeps polygon interpolation working for all shape transitions */
       clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
       cursor: pointer;
-      transition: border-radius 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
-                  clip-path 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: border-radius 0.65s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  clip-path  0.65s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  transform  0.65s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-    .sg-anim-morph.shape-pill   { border-radius: 32px; clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%); }
-    .sg-anim-morph.shape-circle { border-radius: 50%;  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%); }
-    .sg-anim-morph.shape-tri    { border-radius: 0;    clip-path: polygon(50% 0%, 50% 0%, 0% 100%, 100% 100%); }
+
+    /* degenerate 4-pt polygon = triangle; same point count as rect/diamond → interpolates cleanly */
+    .sg-anim-morph.shape-tri {
+      border-radius: 0;
+      clip-path: polygon(50% 0%, 50% 0%, 0% 100%, 100% 100%);
+      transform: rotate(0deg) scale(1);
+    }
+    /* inset 25% top/bottom = same width as circle, half the height */
+    .sg-anim-morph.shape-rect {
+      border-radius: 3px;
+      clip-path: polygon(0% 25%, 100% 25%, 100% 75%, 0% 75%);
+      transform: rotate(0deg) scale(1);
+    }
+    /* expand clip back to full + rotate the rounded square into a diamond */
+    .sg-anim-morph.shape-diamond {
+      border-radius: 10px;
+      clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+      transform: rotate(45deg) scale(0.68);
+    }
 
     /* ── 4. Reveal Hover ── */
     .sg-anim-reveal {
@@ -1632,22 +1650,43 @@
         </div>
       </div>
 
-      <!-- 5. Spinner -->
+      <!-- 5. Checkbox Bounce -->
       <div class="sg-micro-cell" data-animate>
-        <span class="sg-micro-label">Spinner</span>
-        <div class="sg-anim-spinner" id="sg-spinner"></div>
-        <span class="sg-spinner-speed" id="sg-spinner-speed">click · normal</span>
+        <span class="sg-micro-label">Checkbox</span>
+        <button class="sg-anim-checkbox" role="checkbox" aria-checked="false" id="sg-checkbox-micro">
+          <svg class="sg-anim-checkbox-check" viewBox="0 0 14 14" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7.5L5.5 10.5L11.5 3.5"/></svg>
+        </button>
       </div>
 
-      <!-- 6. Progress Bar -->
-      <div class="sg-micro-cell" data-animate id="sg-progress-cell" title="hover to pause · click to restart">
-        <span class="sg-micro-label">Progress</span>
-        <div class="sg-anim-progress">
-          <div class="sg-anim-progress-fill" id="sg-progress-fill"></div>
+      <!-- 6. Card Flip -->
+      <div class="sg-micro-cell" data-animate>
+        <span class="sg-micro-label">Flip</span>
+        <div class="sg-anim-flip-wrap" id="sg-flip-wrap">
+          <div class="sg-anim-flip-inner">
+            <div class="sg-anim-flip-front">Front</div>
+            <div class="sg-anim-flip-back">Back</div>
+          </div>
         </div>
       </div>
 
-      <!-- 7. Skeleton Screen -->
+      <!-- 7. Toggle Switch -->
+      <div class="sg-micro-cell" data-animate>
+        <span class="sg-micro-label">Toggle</span>
+        <div style="display:flex;align-items:center;gap:var(--space-3);">
+          <button class="sg-anim-toggle" role="switch" aria-checked="false" id="sg-toggle-micro">
+            <span class="sg-anim-toggle-knob"></span>
+          </button>
+          <span class="sg-toggle-label" id="sg-toggle-micro-label">off</span>
+        </div>
+      </div>
+
+      <!-- 8. Button Press -->
+      <div class="sg-micro-cell" data-animate>
+        <span class="sg-micro-label">Ripple</span>
+        <button class="sg-anim-btn-press" id="sg-ripple-btn">Click Me</button>
+      </div>
+
+      <!-- 9. Skeleton Screen -->
       <div class="sg-micro-cell" data-animate id="sg-skel-cell">
         <span class="sg-micro-label">Skeleton</span>
         <div class="sg-skel-wrapper">
@@ -1665,29 +1704,11 @@
         <span class="sg-skel-hint" id="sg-skel-hint">click to load</span>
       </div>
 
-      <!-- 8. Button Press -->
+      <!-- 10. Spinner -->
       <div class="sg-micro-cell" data-animate>
-        <span class="sg-micro-label">Ripple</span>
-        <button class="sg-anim-btn-press" id="sg-ripple-btn">Click Me</button>
-      </div>
-
-      <!-- 9. Toggle Switch -->
-      <div class="sg-micro-cell" data-animate>
-        <span class="sg-micro-label">Toggle</span>
-        <div style="display:flex;align-items:center;gap:var(--space-3);">
-          <button class="sg-anim-toggle" role="switch" aria-checked="false" id="sg-toggle-micro">
-            <span class="sg-anim-toggle-knob"></span>
-          </button>
-          <span class="sg-toggle-label" id="sg-toggle-micro-label">off</span>
-        </div>
-      </div>
-
-      <!-- 10. Checkbox Bounce -->
-      <div class="sg-micro-cell" data-animate>
-        <span class="sg-micro-label">Checkbox</span>
-        <button class="sg-anim-checkbox" role="checkbox" aria-checked="false" id="sg-checkbox-micro">
-          <svg class="sg-anim-checkbox-check" viewBox="0 0 14 14" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7.5L5.5 10.5L11.5 3.5"/></svg>
-        </button>
+        <span class="sg-micro-label">Spinner</span>
+        <div class="sg-anim-spinner" id="sg-spinner"></div>
+        <span class="sg-spinner-speed" id="sg-spinner-speed">click · normal</span>
       </div>
 
       <!-- 11. Scroll Progress -->
@@ -1701,14 +1722,11 @@
         </div>
       </div>
 
-      <!-- 12. Card Flip -->
-      <div class="sg-micro-cell" data-animate>
-        <span class="sg-micro-label">Flip</span>
-        <div class="sg-anim-flip-wrap" id="sg-flip-wrap">
-          <div class="sg-anim-flip-inner">
-            <div class="sg-anim-flip-front">Front</div>
-            <div class="sg-anim-flip-back">Back</div>
-          </div>
+      <!-- 12. Progress Bar -->
+      <div class="sg-micro-cell" data-animate id="sg-progress-cell" title="hover to pause · click to restart">
+        <span class="sg-micro-label">Progress</span>
+        <div class="sg-anim-progress">
+          <div class="sg-anim-progress-fill" id="sg-progress-fill"></div>
         </div>
       </div>
 
@@ -1951,13 +1969,18 @@
         if (type === 'toggle') freq *= 1.5;
         if (type === 'flip')   freq = retroNotes[(retroIdx + 2) % retroNotes.length];
       } else {
-        var spread = type === 'pop' ? prof.freqSpread : type === 'flip' ? prof.freqSpread * 0.7 : prof.freqSpread * 0.4;
-        freq = prof.baseFreq + spread;
+        var spread = type === 'pop' ? prof.freqSpread : type === 'flip' ? prof.freqSpread * 0.7 : type === 'reveal-enter' ? prof.freqSpread * 1.1 : type === 'reveal-exit' ? prof.freqSpread * 0.3 : prof.freqSpread * 0.4;
+        freq = type === 'reveal-exit' ? prof.baseFreq : prof.baseFreq + spread;
       }
 
       osc.frequency.setValueAtTime(freq, ctx.currentTime);
-      gain.gain.setValueAtTime(prof.gain, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + prof.decay);
+      if (type === 'reveal-enter') {
+        osc.frequency.exponentialRampToValueAtTime(freq * 1.6, ctx.currentTime + 0.12);
+      } else if (type === 'reveal-exit') {
+        osc.frequency.exponentialRampToValueAtTime(freq * 0.55, ctx.currentTime + 0.14);
+      }
+      gain.gain.setValueAtTime(prof.gain * 0.85, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (type === 'reveal-enter' || type === 'reveal-exit' ? 0.18 : prof.decay));
 
       osc.connect(gain);
       gain.connect(ctx.destination);
@@ -2117,15 +2140,15 @@
     });
   }
 
-  /* ─── MORPH SHAPE CYCLE (click) ─────────────────────── */
+  /* ─── MORPH (press to cycle shape) ─────────────────── */
   var morphEl = document.querySelector('.sg-anim-morph');
-  var morphShapes = ['', 'shape-pill', 'shape-circle', 'shape-tri'];
-  var morphIdx = 0;
+  var morphStates = ['shape-tri', 'shape-rect', 'shape-diamond', ''];
+  var morphIdx = -1;
   if (morphEl) {
-    morphEl.addEventListener('click', function() {
-      morphEl.classList.remove('shape-pill', 'shape-circle', 'shape-tri');
-      morphIdx = (morphIdx + 1) % morphShapes.length;
-      if (morphShapes[morphIdx]) morphEl.classList.add(morphShapes[morphIdx]);
+    morphEl.addEventListener('mouseup', function() {
+      morphEl.classList.remove('shape-tri', 'shape-rect', 'shape-diamond');
+      morphIdx = (morphIdx + 1) % morphStates.length;
+      if (morphStates[morphIdx]) morphEl.classList.add(morphStates[morphIdx]);
       playSound('pop');
     });
   }
@@ -2139,6 +2162,10 @@
     revealEl.addEventListener('mouseenter', function() {
       revealPhraseIdx = (revealPhraseIdx + 1) % revealPhrases.length;
       revealTextEl.textContent = revealPhrases[revealPhraseIdx];
+      playSound('reveal-enter');
+    });
+    revealEl.addEventListener('mouseleave', function() {
+      playSound('reveal-exit');
     });
   }
 

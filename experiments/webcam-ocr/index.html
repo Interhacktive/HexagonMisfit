@@ -391,15 +391,24 @@
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, W, H);
 
+    /* cover-fit: preserve video aspect ratio */
+    const vw = video.videoWidth  || W;
+    const vh = video.videoHeight || H;
+    const scale = Math.max(W / vw, H / vh);
+    const dw = vw * scale;
+    const dh = vh * scale;
+    const dx = (W - dw) / 2;
+    const dy = (H - dh) / 2;
+
     /* draw video — optionally mirrored */
     if (flipped) {
       ctx.save();
       ctx.translate(W, 0);
       ctx.scale(-1, 1);
-      ctx.drawImage(video, 0, 0, W, H);
+      ctx.drawImage(video, -dx, dy, dw, dh);
       ctx.restore();
     } else {
-      ctx.drawImage(video, 0, 0, W, H);
+      ctx.drawImage(video, dx, dy, dw, dh);
     }
 
     /* throttled OCR — only fires when worker is free */

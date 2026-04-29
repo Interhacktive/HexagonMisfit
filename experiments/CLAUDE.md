@@ -21,7 +21,7 @@ Each experiment is self-contained in its own subdirectory with its own `index.ht
 | `unicorn-studio/` | Interactive Unicorn Studio visualization (v1) | Likely Unicorn Studio embed or custom canvas |
 | `unicorn-studio-2/` | Unicorn Studio visualization iteration 2 | Second pass / variant of above |
 | `webcam-ascii/` | Live webcam feed converted to ASCII art in real time | getUserMedia + Canvas pixel sampling |
-| `webcam-physics-blob/` | Webcam input drives a physics-based blob simulation | getUserMedia + physics engine |
+| `face-parallax/` | Face tracking drives head-coupled perspective across layered 3D scenes | getUserMedia + MediaPipe + Canvas 2D |
 
 ---
 
